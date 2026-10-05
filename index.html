@@ -335,8 +335,16 @@ table.print-cal td.othermonth{background:#f7f7f7;}
 #loginGate{position:fixed;inset:0;background:var(--page-plane);display:flex;align-items:center;justify-content:center;z-index:300;padding:20px;}
 #loginGate .card{max-width:420px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.15);}
 .app-shell.hidden-until-login{display:none;}
+html.user-logged-in #loginGate{display:none !important;}
+html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
 .login-chip{background:#eef2f8;border:1px solid #dbe3f0;border-radius:16px;padding:6px 13px;font-size:12.5px;font-weight:600;color:var(--text-primary);cursor:pointer;}
 .login-chip:hover{background:var(--accent,#3568e0);color:#fff;border-color:transparent;}
+
+/* ---------- Peringatan Kas Menipis & Kop Gambar ---------- */
+.cash-warning-badge{display:inline-flex;align-items:center;gap:5px;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;padding:4px 10px;border-radius:14px;font-size:11.5px;font-weight:700;cursor:pointer;animation:pulse-warn 2.5s infinite;}
+@keyframes pulse-warn{0%,100%{transform:scale(1);}50%{transform:scale(1.04);}}
+.kop-image-wrap{text-align:center;margin-bottom:14px;}
+.kop-image-wrap img{max-width:100%;width:100%;max-height:160px;object-fit:contain;display:block;margin:0 auto;}
 
 /* ---------- PJ chip / kalender ---------- */
 .pj-chip{display:block;padding:1px 6px;border-radius:5px;font-size:10px;font-weight:700;color:#fff;margin:1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;cursor:default;}
@@ -448,6 +456,19 @@ table.print-cal td.othermonth{background:#f7f7f7;}
   .card{padding:14px 12px;}
 }
 </style>
+<script>
+(function(){
+  try {
+    var raw = localStorage.getItem("keuanganSekolahUserSessionV1");
+    if(raw) {
+      var u = JSON.parse(raw);
+      if(u && u.name) {
+        document.documentElement.classList.add("user-logged-in");
+      }
+    }
+  } catch(e){}
+})();
+</script>
 </head>
 <body>
 
@@ -546,6 +567,7 @@ table.print-cal td.othermonth{background:#f7f7f7;}
         </div>
       </div>
       <div class="topbar-actions">
+        <span id="cashWarningBadge" class="cash-warning-badge" style="display:none;" title="Klik untuk melihat rincian kas di Dashboard">⚠️ Kas Menipis</span>
         <span id="onlineStatusBadge" class="online-badge" title="Status koneksi internet"></span>
         <button class="btn" id="btnGoogleAuth" style="display:inline-flex;align-items:center;gap:6px;" title="Masuk dengan akun Google untuk sinkronisasi database">
           <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
@@ -562,6 +584,7 @@ table.print-cal td.othermonth{background:#f7f7f7;}
 
       <!-- ============ DASHBOARD ============ -->
       <section class="view active" id="view-dashboard">
+        <div id="dashboardCashAlert" style="display:none; margin-bottom:16px;"></div>
         <div class="stat-grid">
           <div class="stat-card">
             <div class="stat-label">Total Anggaran (Semua Dana)</div>
@@ -588,6 +611,31 @@ table.print-cal td.othermonth{background:#f7f7f7;}
         <div class="stat-grid" id="statSumberGrid"></div>
 
         <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+            <div>
+              <h2 style="margin:0 0 4px 0;">Tren Penerimaan &amp; Pengeluaran Kas per Bulan</h2>
+              <p class="desc" style="margin:0;">Pantau histori arus kas masuk (penerimaan), arus kas keluar (pengeluaran), dan surplus/defisit bulanan untuk memonitor kesehatan keuangan sekolah.</p>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <select id="trendFilterSumber" style="padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid var(--border); background:var(--card-bg, #fff); color:var(--text-primary); font-weight:600;">
+                <option value="all">Semua Sumber Dana</option>
+                <option value="bos">Dana BOS</option>
+                <option value="spp">Dana SPP</option>
+                <option value="pangkal">Uang Pangkal</option>
+                <option value="lain">Dana Lainnya</option>
+              </select>
+              <select id="trendFilterTahun" style="padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid var(--border); background:var(--card-bg, #fff); color:var(--text-primary); font-weight:600;"></select>
+            </div>
+          </div>
+
+          <div class="stat-grid" id="trendKpiGrid" style="grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); margin-bottom:16px;"></div>
+
+          <div class="chart-wrap" style="height:320px; position:relative;">
+            <canvas id="chartTrendBulanan"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
           <h2>Anggaran vs Realisasi per Sumber Dana</h2>
           <p class="desc">Perbandingan rencana anggaran (RAB) dengan realisasi belanja aktual (dari BKU) pada tiap sumber dana.</p>
           <div class="chart-wrap"><canvas id="chartSumber"></canvas></div>
@@ -607,6 +655,34 @@ table.print-cal td.othermonth{background:#f7f7f7;}
           <p class="desc">Data ini otomatis mengisi kop surat &amp; tanda tangan di seluruh laporan. Saldo awal kas WAJIB diisi terpisah untuk tiap sumber dana.</p>
           <p class="desc" id="sekolahGuruNote" style="display:none;color:var(--critical);">Hanya Admin/Kepala Sekolah yang dapat mengubah data identitas sekolah &amp; saldo awal kas. Anda login sebagai Guru — field di bawah terkunci.</p>
           <div class="form-grid" id="formSekolah"></div>
+        </div>
+
+        <!-- ============ KOP LAPORAN RESMI (GAMBAR / TEKS) ============ -->
+        <div class="card">
+          <h2>Kop Surat Laporan Resmi</h2>
+          <p class="desc">Atur tampilan kop surat yang akan dicetak di bagian paling atas setiap dokumen &amp; laporan resmi (Kwitansi, BAST, BKU, RAB, LPJ BOS, LPJ Konsolidasi, Realisasi, dll). Anda dapat mengunggah gambar kop surat resmi (banner lengkap dengan logo dan garis pembatas), atau menggunakan format teks standar otomatis dari data sekolah di atas.</p>
+          
+          <div style="display:flex; flex-direction:column; gap:14px; max-width:680px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <input type="checkbox" id="chkUseKopGambar" style="width:18px; height:18px; cursor:pointer;">
+              <label for="chkUseKopGambar" style="font-weight:600; cursor:pointer; font-size:13px;">Gunakan Gambar Kop Surat pada Seluruh Laporan Cetak</label>
+            </div>
+
+            <div id="kopGambarUploadBox" style="border:2px dashed var(--border); border-radius:8px; padding:18px; text-align:center; background:#fafafa;">
+              <div id="kopGambarPreviewWrap" style="display:none; margin-bottom:12px;">
+                <p style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:6px;">Pratinjau Gambar Kop Saat Ini:</p>
+                <img id="kopGambarPreview" src="" alt="Pratinjau Kop Surat" style="max-width:100%; max-height:160px; object-fit:contain; border:1px solid #ddd; border-radius:4px; padding:4px; background:#fff; margin:0 auto; display:block;">
+              </div>
+              <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
+                <label class="btn primary small" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                  <span>📁 Unggah Gambar Kop (PNG/JPG)</span>
+                  <input type="file" id="inpKopGambar" accept="image/png, image/jpeg, image/webp" style="display:none;">
+                </label>
+                <button type="button" class="btn danger small" id="btnHapusKopGambar" style="display:none;">Hapus Gambar Kop</button>
+              </div>
+              <div style="font-size:11.5px; color:var(--text-muted); margin-top:8px;">Format file: PNG, JPG, atau WebP. Disarankan gambar memanjang horizontal (rasio lebar min. 1000px). Gambar otomatis dioptimasi agar dokumen cetak jernih dan ringan.</div>
+            </div>
+          </div>
         </div>
 
         <div class="card" id="cardAdminSecurity" style="display:none;">
@@ -778,6 +854,7 @@ table.print-cal td.othermonth{background:#f7f7f7;}
         <div class="card">
           <h2>Buku Kas Umum (BKU)</h2>
           <p class="desc">Setiap sumber dana punya buku kas sendiri sehingga saldo tidak tercampur. Pilih sumber dana di bawah.</p>
+          <div id="bkuCashAlert" style="display:none; margin-bottom:12px;"></div>
           <div class="subtabs" id="bkuTabs"></div>
           <div class="table-scroll"><table class="datatable" id="tblBku"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
           <div class="table-actions" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
@@ -1399,6 +1476,8 @@ table.print-cal td.othermonth{background:#f7f7f7;}
       <div class="field"><label>Keterangan (opsional)</label><input type="text" id="bkuFormKeterangan"></div>
     </div>
 
+    <div id="bkuFormWarning" style="display:none; font-size:12px; padding:8px 12px; border-radius:6px; margin:10px 0;"></div>
+
     <div class="modal-actions">
       <button class="btn" type="button" data-close="modal-bku-form">Batal</button>
       <button class="btn primary" type="button" id="bkuFormBtnSimpan">Simpan</button>
@@ -1536,6 +1615,7 @@ const SEKOLAH_FIELDS = [
   ["komite","Nama Ketua Komite Sekolah","text"], ["tahunAjaran","Tahun Ajaran/Anggaran","text"],
   ["saldoAwalBos","Saldo Awal Kas BOS (Rp)","currency"], ["saldoAwalSpp","Saldo Awal Kas SPP (Rp)","currency"],
   ["saldoAwalPangkal","Saldo Awal Kas Uang Pangkal (Rp)","currency"], ["saldoAwalLain","Saldo Awal Kas Dana Lainnya (Rp)","currency"],
+  ["batasKasMenipis","Batas Minimum Peringatan Kas Menipis (Rp)","currency"],
   ["kotaCetak","Kota untuk Cetak Dokumen","text"],
 ];
 const PROGRAM_STATUS = { MENUNGGU:"Menunggu Persetujuan", PERBAIKAN:"Anggaran Perlu Perbaikan", DISETUJUI:"Disetujui", DITOLAK:"Ditolak" };
@@ -1548,7 +1628,8 @@ function uid(){ return uidCounter++; }
 function emptySekolah(){
   return { namaSekolah:"", npsn:"", alamat:"", desa:"", kecamatan:"", kabkota:"", provinsi:"",
     kepsek:"", nipKepsek:"", bendaharaBos:"", nipBendaharaBos:"", bendaharaKomite:"", nipBendaharaKomite:"",
-    komite:"", tahunAjaran:"2026/2027", saldoAwalBos:0, saldoAwalSpp:0, saldoAwalPangkal:0, saldoAwalLain:0, kotaCetak:"",
+    komite:"", tahunAjaran:"2026/2027", saldoAwalBos:0, saldoAwalSpp:0, saldoAwalPangkal:0, saldoAwalLain:0,
+    batasKasMenipis:1000000, kopGambar:"", useKopGambar:false, kotaCetak:"",
     /* Kode akses Admin + pertanyaan/jawaban keamanan untuk pemulihan (lihat
        requestAdminAccess/openAdminRecoverModal) — kosong berarti kode Admin
        belum pernah dibuat, sehingga login Admin berikutnya akan memicu
@@ -1590,7 +1671,11 @@ function nextDocNumber(kind, prefix){
   return nomor;
 }
 
-/* Session-only current user (login gate). NEVER persisted to state/localStorage. */
+/* Sesi Pengguna & Tampilan Aktif — disimpan di localStorage agar tetap pada
+   pengguna dan halaman terakhir saat di-refresh. */
+const USER_SESSION_KEY = "keuanganSekolahUserSessionV1";
+const ACTIVE_VIEW_KEY = "keuanganSekolahActiveViewV1";
+const RECENT_LOGINS_KEY = "keuanganSekolahRecentLoginsV1";
 let currentUser = { name:"", role:"Admin" };
 
 /* Snapshot of the data as it stood at the last successful push/pull, used to
@@ -1772,6 +1857,13 @@ function pjColor(name){
   for(let i=0;i<s.length;i++) h += s.charCodeAt(i);
   return PJ_COLORS[h % PJ_COLORS.length];
 }
+function getProgramSumberKey(prog){
+  if(prog && prog.sumberDana && SUMBER_KEYS.includes(prog.sumberDana)) return prog.sumberDana;
+  for(const k of SUMBER_KEYS){
+    if((state.program[k]||[]).some(p=>p.id===prog?.id)) return k;
+  }
+  return SUMBER_KEYS[0];
+}
 function formatTgl(iso){
   if(!iso) return "-";
   const d = new Date(iso+"T00:00:00");
@@ -1865,40 +1957,11 @@ function bkuWithSaldo(key){
 function syncBkuFromRealisasi(key){
   const meta = SUMBER_META[key];
   if(!meta) return;
-  const validIds = new Set();
-  const desired = [];
-  (state.program[key]||[]).forEach(prog=>{
-    /* Program yang sudah pakai skema Uang Muka (punya riwayat Serah Terima)
-       TIDAK dibuatkan baris BKU dari Realisasi lagi — uangnya sudah dicatat
-       keluar saat Serah Terima (lihat syncBkuFromSerahTerima), supaya tidak
-       dobel hitung. Realisasi di program itu jadi murni laporan
-       pertanggungjawaban, bukan pemicu pengeluaran kas baru. */
-    if(programPakaiSkemaUangMuka(prog)) return;
-    (prog.realisasi||[]).forEach(r=>{
-      validIds.add(r.id);
-      desired.push({
-        autoId: r.id,
-        tanggal: r.tanggalReal || r.tanggal,
-        uraian: `Realisasi: ${prog.namaProgram}${r.keterangan? " — "+r.keterangan : ""}`,
-        pengeluaran: Number(r.anggaranTerpakai)||0,
-      });
-    });
-  });
-  /* Kalau sebuah program baru saja pindah skema (dapat Serah Terima Dana
-     pertamanya setelah sebelumnya sempat punya baris auto-realisasi), baris
-     auto-realisasi lama untuk program itu juga harus disingkirkan meskipun
-     realisasinya sendiri masih ada — makanya filter di bawah memakai
-     `validIds` yang HANYA berisi id tahap dari program skema-langsung. */
-  state.bku[key] = (state.bku[key]||[]).filter(row=> !row.autoRealisasiId || validIds.has(row.autoRealisasiId));
-  desired.forEach(d=>{
-    let row = state.bku[key].find(b=>b.autoRealisasiId===d.autoId);
-    if(row){
-      row.tanggal = d.tanggal; row.uraian = d.uraian; row.pengeluaran = d.pengeluaran;
-    } else {
-      row = { id:uid(), tanggal:d.tanggal, noBukti:"", uraian:d.uraian, penerimaan:0, pengeluaran:d.pengeluaran, autoRealisasiId:d.autoId };
-      state.bku[key].push(row);
-    }
-  });
+  /* Pengeluaran kas program dicatat saat Serah Terima Dana (lihat syncBkuFromSerahTerima).
+     Realisasi adalah laporan pertanggungjawaban PJ atas penggunaan uang muka tersebut, bukan pengeluaran kas tambahan.
+     Jika Serah Terima dihapus, uang kas tidak pernah keluar dari Bendahara, sehingga tidak ada pengeluaran di BKU.
+     Membersihkan baris autoRealisasiId dari BKU agar tidak terjadi desinkronisasi. */
+  state.bku[key] = (state.bku[key]||[]).filter(row=> !row.autoRealisasiId);
 }
 /* Pasangan dari syncBkuFromRealisasi, untuk program yang pakai skema Uang
    Muka: baris Pengeluaran BKU dibuat dari riwayat Serah Terima (uang keluar
@@ -2186,6 +2249,9 @@ const VIEW_TITLES = {
 };
 function switchView(viewName){
   if(!VIEW_TITLES[viewName]) return;
+  try {
+    localStorage.setItem(ACTIVE_VIEW_KEY, viewName);
+  } catch(e){}
   document.querySelectorAll(".nav button[data-view]").forEach(b=>{
     if(b.dataset.view === viewName) b.classList.add("active");
     else b.classList.remove("active");
@@ -2209,6 +2275,18 @@ function switchView(viewName){
   if(renderers[viewName]) renderers[viewName]();
 
   window.scrollTo({ top:0, behavior:"smooth" });
+}
+
+function restoreActiveView(){
+  let savedView = null;
+  try {
+    savedView = localStorage.getItem(ACTIVE_VIEW_KEY);
+  } catch(e){}
+  if(savedView && VIEW_TITLES[savedView]){
+    switchView(savedView);
+  } else {
+    switchView("dashboard");
+  }
 }
 
 function openMobileSidebar(){
@@ -2275,7 +2353,10 @@ function renderSekolahForm(){
       const key = inp.dataset.key;
       state.sekolah[key] = inp.hasAttribute("data-currency") ? parseRibuan(inp.value) : inp.value;
       refreshHeader();
-      if(key.startsWith("saldoAwal")) renderBkuTable(currentBkuKey);
+      if(key.startsWith("saldoAwal") || key==="batasKasMenipis"){
+        renderBkuTable(currentBkuKey);
+        updateCashHealthAlerts();
+      }
     });
   });
   document.getElementById("sekolahGuruNote").style.display = isAdmin ? "none" : "";
@@ -2286,13 +2367,198 @@ function renderSekolahForm(){
   if(secCard){
     secCard.style.display = isAdmin ? "" : "none";
     if(isAdmin){
-      // Pertanyaan keamanan yang sudah ada diprefill (biar tidak sengaja
-      // terhapus saat Admin cuma mau ganti kode) — kode & jawaban TIDAK
-      // pernah ditampilkan ulang, hanya bisa ditimpa dengan yang baru.
       const qInp = document.getElementById("asChangeQuestion");
       if(qInp && document.activeElement!==qInp) qInp.value = state.sekolah.securityQuestion||"";
     }
   }
+}
+
+function renderKopSection(){
+  const chk = document.getElementById("chkUseKopGambar");
+  const previewWrap = document.getElementById("kopGambarPreviewWrap");
+  const previewImg = document.getElementById("kopGambarPreview");
+  const btnHapus = document.getElementById("btnHapusKopGambar");
+  const isAdmin = currentUser.role === "Admin";
+
+  if(chk){
+    chk.checked = !!state.sekolah.useKopGambar;
+    chk.disabled = !isAdmin;
+  }
+  if(state.sekolah.kopGambar){
+    if(previewWrap) previewWrap.style.display = "block";
+    if(previewImg) previewImg.src = state.sekolah.kopGambar;
+    if(btnHapus) btnHapus.style.display = isAdmin ? "inline-block" : "none";
+  } else {
+    if(previewWrap) previewWrap.style.display = "none";
+    if(previewImg) previewImg.src = "";
+    if(btnHapus) btnHapus.style.display = "none";
+  }
+}
+
+function handleKopGambarUpload(file){
+  if(!file) return;
+  if(!file.type.startsWith("image/")){
+    alert("Mohon pilih file gambar (PNG, JPG, atau WebP).");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const maxW = 1400;
+      let w = img.width;
+      let h = img.height;
+      if(w > maxW){
+        h = Math.round((h * maxW) / w);
+        w = maxW;
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL("image/png", 0.9);
+      state.sekolah.kopGambar = dataUrl;
+      state.sekolah.useKopGambar = true;
+      saveStateToLocalStorage();
+      renderKopSection();
+      renderPrint();
+      alert("Gambar kop surat berhasil disimpan dan diaktifkan untuk seluruh laporan cetak!");
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+const inpKopEl = document.getElementById("inpKopGambar");
+if(inpKopEl){
+  inpKopEl.addEventListener("change", (e)=>{
+    const f = e.target.files && e.target.files[0];
+    if(f) handleKopGambarUpload(f);
+    e.target.value = "";
+  });
+}
+const chkKopEl = document.getElementById("chkUseKopGambar");
+if(chkKopEl){
+  chkKopEl.addEventListener("change", (e)=>{
+    state.sekolah.useKopGambar = e.target.checked;
+    saveStateToLocalStorage();
+    renderKopSection();
+    renderPrint();
+  });
+}
+const btnHapusKopEl = document.getElementById("btnHapusKopGambar");
+if(btnHapusKopEl){
+  btnHapusKopEl.addEventListener("click", ()=>{
+    if(confirm("Hapus gambar kop surat dan kembali menggunakan format teks standar?")){
+      state.sekolah.kopGambar = "";
+      state.sekolah.useKopGambar = false;
+      saveStateToLocalStorage();
+      renderKopSection();
+      renderPrint();
+    }
+  });
+}
+
+function updateCashHealthAlerts(){
+  const limit = (Number(state.sekolah.batasKasMenipis) >= 0) ? Number(state.sekolah.batasKasMenipis) : 1000000;
+  const criticalFunds = [];
+  const lowFunds = [];
+
+  SUMBER_KEYS.forEach(k => {
+    const s = bkuTotals(k).saldoAkhir;
+    if(s < 0) criticalFunds.push({ key: k, label: SUMBER_META[k].label, saldo: s });
+    else if(s <= limit) lowFunds.push({ key: k, label: SUMBER_META[k].label, saldo: s });
+  });
+
+  const totalSaldo = lpjKonsolidasiTotal().saldoAkhir;
+  const topbarBadge = document.getElementById("cashWarningBadge");
+  const dashAlert = document.getElementById("dashboardCashAlert");
+
+  const hasIssues = criticalFunds.length > 0 || lowFunds.length > 0 || totalSaldo < 0;
+
+  if(topbarBadge){
+    if(hasIssues){
+      topbarBadge.style.display = "inline-flex";
+      topbarBadge.textContent = criticalFunds.length ? "🚨 Kas Defisit!" : "⚠️ Kas Menipis";
+      topbarBadge.title = `Klik untuk melihat rincian kas di Dashboard (Batas peringatan: ${rp(limit)})`;
+    } else {
+      topbarBadge.style.display = "none";
+    }
+  }
+
+  if(dashAlert){
+    if(hasIssues){
+      dashAlert.style.display = "block";
+      let itemsHtml = "";
+      criticalFunds.forEach(f => {
+        itemsHtml += `<li style="margin-bottom:5px;"><b>${escapeHtml(f.label)}</b>: Posisi <span style="color:#dc2626; font-weight:700;">Defisit ${rp(f.saldo)}</span> &mdash; Saldo minus, pengeluaran telah melebihi kas yang tersedia!</li>`;
+      });
+      lowFunds.forEach(f => {
+        itemsHtml += `<li style="margin-bottom:5px;"><b>${escapeHtml(f.label)}</b>: Sisa kas <span style="color:#d97706; font-weight:700;">${rp(f.saldo)}</span> &mdash; Di bawah batas minimum aman (${rp(limit)}).</li>`;
+      });
+
+      dashAlert.innerHTML = `
+        <div style="background:${criticalFunds.length ? '#fef2f2' : '#fffbeb'}; border:1px solid ${criticalFunds.length ? '#fecaca' : '#fde68a'}; border-left:5px solid ${criticalFunds.length ? '#dc2626' : '#f59e0b'}; border-radius:8px; padding:14px 18px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:22px;">${criticalFunds.length ? '🚨' : '⚠️'}</span>
+              <h3 style="margin:0; font-size:14.5px; font-weight:700; color:${criticalFunds.length ? '#991b1b' : '#92400e'};">
+                ${criticalFunds.length ? 'PERINGATAN: KAS SEKOLAH MENGALAMI DEFISIT!' : 'PERINGATAN: SALDO KAS SEKOLAH MENIPIS'}
+              </h3>
+            </div>
+            <button class="btn small" id="btnAlertGotoBku" style="background:#fff; border-color:${criticalFunds.length ? '#f87171' : '#fcd34d'}; font-size:11.5px; font-weight:600; color:${criticalFunds.length ? '#991b1b' : '#92400e'};">
+              Buka Buku Kas Umum (BKU) &rarr;
+            </button>
+          </div>
+          <p style="margin:8px 0 6px 0; font-size:12.5px; color:${criticalFunds.length ? '#7f1d1d' : '#78350f'};">
+            Ditemukan saldo sumber dana yang memerlukan perhatian khusus (batas peringatan: <b>${rp(limit)}</b>):
+          </p>
+          <ul style="margin:0 0 4px 18px; padding:0; font-size:12.5px; color:${criticalFunds.length ? '#7f1d1d' : '#78350f'};">
+            ${itemsHtml}
+          </ul>
+        </div>
+      `;
+      const btnGo = document.getElementById("btnAlertGotoBku");
+      if(btnGo){
+        btnGo.onclick = () => switchView("bku");
+      }
+    } else {
+      dashAlert.style.display = "none";
+      dashAlert.innerHTML = "";
+    }
+  }
+
+  // Update BKU alert banner
+  const bkuAlertEl = document.getElementById("bkuCashAlert");
+  if(bkuAlertEl && typeof currentBkuKey !== "undefined" && SUMBER_META[currentBkuKey]){
+    const bkuSaldo = bkuTotals(currentBkuKey).saldoAkhir;
+    if(bkuSaldo < 0){
+      bkuAlertEl.style.display = "block";
+      bkuAlertEl.innerHTML = `<div style="background:#fef2f2; border:1px solid #fecaca; border-left:4px solid #dc2626; border-radius:6px; padding:10px 14px; font-size:12.5px; color:#991b1b; display:flex; align-items:center; gap:8px;">
+        <span style="font-size:18px;">🚨</span>
+        <div><b>Peringatan Defisit Kas:</b> Saldo kas <b>${escapeHtml(SUMBER_META[currentBkuKey].label)}</b> saat ini berada pada posisi minus <b>${rp(bkuSaldo)}</b>! Pengeluaran telah melampaui kas masuk.</div>
+      </div>`;
+    } else if(bkuSaldo <= limit){
+      bkuAlertEl.style.display = "block";
+      bkuAlertEl.innerHTML = `<div style="background:#fff7ed; border:1px solid #fed7aa; border-left:4px solid #ea580c; border-radius:6px; padding:10px 14px; font-size:12.5px; color:#9a3412; display:flex; align-items:center; gap:8px;">
+        <span style="font-size:18px;">⚠️</span>
+        <div><b>Peringatan Kas Menipis:</b> Saldo kas <b>${escapeHtml(SUMBER_META[currentBkuKey].label)}</b> tersisa <b>${rp(bkuSaldo)}</b> (di bawah batas minimum ${rp(limit)}). Segera lakukan pengisian kas atau tunda pengeluaran non-prioritas.</div>
+      </div>`;
+    } else {
+      bkuAlertEl.style.display = "none";
+      bkuAlertEl.innerHTML = "";
+    }
+  }
+}
+
+const cashBadge = document.getElementById("cashWarningBadge");
+if(cashBadge){
+  cashBadge.addEventListener("click", ()=>{
+    switchView("dashboard");
+    const dAlert = document.getElementById("dashboardCashAlert");
+    if(dAlert) dAlert.scrollIntoView({ behavior:"smooth" });
+  });
 }
 
 /* =========================================================================
@@ -3098,12 +3364,19 @@ document.getElementById("dfBtnSimpan").addEventListener("click", ()=>{
    memori selama sesi berjalan (mengikuti batasan platform: tidak boleh
    pakai localStorage/sessionStorage) — hilang begitu tab ditutup/reload. */
 let recentLogins = [];
+function restoreRecentLogins(){
+  try {
+    const raw = localStorage.getItem(RECENT_LOGINS_KEY);
+    if(raw) recentLogins = JSON.parse(raw);
+  } catch(e){}
+}
 function renderLoginGtkOptions(){
   const sel = document.getElementById("loginNama");
   sel.innerHTML = `<option value="">- pilih dari daftar -</option>` +
     state.gtk.map(g=>`<option value="${escapeHtml(g.nama)}">${escapeHtml(g.nama)} (${escapeHtml(g.jabatan)})</option>`).join("");
 }
 function renderLoginRecentChips(){
+  restoreRecentLogins();
   const wrap = document.getElementById("loginRecentWrap");
   const box = document.getElementById("loginRecentChips");
   if(!recentLogins.length){ wrap.style.display = "none"; return; }
@@ -3129,17 +3402,28 @@ function attemptLogin(name, role){
 function loginAs(name, role){
   currentUser = { name, role };
   rememberRecentLogin(name, role);
+  try {
+    localStorage.setItem(USER_SESSION_KEY, JSON.stringify(currentUser));
+  } catch(e){}
   hideLoginGate();
   document.getElementById("currentUserLabel").textContent = `${name} · ${role}`;
   renderAll();
+  restoreActiveView();
 }
 function rememberRecentLogin(name, role){
   recentLogins = recentLogins.filter(r=> !(r.name===name && r.role===role));
   recentLogins.unshift({ name, role });
   recentLogins = recentLogins.slice(0, 5);
+  try {
+    localStorage.setItem(RECENT_LOGINS_KEY, JSON.stringify(recentLogins));
+  } catch(e){}
 }
 function showLoginGate(){
   currentUser = { name:"", role:currentUser.role||"Admin" };
+  try {
+    localStorage.removeItem(USER_SESSION_KEY);
+  } catch(e){}
+  document.documentElement.classList.remove("user-logged-in");
   renderLoginGtkOptions();
   renderLoginRecentChips();
   document.getElementById("loginNama").value = "";
@@ -3148,8 +3432,25 @@ function showLoginGate(){
   document.getElementById("appShell").classList.add("hidden-until-login");
 }
 function hideLoginGate(){
+  document.documentElement.classList.add("user-logged-in");
   document.getElementById("loginGate").style.display = "none";
   document.getElementById("appShell").classList.remove("hidden-until-login");
+}
+function restoreUserSession(){
+  restoreRecentLogins();
+  let savedUser = null;
+  try {
+    const rawUser = localStorage.getItem(USER_SESSION_KEY);
+    if(rawUser) savedUser = JSON.parse(rawUser);
+  } catch(e){}
+  if(savedUser && savedUser.name){
+    currentUser = savedUser;
+    hideLoginGate();
+    const lbl = document.getElementById("currentUserLabel");
+    if(lbl) lbl.textContent = `${savedUser.name} · ${savedUser.role}`;
+  } else {
+    showLoginGate();
+  }
 }
 document.getElementById("btnLoginMasuk").addEventListener("click", ()=>{
   const selVal = document.getElementById("loginNama").value;
@@ -3605,7 +3906,13 @@ document.getElementById("pjBtnCicilSimpan").addEventListener("click", ()=>{
 /* =========================================================================
    PROGRAM KERJA (generik per sumber dana)
    ========================================================================= */
-let currentProgramKey = "bos";
+let currentProgramKey = (function(){
+  try {
+    const k = localStorage.getItem("keuanganSekolahProgramKey");
+    if(k && SUMBER_KEYS.includes(k)) return k;
+  } catch(e){}
+  return "bos";
+})();
 function findProgramById(id){
   for(const k of SUMBER_KEYS){ const f = state.program[k].find(p=>p.id===id); if(f) return { key:k, prog:f }; }
   return null;
@@ -3618,7 +3925,12 @@ function allApprovedPrograms(){
 function renderProgramTabs(){
   const wrap = document.getElementById("programTabs");
   wrap.innerHTML = SUMBER_KEYS.map(k=>`<button data-k="${k}" class="${k===currentProgramKey?'active '+SUMBER_META[k].cls:''}">${SUMBER_META[k].label}</button>`).join("");
-  wrap.querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ currentProgramKey = b.dataset.k; renderProgramTabs(); renderProgramTable(); }));
+  wrap.querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{
+    currentProgramKey = b.dataset.k;
+    try { localStorage.setItem("keuanganSekolahProgramKey", currentProgramKey); } catch(e){}
+    renderProgramTabs();
+    renderProgramTable();
+  }));
 }
 /* Panel status/toggle kunci Anggaran Awal — hanya tampil untuk Admin.
    Guru tetap melihat efeknya lewat tombol "+ Ajukan Program" yang otomatis
@@ -4169,9 +4481,20 @@ function renderStRiwayat(prog){
     const id = Number(btn.dataset.strhapus);
     const label = jenis==="st" ? "riwayat Serah Terima" : "riwayat Pengembalian Sisa Dana";
     if(!confirmWithAdminCode(`Hapus ${label} ini? Data yang dihapus tidak dapat dikembalikan, dan BKU otomatis terkait akan ikut disesuaikan.`)) return;
-    if(jenis==="st") prog.serahTerima = (prog.serahTerima||[]).filter(r=>r.id!==id);
-    else prog.pengembalianUangMuka = (prog.pengembalianUangMuka||[]).filter(r=>r.id!==id);
-    syncBkuUangMuka(prog.sumberDana);
+    const progKey = getProgramSumberKey(prog);
+    prog.sumberDana = progKey;
+    if(jenis==="st"){
+      prog.serahTerima = (prog.serahTerima||[]).filter(r=>r.id!==id);
+      if((prog.serahTerima||[]).length === 0 && (prog.realisasi||[]).length > 0){
+        if(confirm("Seluruh riwayat Serah Terima untuk program ini telah dihapus.\n\nApakah Anda juga ingin membatalkan/menghapus catatan Realisasi program ini agar data pembukuan bersih kembali?")){
+          prog.realisasi = [];
+          prog.realisasiBatal = [];
+        }
+      }
+    } else {
+      prog.pengembalianUangMuka = (prog.pengembalianUangMuka||[]).filter(r=>r.id!==id);
+    }
+    SUMBER_KEYS.forEach(k=> syncBkuUangMuka(k));
     renderStRingkasan(prog);
     renderStRiwayat(prog);
     renderAll();
@@ -4787,11 +5110,22 @@ document.getElementById("btnCetakRekapProgram").addEventListener("click", ()=>{ 
 /* =========================================================================
    BKU (generik per sumber dana)
    ========================================================================= */
-let currentBkuKey = "bos";
+let currentBkuKey = (function(){
+  try {
+    const k = localStorage.getItem("keuanganSekolahBkuKey");
+    if(k && SUMBER_KEYS.includes(k)) return k;
+  } catch(e){}
+  return "bos";
+})();
 function renderBkuTabs(){
   const wrap = document.getElementById("bkuTabs");
   wrap.innerHTML = SUMBER_KEYS.map(k=>`<button data-k="${k}" class="${k===currentBkuKey?'active '+SUMBER_META[k].cls:''}">${SUMBER_META[k].label}</button>`).join("");
-  wrap.querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ currentBkuKey = b.dataset.k; renderBkuTabs(); renderBkuTable(currentBkuKey); }));
+  wrap.querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{
+    currentBkuKey = b.dataset.k;
+    try { localStorage.setItem("keuanganSekolahBkuKey", currentBkuKey); } catch(e){}
+    renderBkuTabs();
+    renderBkuTable(currentBkuKey);
+  }));
 }
 function renderBkuTable(key){
   const table = document.getElementById("tblBku");
@@ -4809,13 +5143,17 @@ function renderBkuTable(key){
     cells.push(`<td class="num">${row.pengeluaran? rp(row.pengeluaran) : ""}</td>`);
     cells.push(`<td class="computed" data-role="saldo">${rp(row.saldo)}</td>`);
     let autoBadge = "";
-    if(row.autoRealisasiId) autoBadge = `<span class="badge-note" title="Baris ini dibuat &amp; diperbarui otomatis dari Update Realisasi — untuk mengubahnya, edit lewat menu Realisasi Program.">Otomatis dari Realisasi</span>`;
-    else if(row.autoSerahTerimaId) autoBadge = `<span class="badge-note" title="Baris ini dibuat &amp; diperbarui otomatis dari Serah Terima Dana (uang muka kegiatan) — untuk mengubahnya, edit lewat menu Serah Terima Dana.">Otomatis dari Serah Terima</span>`;
-    else if(row.autoPengembalianId) autoBadge = `<span class="badge-note" title="Baris ini dibuat &amp; diperbarui otomatis dari Pengembalian Sisa Uang Muka — untuk mengubahnya, edit lewat menu Serah Terima Dana.">Otomatis dari Pengembalian</span>`;
-    else if(row.autoPiutangId) autoBadge = `<span class="badge-note" title="Catatan otomatis — bukan transaksi kas riil (Penerimaan/Pengeluaran = 0). Muncul karena Realisasi melebihi Serah Terima (PJ menalangi dulu); akan otomatis hilang begitu ada Serah Terima Tambahan yang menutup kekurangannya.">Catatan Piutang PJ</span>`;
-    cells.push(autoBadge
-      ? `<td>${autoBadge}</td>`
-      : `<td><div class="row-actions"><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div></td>`);
+    if(row.autoRealisasiId) autoBadge = `<span class="badge-note" title="Baris ini dibuat dari Realisasi">Otomatis dari Realisasi</span>`;
+    else if(row.autoSerahTerimaId) autoBadge = `<span class="badge-note" title="Baris ini dibuat &amp; diperbarui otomatis dari Serah Terima Dana (uang muka kegiatan).">Otomatis dari Serah Terima</span>`;
+    else if(row.autoPengembalianId) autoBadge = `<span class="badge-note" title="Baris ini dibuat &amp; diperbarui otomatis dari Pengembalian Sisa Uang Muka.">Otomatis dari Pengembalian</span>`;
+    else if(row.autoPiutangId) autoBadge = `<span class="badge-note" title="Catatan otomatis — bukan transaksi kas riil (Penerimaan/Pengeluaran = 0).">Catatan Piutang PJ</span>`;
+    
+    const canDel = currentUser.role === "Admin";
+    if(autoBadge){
+      cells.push(`<td><div class="row-actions" style="align-items:center; gap:6px;">${autoBadge}${canDel ? `<button class="row-del" data-del="1" title="Hapus transaksi ini dari BKU &amp; data terkait">&times;</button>` : ""}</div></td>`);
+    } else {
+      cells.push(`<td><div class="row-actions"><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div></td>`);
+    }
     return `<tr data-id="${row.id}">${cells.join("")}</tr>`;
   }).join("") || `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">Belum ada transaksi</td></tr>`;
 
@@ -4826,12 +5164,33 @@ function renderBkuTable(key){
     const delBtn = tr.querySelector("[data-del]");
     if(delBtn) delBtn.addEventListener("click", ()=>{
       const row = state.bku[key].find(r=>r.id===id);
+      if(!row) return;
       if(!confirmDelete(`transaksi BKU "${row?.uraian || "(tanpa uraian)"}"`)) return;
-      state.bku[key] = state.bku[key].filter(r=>r.id!==id); renderBkuTable(key);
+
+      if(row.autoSerahTerimaId){
+        (state.program[key]||[]).forEach(p=>{
+          p.serahTerima = (p.serahTerima||[]).filter(st=> st.id !== row.autoSerahTerimaId);
+        });
+      }
+      if(row.autoRealisasiId){
+        (state.program[key]||[]).forEach(p=>{
+          p.realisasi = (p.realisasi||[]).filter(r=> r.id !== row.autoRealisasiId);
+        });
+      }
+      if(row.autoPengembalianId){
+        (state.program[key]||[]).forEach(p=>{
+          p.pengembalianUangMuka = (p.pengembalianUangMuka||[]).filter(km=> km.id !== row.autoPengembalianId);
+        });
+      }
+      state.bku[key] = state.bku[key].filter(r=>r.id!==id);
+      SUMBER_KEYS.forEach(k=> syncBkuUangMuka(k));
+      renderAll();
+      saveStateToLocalStorage();
     });
   });
 
   renderBkuFooter(key);
+  updateCashHealthAlerts();
 }
 function renderBkuFooter(key){
   const headColsLen = 8; // harus sesuai jumlah kolom headCols di renderBkuTable
@@ -4850,8 +5209,56 @@ function bkuFormUpdateJenisUi(){
   const jenis = document.querySelector('input[name="bkuFormJenis"]:checked').value;
   document.getElementById("bkuFormPengeluaranWrap").style.display = jenis==="pengeluaran" ? "" : "none";
   document.getElementById("bkuFormPenerimaanWrap").style.display = jenis==="penerimaan" ? "" : "none";
+  updateBkuFormWarning();
 }
 document.querySelectorAll('input[name="bkuFormJenis"]').forEach(r=> r.addEventListener("change", bkuFormUpdateJenisUi));
+
+function updateBkuFormWarning(){
+  const warnEl = document.getElementById("bkuFormWarning");
+  if(!warnEl) return;
+  const jenisEl = document.querySelector('input[name="bkuFormJenis"]:checked');
+  const jenis = jenisEl ? jenisEl.value : "penerimaan";
+  if(jenis !== "pengeluaran"){
+    warnEl.style.display = "none";
+    warnEl.innerHTML = "";
+    return;
+  }
+  const key = bkuFormKey;
+  if(!key){ warnEl.style.display = "none"; return; }
+
+  const currentSaldo = bkuTotals(key).saldoAkhir;
+  const editingRow = bkuFormEditingId ? (state.bku[key]||[]).find(r=>r.id===bkuFormEditingId) : null;
+  const prevExp = editingRow ? (Number(editingRow.pengeluaran)||0) : 0;
+  const newExp = parseRibuan(document.getElementById("bkuFormJumlahKeluar").value) || 0;
+  const projectedSaldo = currentSaldo + prevExp - newExp;
+  const limit = (Number(state.sekolah.batasKasMenipis) >= 0) ? Number(state.sekolah.batasKasMenipis) : 1000000;
+
+  if(newExp > 0){
+    if(projectedSaldo < 0){
+      warnEl.style.display = "block";
+      warnEl.style.background = "#fef2f2";
+      warnEl.style.border = "1px solid #fecaca";
+      warnEl.style.color = "#991b1b";
+      warnEl.innerHTML = `🚨 <b>Peringatan Defisit:</b> Saldo saat ini <b>${rp(currentSaldo)}</b>. Pengeluaran ini melebihi kas tersedia sebesar <b>${rp(Math.abs(projectedSaldo))}</b>!`;
+    } else if(projectedSaldo <= limit){
+      warnEl.style.display = "block";
+      warnEl.style.background = "#fff7ed";
+      warnEl.style.border = "1px solid #fed7aa";
+      warnEl.style.color = "#9a3412";
+      warnEl.innerHTML = `⚠️ <b>Perhatian Kas Menipis:</b> Saldo saat ini <b>${rp(currentSaldo)}</b>. Setelah transaksi ini, sisa kas menjadi <b>${rp(projectedSaldo)}</b> (di bawah batas minimum ${rp(limit)}).`;
+    } else {
+      warnEl.style.display = "block";
+      warnEl.style.background = "#f0fdf4";
+      warnEl.style.border = "1px solid #bbf7d0";
+      warnEl.style.color = "#166534";
+      warnEl.innerHTML = `✅ Estimasi sisa kas setelah transaksi: <b>${rp(projectedSaldo)}</b> (Aman)`;
+    }
+  } else {
+    warnEl.style.display = "none";
+    warnEl.innerHTML = "";
+  }
+}
+document.getElementById("bkuFormJumlahKeluar").addEventListener("input", updateBkuFormWarning);
 /* Cek "Kegiatan" yang diketik terhadap daftar Program yang SUDAH DISETUJUI
    pada sumber dana yang sama — supaya sebelum mencatat pengeluaran manual,
    bisa dicek dulu apakah pengeluaran itu sebenarnya sudah tercatat otomatis
@@ -4906,6 +5313,7 @@ function openBkuForm(key, id){
   document.getElementById("bkuFormJumlahMasuk").value = isNew ? "" : (jenis==="penerimaan" ? formatRibuan(row.penerimaan) : "");
 
   bkuFormUpdateJenisUi();
+  updateBkuFormWarning();
   wireCurrencyInputs(document.getElementById("modal-bku-form"));
   openModal("modal-bku-form");
 }
@@ -4948,6 +5356,7 @@ document.getElementById("bkuFormBtnSimpan").addEventListener("click", ()=>{
   }
   closeModal("modal-bku-form");
   renderBkuTable(key);
+  updateCashHealthAlerts();
   saveStateToLocalStorage();
 });
 document.getElementById("btnAddBku").addEventListener("click", ()=> openBkuForm(currentBkuKey, null));
@@ -5256,9 +5665,221 @@ function renderLpjKons(){
 }
 
 /* =========================================================================
-   DASHBOARD
+   DASHBOARD & TREN KEUANGAN
    ========================================================================= */
 let chartSumber = null;
+let chartTrendBulanan = null;
+let trendFilterSumber = "all";
+let trendFilterTahun = null;
+
+function renderDashboardTrend(){
+  const yearsSet = new Set();
+  const currentYear = new Date().getFullYear();
+  yearsSet.add(currentYear);
+  SUMBER_KEYS.forEach(k=>{
+    (state.bku[k]||[]).forEach(row=>{
+      if(row.tanggal && row.tanggal.length >= 4){
+        const y = parseInt(row.tanggal.substring(0, 4), 10);
+        if(!isNaN(y) && y >= 2000 && y <= 2100) yearsSet.add(y);
+      }
+    });
+  });
+  const years = Array.from(yearsSet).sort((a,b)=> b - a);
+
+  if(!trendFilterTahun || !years.includes(Number(trendFilterTahun))){
+    trendFilterTahun = years[0];
+  }
+
+  const yearSel = document.getElementById("trendFilterTahun");
+  if(yearSel){
+    yearSel.innerHTML = years.map(y=> `<option value="${y}" ${y===trendFilterTahun?'selected':''}>Tahun ${y}</option>`).join("");
+    yearSel.value = trendFilterTahun;
+  }
+  const sumberSel = document.getElementById("trendFilterSumber");
+  if(sumberSel && trendFilterSumber){
+    sumberSel.value = trendFilterSumber;
+  }
+
+  const selYear = Number(trendFilterTahun);
+  const selSumber = trendFilterSumber || "all";
+
+  const monthPenerimaan = new Array(12).fill(0);
+  const monthPengeluaran = new Array(12).fill(0);
+  const monthNet = new Array(12).fill(0);
+
+  const keys = (selSumber === "all") ? SUMBER_KEYS : [selSumber];
+  keys.forEach(k=>{
+    (state.bku[k]||[]).forEach(row=>{
+      if(!row.tanggal) return;
+      const parts = row.tanggal.split("-");
+      if(parts.length >= 2){
+        const yr = parseInt(parts[0], 10);
+        const mo = parseInt(parts[1], 10) - 1;
+        if(yr === selYear && mo >= 0 && mo < 12){
+          monthPenerimaan[mo] += Number(row.penerimaan) || 0;
+          monthPengeluaran[mo] += Number(row.pengeluaran) || 0;
+        }
+      }
+    });
+  });
+
+  let totalPenTahun = 0;
+  let totalPengTahun = 0;
+  for(let i=0; i<12; i++){
+    monthNet[i] = monthPenerimaan[i] - monthPengeluaran[i];
+    totalPenTahun += monthPenerimaan[i];
+    totalPengTahun += monthPengeluaran[i];
+  }
+  const netTahun = totalPenTahun - totalPengTahun;
+
+  const kpiGrid = document.getElementById("trendKpiGrid");
+  if(kpiGrid){
+    const isSurplus = netTahun >= 0;
+    const statusText = (totalPenTahun === 0 && totalPengTahun === 0)
+      ? "Belum ada transaksi di tahun ini"
+      : isSurplus
+        ? "🟢 Arus Kas Sehat (Surplus: penerimaan menutup pengeluaran)"
+        : "⚠️ Perlu Perhatian (Defisit: pengeluaran melampaui penerimaan)";
+    kpiGrid.innerHTML = `
+      <div class="stat-card" style="padding:10px 14px;">
+        <div class="stat-label">Total Penerimaan (${selYear})</div>
+        <div class="stat-value green" style="font-size:18px;">${rp(totalPenTahun)}</div>
+        <div class="stat-sub">Rata-rata: ${rp(Math.round(totalPenTahun/12))}/bln</div>
+      </div>
+      <div class="stat-card" style="padding:10px 14px;">
+        <div class="stat-label">Total Pengeluaran (${selYear})</div>
+        <div class="stat-value orange" style="font-size:18px;">${rp(totalPengTahun)}</div>
+        <div class="stat-sub">Rata-rata: ${rp(Math.round(totalPengTahun/12))}/bln</div>
+      </div>
+      <div class="stat-card" style="padding:10px 14px;">
+        <div class="stat-label">Arus Kas Bersih (Net Cash Flow)</div>
+        <div class="stat-value ${isSurplus ? 'green' : 'red'}" style="font-size:18px;">${isSurplus ? '+'+rp(netTahun) : '-'+rp(Math.abs(netTahun))}</div>
+        <div class="stat-sub">${isSurplus ? 'Surplus Kas Tahun Ini' : 'Defisit Kas Tahun Ini'}</div>
+      </div>
+      <div class="stat-card" style="padding:10px 14px;">
+        <div class="stat-label">Kondisi Kesehatan Kas</div>
+        <div style="font-weight:600; font-size:12px; margin-top:4px; color:${isSurplus ? 'var(--success, #059669)' : 'var(--critical, #dc2626)'};">${statusText}</div>
+        <div class="stat-sub">${selSumber==='all' ? 'Gabungan semua sumber dana' : SUMBER_META[selSumber].label}</div>
+      </div>
+    `;
+  }
+
+  const canvas = document.getElementById("chartTrendBulanan");
+  if(!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if(chartTrendBulanan) chartTrendBulanan.destroy();
+
+  chartTrendBulanan = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: BULAN_NAMA_ID,
+      datasets: [
+        {
+          label: "Penerimaan (Kas Masuk)",
+          data: monthPenerimaan,
+          borderColor: "#10b981",
+          backgroundColor: "rgba(16, 185, 129, 0.12)",
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2.5,
+          pointBackgroundColor: "#10b981",
+          pointBorderColor: "#ffffff",
+          pointBorderWidth: 1.5,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: "Pengeluaran (Kas Keluar)",
+          data: monthPengeluaran,
+          borderColor: "#ef4444",
+          backgroundColor: "rgba(239, 68, 68, 0.08)",
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2.5,
+          pointBackgroundColor: "#ef4444",
+          pointBorderColor: "#ffffff",
+          pointBorderWidth: 1.5,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: "Arus Kas Bersih (Surplus / Defisit)",
+          data: monthNet,
+          borderColor: "#3b82f6",
+          borderDash: [5, 4],
+          fill: false,
+          tension: 0.35,
+          borderWidth: 2,
+          pointBackgroundColor: "#3b82f6",
+          pointBorderColor: "#ffffff",
+          pointBorderWidth: 1.5,
+          pointRadius: 3.5,
+          pointHoverRadius: 5.5
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index",
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          position: "top",
+          align: "start",
+          labels: {
+            color: "#52514e",
+            font: { size: 12, weight: "600" },
+            boxWidth: 14,
+            boxHeight: 14,
+            usePointStyle: true
+          }
+        },
+        tooltip: {
+          backgroundColor: "rgba(24, 24, 27, 0.95)",
+          titleColor: "#ffffff",
+          bodyColor: "#ffffff",
+          padding: 12,
+          boxPadding: 6,
+          usePointStyle: true,
+          callbacks: {
+            label: (c) => ` ${c.dataset.label}: ${rp(c.parsed.y)}`,
+            afterBody: (items) => {
+              if(!items.length) return "";
+              const idx = items[0].dataIndex;
+              const pen = monthPenerimaan[idx];
+              const peng = monthPengeluaran[idx];
+              const net = pen - peng;
+              const status = net >= 0 ? `Surplus (+${rp(net)})` : `Defisit (-${rp(Math.abs(net))})`;
+              return `\nArus Kas Bersih: ${status}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: "#898781", font: { size: 11 } }
+        },
+        y: {
+          grid: { color: "#e5e7eb" },
+          ticks: {
+            color: "#898781",
+            font: { size: 11 },
+            callback: (v) => {
+              if(Math.abs(v) >= 1e6) return "Rp " + (v/1e6).toLocaleString("id-ID") + " jt";
+              if(Math.abs(v) >= 1e3) return "Rp " + (v/1e3).toLocaleString("id-ID") + " rb";
+              return "Rp " + v.toLocaleString("id-ID");
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
 function renderDashboard(){
   const rs = realisasiPerSumberDana();
   const totalAnggaran = rs.reduce((s,r)=>s+r.anggaran,0);
@@ -5275,12 +5896,26 @@ function renderDashboard(){
   document.getElementById("statPct").textContent = pct(pctReal) + " terealisasi";
   document.getElementById("statSaldo").textContent = rp(totalSaldo);
 
-  document.getElementById("statSumberGrid").innerHTML = rs.map(r=>`
-    <div class="stat-card">
-      <div class="stat-label"><span class="badge-sumber ${SUMBER_META[r.key].cls}">${r.label}</span></div>
-      <div class="stat-value" style="color:var(--series-${r.key==='bos'?'1':r.key==='spp'?'3':r.key==='pangkal'?'2':'7'})">${rp(bkuTotals(r.key).saldoAkhir)}</div>
-      <div class="stat-sub">Anggaran ${rp(r.anggaran)} · Realisasi ${pct(r.pct)}</div>
-    </div>`).join("");
+  const limitKas = (Number(state.sekolah.batasKasMenipis) >= 0) ? Number(state.sekolah.batasKasMenipis) : 1000000;
+  document.getElementById("statSumberGrid").innerHTML = rs.map(r=>{
+    const sAkhir = bkuTotals(r.key).saldoAkhir;
+    const isDefisit = sAkhir < 0;
+    const isMenipis = sAkhir >= 0 && sAkhir <= limitKas;
+    const warnBadge = isDefisit
+      ? `<span class="pill danger" style="font-size:9.5px; padding:2px 6px; margin-left:6px;">🚨 Defisit</span>`
+      : isMenipis
+        ? `<span class="pill danger" style="font-size:9.5px; padding:2px 6px; margin-left:6px; background:#fff7ed; color:#c2410c; border-color:#fdba74;">⚠️ Menipis</span>`
+        : "";
+    return `
+      <div class="stat-card">
+        <div class="stat-label"><span class="badge-sumber ${SUMBER_META[r.key].cls}">${r.label}</span>${warnBadge}</div>
+        <div class="stat-value" style="color:var(--series-${r.key==='bos'?'1':r.key==='spp'?'3':r.key==='pangkal'?'2':'7'})">${rp(sAkhir)}</div>
+        <div class="stat-sub">Anggaran ${rp(r.anggaran)} · Realisasi ${pct(r.pct)}</div>
+      </div>`;
+  }).join("");
+
+  updateCashHealthAlerts();
+  renderDashboardTrend();
 
   const ctx = document.getElementById("chartSumber").getContext("2d");
   if(chartSumber) chartSumber.destroy();
@@ -5311,11 +5946,31 @@ function renderDashboard(){
     <div class="stat-card"><div class="stat-label">Total Penerimaan Siswa</div><div class="stat-value green">${rp(state.sppTx.reduce((s,t)=>s+(Number(t.jumlah)||0),0) + state.itemTx.reduce((s,t)=>s+(Number(t.jumlah)||0),0))}</div><div class="stat-sub">SPP + Uang Pangkal + Item Lainnya</div></div>`;
 }
 
+const filterSumberEl = document.getElementById("trendFilterSumber");
+if(filterSumberEl){
+  filterSumberEl.addEventListener("change", (e)=>{
+    trendFilterSumber = e.target.value;
+    renderDashboardTrend();
+  });
+}
+const filterTahunEl = document.getElementById("trendFilterTahun");
+if(filterTahunEl){
+  filterTahunEl.addEventListener("change", (e)=>{
+    trendFilterTahun = Number(e.target.value);
+    renderDashboardTrend();
+  });
+}
+
 /* =========================================================================
    PRINT PAGES
    ========================================================================= */
 function kopSurat(){
   const s = state.sekolah;
+  if(s.useKopGambar && s.kopGambar){
+    return `<div class="kop-image-wrap">
+      <img src="${s.kopGambar}" alt="Kop Surat Resmi" />
+    </div>`;
+  }
   return `<div class="kop">
     <div class="l1">PEMERINTAH ${escapeHtml((s.kabkota||"KABUPATEN/KOTA").toUpperCase())}</div>
     <div class="l1">DINAS PENDIDIKAN</div>
@@ -6542,8 +7197,10 @@ function loadSampleData(){
       Tombol Tarik/Kirim manual yang sudah ada tetap berfungsi seperti biasa.
    ========================================================================= */
 const AUTOSAVE_KEY = "keuanganSekolahAutosaveV1";
-let currentAuthToken = null;
-let currentAuthUser = null;
+window.currentAuthToken = window.currentAuthToken || null;
+window.currentAuthUser = window.currentAuthUser || null;
+var currentAuthToken = window.currentAuthToken;
+var currentAuthUser = window.currentAuthUser;
 let cloudSyncInFlight = false;
 
 async function syncStateToCloudDatabase() {
@@ -6667,6 +7324,7 @@ function startAutoSync(){
    ========================================================================= */
 function renderAll(){
   renderSekolahForm();
+  renderKopSection();
   renderGsheetSection();
   refreshHeader();
   renderSiswaTable();
@@ -6684,10 +7342,13 @@ function renderAll(){
   renderLpjBos();
   renderLpjKons();
   renderDashboard();
+  updateCashHealthAlerts();
   renderPrint();
 }
 restoreAutosavedStateIfAny();
+restoreUserSession();
 renderAll();
+restoreActiveView();
 startAutoSync();
 /* Pasang format pemisah ribuan ke semua input nominal statis yang sudah ada
    di HTML sejak awal (yang dibuat dinamis lewat JS punya pemanggilan
@@ -6713,9 +7374,11 @@ async function initClientAuth() {
     if (btn) {
       btn.addEventListener('click', async () => {
         if (!auth) return;
-        if (currentAuthUser) {
+        if (window.currentAuthUser) {
           if (confirm("Keluar dari akun Google?")) {
             await signOut(auth);
+            window.currentAuthToken = null;
+            window.currentAuthUser = null;
             currentAuthToken = null;
             currentAuthUser = null;
             if (label) label.textContent = "Masuk Google";
@@ -6726,8 +7389,10 @@ async function initClientAuth() {
             btn.disabled = true;
             if (label) label.textContent = "Menghubungkan...";
             const cred = await signInWithPopup(auth, provider);
+            window.currentAuthUser = cred.user;
+            window.currentAuthToken = await cred.user.getIdToken();
             currentAuthUser = cred.user;
-            currentAuthToken = await cred.user.getIdToken();
+            currentAuthToken = window.currentAuthToken;
           } catch(err) {
             console.error("Login error:", err);
             alert("Gagal masuk dengan Google: " + (err.message || err));
@@ -6739,9 +7404,11 @@ async function initClientAuth() {
     }
 
     onAuthStateChanged(auth, async (user) => {
+      window.currentAuthUser = user;
       currentAuthUser = user;
       if (user) {
-        currentAuthToken = await user.getIdToken();
+        window.currentAuthToken = await user.getIdToken();
+        currentAuthToken = window.currentAuthToken;
         const displayName = user.displayName || user.email || "Akun Google";
         if (label) label.textContent = displayName;
         if (btn) btn.title = "Masuk sebagai: " + (user.email || displayName) + " (Klik untuk keluar)";
@@ -6750,7 +7417,7 @@ async function initClientAuth() {
           await fetch('/api/auth/sync-user', {
             method: 'POST',
             headers: {
-              'Authorization': 'Bearer ' + currentAuthToken
+              'Authorization': 'Bearer ' + window.currentAuthToken
             }
           });
           const cloudState = await loadStateFromCloudDatabase();
@@ -6765,7 +7432,10 @@ async function initClientAuth() {
           console.warn("Cloud initial sync error:", e);
         }
       } else {
+        window.currentAuthToken = null;
+        window.currentAuthUser = null;
         currentAuthToken = null;
+        currentAuthUser = null;
         if (label) label.textContent = "Masuk Google";
         if (btn) btn.title = "Masuk dengan akun Google untuk sinkronisasi database";
       }
