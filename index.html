@@ -811,6 +811,7 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
               <button class="btn small" id="btnToggleAnggaranAwalLock" type="button"></button>
             </div>
           </div>
+          <div id="programUserNotice" style="display:none; margin-bottom:12px; background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; padding:10px 14px; border-radius:6px; font-size:12.5px;"></div>
           <div class="subtabs" id="programTabs"></div>
           <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:12px;">
             <div class="field" style="max-width:260px;" id="programStatusFilterWrap">
@@ -1286,7 +1287,7 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
       <h3 style="font-size:12.5px;margin:0 0 8px;">Riwayat Serah Terima &amp; Pengembalian</h3>
       <div id="stRiwayat"></div>
     </div>
-    <div style="max-width:420px;">
+    <div id="stFormDisburseWrap" style="max-width:420px;">
       <h3 style="font-size:12.5px;margin:0 0 8px;">Catat Serah Terima Baru</h3>
       <div class="field" style="margin-bottom:10px;">
         <label><input type="radio" name="stMode" value="total" checked> Total Keseluruhan Program</label><br>
@@ -1304,6 +1305,7 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
       <button class="btn primary" type="button" id="stBtnCetak">Catat &amp; Cetak Serah Terima</button>
       <p class="desc" style="margin-top:10px;">Catatan: pengembalian sisa dana uang muka yang tidak habis terpakai sekarang dicatat lewat menu <b>Realisasi</b> (tombol Update Realisasi), bukan di sini lagi.</p>
     </div>
+    <div id="stGuruNote" style="display:none; color:var(--text-secondary); font-size:12px; margin-top:8px; padding:10px; background:#f9fafb; border-radius:6px; border:1px solid var(--border);">ℹ️ Penyerahan uang muka kegiatan baru dicatat oleh Bendahara/Admin Sekolah. Anda dapat melihat riwayat dan mencetak ulang BAST di atas.</div>
     <div class="modal-actions">
       <button class="btn" type="button" data-close="modal-serahterima">Tutup</button>
     </div>
@@ -2359,7 +2361,13 @@ function renderSekolahForm(){
       }
     });
   });
-  document.getElementById("sekolahGuruNote").style.display = isAdmin ? "none" : "";
+  const noteEl = document.getElementById("sekolahGuruNote");
+  if(noteEl){
+    noteEl.style.display = isAdmin ? "none" : "";
+    if(!isAdmin){
+      noteEl.innerHTML = `🔒 <b>Akses Terbatas:</b> Anda masuk sebagai <b>${escapeHtml(currentUser.name)} (${escapeHtml(currentUser.role)})</b>. Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk mengubah identitas sekolah, saldo awal kas, batas kas menipis, dan kop surat. Seluruh field di bawah terkunci.`;
+    }
+  }
   const gsheetInp = document.getElementById("gsheetUrl");
   if(gsheetInp) gsheetInp.disabled = !isAdmin;
 
@@ -2378,6 +2386,7 @@ function renderKopSection(){
   const previewWrap = document.getElementById("kopGambarPreviewWrap");
   const previewImg = document.getElementById("kopGambarPreview");
   const btnHapus = document.getElementById("btnHapusKopGambar");
+  const uploadBox = document.getElementById("kopGambarUploadBox");
   const isAdmin = currentUser.role === "Admin";
 
   if(chk){
@@ -2393,9 +2402,24 @@ function renderKopSection(){
     if(previewImg) previewImg.src = "";
     if(btnHapus) btnHapus.style.display = "none";
   }
+  const uploadBtn = uploadBox ? uploadBox.querySelector("label.btn") : null;
+  if(uploadBtn) uploadBtn.style.display = isAdmin ? "inline-flex" : "none";
+  let noteEl = document.getElementById("kopGuruNote");
+  if(!noteEl && uploadBox){
+    noteEl = document.createElement("div");
+    noteEl.id = "kopGuruNote";
+    noteEl.style.cssText = "display:none; color:var(--text-secondary); font-size:12px; margin-top:8px;";
+    noteEl.textContent = "Pengunggahan dan penggantian gambar kop surat hanya dapat diubah oleh Admin.";
+    uploadBox.appendChild(noteEl);
+  }
+  if(noteEl) noteEl.style.display = isAdmin ? "none" : "block";
 }
 
 function handleKopGambarUpload(file){
+  if(currentUser.role !== "Admin"){
+    alert("Akses Ditolak: Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk mengunggah atau mengganti gambar kop surat.");
+    return;
+  }
   if(!file) return;
   if(!file.type.startsWith("image/")){
     alert("Mohon pilih file gambar (PNG, JPG, atau WebP).");
@@ -3182,6 +3206,10 @@ function applyPulledData(data){
 }
 
 async function pullFromGoogleSheets(){
+  if(currentUser.role !== "Admin"){
+    alert("Akses Ditolak: Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk menarik data dari Google Sheets.");
+    return;
+  }
   const url = requireGsheetUrl("Tarik dari Google Sheets");
   if(!url) return;
   if(!confirm("Menarik data akan MENIMPA seluruh data yang sedang terbuka di aplikasi ini dengan data dari Google Sheets. Pastikan data penting sudah dikirim/disimpan terlebih dahulu. Lanjutkan?")) return;
@@ -3225,10 +3253,15 @@ function siswaMatchesSearch(s, q){
   return hay.includes(q);
 }
 function renderSiswaTable(){
+  const isAdmin = currentUser.role === "Admin";
   const tbody = document.querySelector("#tblSiswa tbody");
   const q = siswaSearchQuery.trim().toLowerCase();
   const filtered = state.siswa.filter(s=> siswaMatchesSearch(s, q));
-  tbody.innerHTML = filtered.map((s,i)=>`
+  tbody.innerHTML = filtered.map((s,i)=>{
+    const actionCell = isAdmin
+      ? `<div class="row-actions"><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div>`
+      : `<span style="color:var(--text-muted);font-size:11px;">Hanya Lihat</span>`;
+    return `
     <tr data-id="${s.id}">
       <td style="text-align:center">${i+1}</td>
       <td>${escapeHtml(s.nis)}</td>
@@ -3238,20 +3271,28 @@ function renderSiswaTable(){
       <td class="num">${rp(s.tarifPangkal)}</td>
       <td style="text-align:center">${escapeHtml(s.status)}</td>
       <td>${escapeHtml(s.waOrtu||"-")}</td>
-      <td><div class="row-actions"><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div></td>
-    </tr>`).join("") || `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:14px;">${q? "Tidak ada siswa yang cocok dengan pencarian." : "Belum ada data siswa"}</td></tr>`;
-  tbody.querySelectorAll("tr[data-id]").forEach(tr=>{
-    const id = Number(tr.dataset.id);
-    tr.querySelector("[data-edit]").addEventListener("click", ()=> openSiswaForm(id));
-    tr.querySelector("[data-del]").addEventListener("click", ()=>{
-      const row = state.siswa.find(s=>s.id===id);
-      if(!confirmDelete(`siswa "${row?.nama || "(tanpa nama)"}"`)) return;
-      state.siswa = state.siswa.filter(s=>s.id!==id); renderSiswaTable();
+      <td>${actionCell}</td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:14px;">${q? "Tidak ada siswa yang cocok dengan pencarian." : "Belum ada data siswa"}</td></tr>`;
+  if(isAdmin){
+    tbody.querySelectorAll("tr[data-id]").forEach(tr=>{
+      const id = Number(tr.dataset.id);
+      const btnEdit = tr.querySelector("[data-edit]");
+      if(btnEdit) btnEdit.addEventListener("click", ()=> openSiswaForm(id));
+      const btnDel = tr.querySelector("[data-del]");
+      if(btnDel) btnDel.addEventListener("click", ()=>{
+        const row = state.siswa.find(s=>s.id===id);
+        if(!confirmDelete(`siswa "${row?.nama || "(tanpa nama)"}"`)) return;
+        state.siswa = state.siswa.filter(s=>s.id!==id); renderSiswaTable();
+      });
     });
-  });
+  }
   document.getElementById("siswaCount").textContent = state.siswa.length;
+  const addSiswaBtn = document.getElementById("btnAddSiswa");
+  if(addSiswaBtn) addSiswaBtn.style.display = isAdmin ? "" : "none";
 }
 function openSiswaForm(id){
+  if(currentUser.role !== "Admin"){ alert("Hanya Admin/Kepala Sekolah yang dapat menambah atau mengedit data siswa."); return; }
   const isNew = id==null;
   const row = isNew ? newSiswaRow() : state.siswa.find(s=>s.id===id);
   if(!row) return;
@@ -3399,6 +3440,67 @@ function attemptLogin(name, role){
   if(role === "Admin") requestAdminAccess(name);
   else loginAs(name, role);
 }
+function updateRoleUI(){
+  const isAdmin = currentUser.role === "Admin";
+
+  // 1. Tombol Topbar: Kosongkan Semua & Muat Contoh Data (Hanya Admin)
+  const btnReset = document.getElementById("btnReset");
+  const btnLoadSample = document.getElementById("btnLoadSample");
+  if(btnReset){
+    btnReset.style.display = (isAdmin && !window.__LOCKED_GSHEET_URL__) ? "" : "none";
+  }
+  if(btnLoadSample){
+    btnLoadSample.style.display = (isAdmin && !window.__LOCKED_GSHEET_URL__) ? "" : "none";
+  }
+
+  // 2. Sidebar Menu Khusus Admin (Buka Cadangan JSON, Kirim/Tarik Google Sheets)
+  const btnImportTrigger = document.getElementById("btnImportTrigger");
+  if(btnImportTrigger && btnImportTrigger.parentElement){
+    btnImportTrigger.parentElement.style.display = isAdmin ? "" : "none";
+  }
+  const btnPullSheetsQuick = document.getElementById("btnPullSheetsQuick");
+  if(btnPullSheetsQuick && btnPullSheetsQuick.parentElement){
+    btnPullSheetsQuick.parentElement.style.display = isAdmin ? "" : "none";
+  }
+  const btnPushSheetsQuick = document.getElementById("btnPushSheetsQuick");
+  if(btnPushSheetsQuick && btnPushSheetsQuick.parentElement){
+    btnPushSheetsQuick.parentElement.style.display = isAdmin ? "" : "none";
+  }
+
+  // 3. Label Akun & Peran di Topbar
+  const lbl = document.getElementById("currentUserLabel");
+  if(lbl){
+    if(currentUser.name){
+      lbl.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;"><span class="pill ${isAdmin ? 'ok' : 'info'}" style="font-size:11px;padding:2px 8px;">${escapeHtml(currentUser.role||"Pengguna")}</span> <b style="color:var(--text-primary);">${escapeHtml(currentUser.name)}</b></span>`;
+    } else {
+      lbl.textContent = "";
+    }
+  }
+
+  // 4. Tombol Master Data & Transaksi Keuangan
+  const btnAddSiswa = document.getElementById("btnAddSiswa");
+  if(btnAddSiswa) btnAddSiswa.style.display = isAdmin ? "" : "none";
+
+  const btnAddGtk = document.getElementById("btnAddGtk");
+  if(btnAddGtk) btnAddGtk.style.display = isAdmin ? "" : "none";
+
+  const btnAddBku = document.getElementById("btnAddBku");
+  if(btnAddBku) btnAddBku.style.display = isAdmin ? "" : "none";
+
+  const btnAddSppTx = document.getElementById("btnAddSppTx");
+  if(btnAddSppTx) btnAddSppTx.style.display = isAdmin ? "" : "none";
+  const btnAddSppTxManual = document.getElementById("btnAddSppTxManual");
+  if(btnAddSppTxManual) btnAddSppTxManual.style.display = isAdmin ? "" : "none";
+
+  const btnAddItemTx = document.getElementById("btnAddItemTx");
+  if(btnAddItemTx) btnAddItemTx.style.display = isAdmin ? "" : "none";
+
+  const btnPushSheets = document.getElementById("btnPushSheets");
+  if(btnPushSheets) btnPushSheets.style.display = isAdmin ? "" : "none";
+  const btnPullSheets = document.getElementById("btnPullSheets");
+  if(btnPullSheets) btnPullSheets.style.display = isAdmin ? "" : "none";
+}
+
 function loginAs(name, role){
   currentUser = { name, role };
   rememberRecentLogin(name, role);
@@ -3406,7 +3508,7 @@ function loginAs(name, role){
     localStorage.setItem(USER_SESSION_KEY, JSON.stringify(currentUser));
   } catch(e){}
   hideLoginGate();
-  document.getElementById("currentUserLabel").textContent = `${name} · ${role}`;
+  updateRoleUI();
   renderAll();
   restoreActiveView();
 }
@@ -3446,8 +3548,7 @@ function restoreUserSession(){
   if(savedUser && savedUser.name){
     currentUser = savedUser;
     hideLoginGate();
-    const lbl = document.getElementById("currentUserLabel");
-    if(lbl) lbl.textContent = `${savedUser.name} · ${savedUser.role}`;
+    updateRoleUI();
   } else {
     showLoginGate();
   }
@@ -3615,26 +3716,39 @@ function confirmWithAdminCode(pesan){
    ========================================================================= */
 function renderGtkTable(){
   const tbody = document.querySelector("#tblGtk tbody");
-  tbody.innerHTML = state.gtk.map((g,i)=>`
+  const isAdmin = currentUser.role === "Admin";
+  tbody.innerHTML = state.gtk.map((g,i)=>{
+    const actionCell = isAdmin
+      ? `<div class="row-actions"><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div>`
+      : `<span style="color:var(--text-muted);font-size:11px;">Hanya Lihat</span>`;
+    return `
     <tr data-id="${g.id}">
       <td style="text-align:center">${i+1}</td>
       <td>${escapeHtml(g.nama)}</td>
       <td>${escapeHtml(g.nip)}</td>
       <td>${escapeHtml(g.jabatan)}</td>
-      <td><div class="row-actions"><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div></td>
-    </tr>`).join("") || `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:14px;">Belum ada data GTK</td></tr>`;
-  tbody.querySelectorAll("tr[data-id]").forEach(tr=>{
-    const id = Number(tr.dataset.id);
-    tr.querySelector("[data-edit]").addEventListener("click", ()=> openGtkForm(id));
-    tr.querySelector("[data-del]").addEventListener("click", ()=>{
-      const row = state.gtk.find(g=>g.id===id);
-      if(!confirmDelete(`data GTK "${row?.nama || "(tanpa nama)"}"`)) return;
-      state.gtk = state.gtk.filter(g=>g.id!==id); renderGtkTable();
+      <td>${actionCell}</td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:14px;">Belum ada data GTK</td></tr>`;
+  if(isAdmin){
+    tbody.querySelectorAll("tr[data-id]").forEach(tr=>{
+      const id = Number(tr.dataset.id);
+      const btnEdit = tr.querySelector("[data-edit]");
+      if(btnEdit) btnEdit.addEventListener("click", ()=> openGtkForm(id));
+      const btnDel = tr.querySelector("[data-del]");
+      if(btnDel) btnDel.addEventListener("click", ()=>{
+        const row = state.gtk.find(g=>g.id===id);
+        if(!confirmDelete(`data GTK "${row?.nama || "(tanpa nama)"}"`)) return;
+        state.gtk = state.gtk.filter(g=>g.id!==id); renderGtkTable();
+      });
     });
-  });
+  }
   document.getElementById("gtkCount").textContent = state.gtk.length;
+  const addGtkBtn = document.getElementById("btnAddGtk");
+  if(addGtkBtn) addGtkBtn.style.display = isAdmin ? "" : "none";
 }
 function openGtkForm(id){
+  if(currentUser.role !== "Admin"){ alert("Hanya Admin/Kepala Sekolah yang dapat menambah atau mengedit data GTK."); return; }
   const isNew = id==null;
   const row = isNew ? newGtkRow() : state.gtk.find(g=>g.id===id);
   if(!row) return;
@@ -3963,13 +4077,22 @@ function renderProgramTable(){
   const isAdmin = currentUser.role === "Admin";
   document.getElementById("programStatusFilterWrap").style.display = isAdmin ? "" : "none";
   renderProgramLockPanel();
+  const noticeEl = document.getElementById("programUserNotice");
+  if(noticeEl){
+    if(!isAdmin){
+      noticeEl.style.display = "";
+      noticeEl.innerHTML = `👤 <b>Akses Pengguna (${escapeHtml(currentUser.role)}):</b> Anda masuk sebagai <b>${escapeHtml(currentUser.name)}</b>. Menampilkan program kerja terkait Anda (diajukan oleh Anda atau di mana Anda ditunjuk sebagai PJ). Anda dapat mengajukan program kerja baru, mengedit draf/revisi program Anda, serta mengelola rincian anggaran.`;
+    } else {
+      noticeEl.style.display = "none";
+    }
+  }
   const addBtn = document.getElementById("btnAddProgram");
   const locked = !!state.sekolah.anggaranAwalTerkunci;
   addBtn.disabled = locked;
   addBtn.title = locked ? "Anggaran Awal sudah dikunci — tidak bisa mengajukan Program Kerja baru." : "";
-  let rows = state.program[currentProgramKey];
+  let rows = state.program[currentProgramKey] || [];
   if(!isAdmin){
-    rows = rows.filter(p=>p.namaPengaju===currentUser.name);
+    rows = rows.filter(p=> p.namaPengaju===currentUser.name || p.pj===currentUser.name);
   } else {
     const filterVal = document.getElementById("programStatusFilter").value;
     if(filterVal) rows = rows.filter(p=>p.status===filterVal);
@@ -3978,8 +4101,8 @@ function renderProgramTable(){
   tbody.innerHTML = rows.map((p,i)=>{
     const statusCls = p.status===PROGRAM_STATUS.DISETUJUI?"ok":p.status===PROGRAM_STATUS.MENUNGGU?"na":p.status===PROGRAM_STATUS.PERBAIKAN?"partial":"bad";
     const tglLabel = (p.tanggal||[]).map(t=>t?formatTgl(t):"-").join(", ");
-    const canManageAnggaran = isAdmin || p.namaPengaju===currentUser.name;
-    const canEditProgram = !isAdmin && p.namaPengaju===currentUser.name && (p.status===PROGRAM_STATUS.MENUNGGU || p.status===PROGRAM_STATUS.PERBAIKAN);
+    const canManageAnggaran = isAdmin || p.namaPengaju===currentUser.name || p.pj===currentUser.name;
+    const canEditProgram = (isAdmin || p.namaPengaju===currentUser.name) && (p.status===PROGRAM_STATUS.MENUNGGU || p.status===PROGRAM_STATUS.PERBAIKAN);
     const btns = [];
     if(canManageAnggaran) btns.push(`<button class="btn small" data-anggaran="${p.id}" type="button">Kelola Anggaran</button>`);
     if(canEditProgram) btns.push(`<button class="btn small" data-editprog="${p.id}" type="button">Edit Program</button>`);
@@ -3993,7 +4116,7 @@ function renderProgramTable(){
       <td><span class="pill ${statusCls}">${escapeHtml(p.status)}</span></td>
       <td>${btns.join(" ")}</td>
     </tr>`;
-  }).join("") || `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">Belum ada program</td></tr>`;
+  }).join("") || `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">${!isAdmin ? `Belum ada program kerja terkait Anda (${escapeHtml(currentUser.name)}) pada sumber dana ini. Klik tombol "+ Ajukan Program" di bawah untuk mengajukan program baru.` : "Belum ada program"}</td></tr>`;
   tbody.querySelectorAll("[data-anggaran]").forEach(b=> b.addEventListener("click", ()=>{
     const prog = state.program[currentProgramKey].find(p=>p.id===Number(b.dataset.anggaran));
     if(prog) openProgramAnggaranModal(prog);
@@ -4030,6 +4153,17 @@ function renderMpTanggalList(){
 }
 document.getElementById("mpAddTanggal").addEventListener("click", ()=>{ mpDatesDraft.push(""); renderMpTanggalList(); });
 function openProgramModal(prog){
+  const isAdmin = currentUser.role === "Admin";
+  if(prog){
+    if(!isAdmin && prog.namaPengaju !== currentUser.name){
+      alert("Akses Ditolak: Anda hanya dapat mengedit program kerja yang Anda ajukan sendiri.");
+      return;
+    }
+    if(prog.status === PROGRAM_STATUS.DISETUJUI || prog.status === PROGRAM_STATUS.DITOLAK){
+      alert("Program yang sudah Disetujui atau Ditolak tidak dapat diedit lagi.");
+      return;
+    }
+  }
   editingProgramId = prog ? prog.id : null;
   document.getElementById("modalProgramTitle").textContent = prog ? "Edit Program Kerja" : "Ajukan Program Kerja";
   document.getElementById("mpNamaProgram").value = prog ? prog.namaProgram : "";
@@ -4073,6 +4207,11 @@ document.getElementById("mpSimpan").addEventListener("click", ()=>{
     const found = findProgramById(editingProgramId);
     if(!found){ closeModal("modal-program"); return; }
     const prog = found.prog;
+    const isAdmin = currentUser.role === "Admin";
+    if(!isAdmin && prog.namaPengaju !== currentUser.name){
+      alert("Akses Ditolak: Anda hanya dapat mengedit program kerja yang Anda ajukan sendiri.");
+      return;
+    }
     if(prog.status===PROGRAM_STATUS.DISETUJUI || prog.status===PROGRAM_STATUS.DITOLAK){
       alert("Program yang sudah Disetujui/Ditolak tidak dapat diedit lagi.");
       return;
@@ -4104,6 +4243,12 @@ let currentAnggaranProg = null;
 let currentAnggaranTanggal = "";
 let editingBudgetId = null;
 function openProgramAnggaranModal(prog){
+  const isAdmin = currentUser.role === "Admin";
+  const canAccess = isAdmin || prog.namaPengaju === currentUser.name || prog.pj === currentUser.name;
+  if(!canAccess){
+    alert("Akses Ditolak: Anda hanya dapat mengelola anggaran untuk program kerja terkait Anda.");
+    return;
+  }
   currentAnggaranProg = prog;
   currentAnggaranTanggal = (prog.tanggal && prog.tanggal[0]) || "";
   editingBudgetId = null;
@@ -4122,7 +4267,7 @@ function renderProgramAnggaranModal(){
   tglSel.innerHTML = (prog.tanggal||[]).map(t=>`<option value="${t}" ${t===currentAnggaranTanggal?"selected":""}>${t? formatTgl(t) : "(tanggal kosong)"}</option>`).join("");
 
   const editable = (prog.status===PROGRAM_STATUS.MENUNGGU || prog.status===PROGRAM_STATUS.PERBAIKAN) &&
-    (currentUser.role==="Admin" || prog.namaPengaju===currentUser.name);
+    (currentUser.role==="Admin" || prog.namaPengaju===currentUser.name || prog.pj===currentUser.name);
 
   /* Salin Kebutuhan: hanya relevan kalau program punya lebih dari 1 jadwal
      tanggal pelaksanaan — pilihan "salin dari" mengecualikan tanggal yang
@@ -4339,8 +4484,12 @@ function openPjPickModal(prog){
    SERAH TERIMA DANA
    ========================================================================= */
 function renderSerahTerimaTable(){
+  const isAdmin = currentUser.role === "Admin";
   const tbody = document.querySelector("#tblSerahTerima tbody");
-  const rows = allApprovedPrograms();
+  let rows = allApprovedPrograms();
+  if(!isAdmin){
+    rows = rows.filter(({p})=> p.pj === currentUser.name || p.namaPengaju === currentUser.name);
+  }
   tbody.innerHTML = rows.map(({key,p})=>{
     let statusUm;
     if(!programPakaiSkemaUangMuka(p)){
@@ -4351,6 +4500,7 @@ function renderSerahTerimaTable(){
       else if(sisa > 0) statusUm = `<span style="color:#8a5b00;">Sisa di PJ: ${rp(sisa)}</span>`;
       else statusUm = `<span style="color:#0ca30c;">Lunas (sisa Rp 0)</span>`;
     }
+    const btnLabel = isAdmin ? "Serah Terima Dana" : "Lihat BAST & Dana";
     return `
     <tr>
       <td>${escapeHtml(p.namaProgram)}<br><span style="color:var(--text-secondary);font-size:11px;">PJ: ${escapeHtml(p.pj||"-")}</span></td>
@@ -4358,9 +4508,9 @@ function renderSerahTerimaTable(){
       <td>${(p.tanggal||[]).map(formatTgl).join(", ")}</td>
       <td class="computed">${rp(programBudgetTotal(p))}</td>
       <td>${statusUm}</td>
-      <td><button class="btn small" data-st="${p.id}" data-stkey="${key}" type="button">Serah Terima Dana</button></td>
+      <td><button class="btn small" data-st="${p.id}" data-stkey="${key}" type="button">${btnLabel}</button></td>
     </tr>`;
-  }).join("") || `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:14px;">Belum ada program disetujui</td></tr>`;
+  }).join("") || `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:14px;">${!isAdmin ? `Belum ada program disetujui yang ditugaskan kepada Anda (${escapeHtml(currentUser.name)})` : "Belum ada program disetujui"}</td></tr>`;
   tbody.querySelectorAll("[data-st]").forEach(btn=> btn.addEventListener("click", ()=>{
     const key = btn.dataset.stkey;
     const prog = state.program[key].find(p=>p.id===Number(btn.dataset.st));
@@ -4466,10 +4616,11 @@ function renderStRiwayat(prog){
      Kode Admin yang benar supaya data historis tidak sengaja/asal terhapus.
      Menghapus di sini otomatis menyesuaikan ulang baris BKU terkait lewat
      syncBkuUangMuka (termasuk Catatan Piutang PJ kalau relevan). */
+  const isAdmin = currentUser.role === "Admin";
   wrap.innerHTML = `<table class="datatable narrow" style="font-size:12px;"><thead><tr><th>Tanggal</th><th>Jenis</th><th>Nominal</th><th>No. Dokumen</th><th></th></tr></thead><tbody>
     ${all.map(r=> r.jenis==="st"
-      ? `<tr><td>${formatTgl(r.tanggal)}</td><td>Serah Terima</td><td class="num">${rp(r.nominal)}</td><td>${escapeHtml(r.noBast)}</td><td><button class="btn small" data-streprint="${r.id}">Cetak Ulang</button> <button class="btn small danger" data-strhapus="${r.id}" data-strhapusjenis="st">Hapus</button></td></tr>`
-      : `<tr><td>${formatTgl(r.tanggal)}</td><td>Pengembalian</td><td class="num">${rp(r.nominal)}</td><td>${escapeHtml(r.keterangan||"-")}</td><td><button class="btn small danger" data-strhapus="${r.id}" data-strhapusjenis="km">Hapus</button></td></tr>`
+      ? `<tr><td>${formatTgl(r.tanggal)}</td><td>Serah Terima</td><td class="num">${rp(r.nominal)}</td><td>${escapeHtml(r.noBast)}</td><td><button class="btn small" data-streprint="${r.id}">Cetak Ulang</button> ${isAdmin ? `<button class="btn small danger" data-strhapus="${r.id}" data-strhapusjenis="st">Hapus</button>` : ""}</td></tr>`
+      : `<tr><td>${formatTgl(r.tanggal)}</td><td>Pengembalian</td><td class="num">${rp(r.nominal)}</td><td>${escapeHtml(r.keterangan||"-")}</td><td>${isAdmin ? `<button class="btn small danger" data-strhapus="${r.id}" data-strhapusjenis="km">Hapus</button>` : ""}</td></tr>`
     ).join("")}
   </tbody></table>`;
   wrap.querySelectorAll("[data-streprint]").forEach(btn=> btn.addEventListener("click", ()=>{
@@ -4504,6 +4655,20 @@ function renderStRiwayat(prog){
 function openSerahTerimaModal(prog){
   currentSerahTerimaProg = prog;
   document.getElementById("stSub").textContent = `Program: ${prog.namaProgram} · PJ: ${prog.pj||"-"}`;
+  const isAdmin = currentUser.role === "Admin";
+  const formDisburse = document.getElementById("stFormDisburseWrap");
+  if(formDisburse) formDisburse.style.display = isAdmin ? "block" : "none";
+  let stNotice = document.getElementById("stNonAdminNotice");
+  if(!stNotice && formDisburse && formDisburse.parentElement){
+    stNotice = document.createElement("div");
+    stNotice.id = "stNonAdminNotice";
+    stNotice.style.cssText = "display:none; color:var(--text-secondary); font-size:12.5px; background:#f8fafc; border:1px solid #e2e8f0; padding:10px 14px; border-radius:6px; margin-top:10px;";
+    formDisburse.parentElement.appendChild(stNotice);
+  }
+  if(stNotice){
+    stNotice.style.display = isAdmin ? "none" : "block";
+    stNotice.innerHTML = `ℹ️ <b>Mode PJ Kegiatan:</b> Penyerahan uang kas baru hanya dapat disahkan dan dicatat oleh Admin/Bendahara. Anda dapat melihat ringkasan status dana di atas serta mencetak ulang kwitansi/BAST di tabel riwayat.`;
+  }
   /* Kalau program ini SUDAH PERNAH Serah Terima (sebagian atau total),
      opsi "Total Keseluruhan Program" dikunci (disabled) — supaya tidak
      menyerahkan dana ganda untuk tanggal yang sudah pernah diserahkan.
@@ -4544,6 +4709,10 @@ document.querySelectorAll('input[name="stMode"]').forEach(r=> r.addEventListener
 }));
 document.getElementById("stNominal").addEventListener("input", stUpdateWarning);
 document.getElementById("stBtnCetak").addEventListener("click", ()=>{
+  if(currentUser.role !== "Admin"){
+    alert("Akses Ditolak: Hanya Admin/Bendahara yang memiliki wewenang untuk mencatat penyerahan dana kas (Serah Terima).");
+    return;
+  }
   const prog = currentSerahTerimaProg;
   if(!prog) return;
   const mode = document.querySelector('input[name="stMode"]:checked').value;
@@ -4580,12 +4749,16 @@ document.getElementById("stBtnCetak").addEventListener("click", ()=>{
    REALISASI PROGRAM (dalam view Realisasi)
    ========================================================================= */
 function renderRealisasiProgramTable(){
+  const isAdmin = currentUser.role === "Admin";
   const tbody = document.querySelector("#tblRealisasiProgram tbody");
-  const rows = allApprovedPrograms();
+  let rows = allApprovedPrograms();
+  if(!isAdmin){
+    rows = rows.filter(({p}) => p.pj === currentUser.name || p.namaPengaju === currentUser.name);
+  }
   tbody.innerHTML = rows.map(({key,p})=>{
     const label = programRealisasiLabel(p);
     const cls = label==="Realisasi Selesai"?"ok":label==="Belum Direalisasikan"?"na":label==="Batal Terealisasi (Semua Jadwal)"?"bad":"partial";
-    const canUpdate = currentUser.role==="Admin" || p.pj===currentUser.name;
+    const canUpdate = isAdmin || p.pj===currentUser.name || p.namaPengaju===currentUser.name;
     const canKwitansi = (p.realisasi||[]).length > 0;
     const btns = [];
     if(canUpdate) btns.push(`<button class="btn small" data-ur="${p.id}" data-urkey="${key}" type="button">Update Realisasi</button>`);
@@ -4610,7 +4783,7 @@ function renderRealisasiProgramTable(){
       <td>${umInfo}</td>
       <td>${btns.join(" ")}</td>
     </tr>`;
-  }).join("") || `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:14px;">Belum ada program disetujui</td></tr>`;
+  }).join("") || `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:14px;">${!isAdmin ? `Belum ada program disetujui yang ditugaskan kepada Anda (${escapeHtml(currentUser.name)})` : "Belum ada program disetujui"}</td></tr>`;
   tbody.querySelectorAll("[data-ur]").forEach(btn=> btn.addEventListener("click", ()=>{
     const prog = state.program[btn.dataset.urkey].find(p=>p.id===Number(btn.dataset.ur));
     if(prog) openUpdateRealisasiModal(prog);
@@ -4706,6 +4879,12 @@ function renderKontrolKeuangan(){
 let currentUpdateRealisasiProg = null;
 let urDraft = null;
 function openUpdateRealisasiModal(prog){
+  const isAdmin = currentUser.role === "Admin";
+  const canUpdate = isAdmin || prog.pj === currentUser.name || prog.namaPengaju === currentUser.name;
+  if(!canUpdate){
+    alert("Akses Ditolak: Anda hanya dapat memperbarui realisasi untuk program kerja yang ditugaskan kepada Anda atau diajukan oleh Anda.");
+    return;
+  }
   /* Aturan baru: Realisasi TIDAK BOLEH dicatat sebelum program punya
      riwayat Serah Terima Dana (uang muka) — kalau belum ada, arahkan
      pengguna ke modal Serah Terima Dana dulu dan batalkan pembukaan
@@ -5128,6 +5307,7 @@ function renderBkuTabs(){
   }));
 }
 function renderBkuTable(key){
+  const isAdmin = currentUser.role === "Admin";
   const table = document.getElementById("tblBku");
   const headCols = ["No","Tanggal","No Bukti","Uraian","Penerimaan","Pengeluaran","Saldo",""];
   table.querySelector("thead").innerHTML = `<tr>${headCols.map(h=>`<th>${h}</th>`).join("")}</tr>`;
@@ -5148,14 +5328,20 @@ function renderBkuTable(key){
     else if(row.autoPengembalianId) autoBadge = `<span class="badge-note" title="Baris ini dibuat &amp; diperbarui otomatis dari Pengembalian Sisa Uang Muka.">Otomatis dari Pengembalian</span>`;
     else if(row.autoPiutangId) autoBadge = `<span class="badge-note" title="Catatan otomatis — bukan transaksi kas riil (Penerimaan/Pengeluaran = 0).">Catatan Piutang PJ</span>`;
     
-    const canDel = currentUser.role === "Admin";
     if(autoBadge){
-      cells.push(`<td><div class="row-actions" style="align-items:center; gap:6px;">${autoBadge}${canDel ? `<button class="row-del" data-del="1" title="Hapus transaksi ini dari BKU &amp; data terkait">&times;</button>` : ""}</div></td>`);
+      cells.push(`<td><div class="row-actions" style="align-items:center; gap:6px;">${autoBadge}${isAdmin ? `<button class="row-del" data-del="1" title="Hapus transaksi ini dari BKU &amp; data terkait">&times;</button>` : ""}</div></td>`);
     } else {
-      cells.push(`<td><div class="row-actions"><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div></td>`);
+      if(isAdmin){
+        cells.push(`<td><div class="row-actions"><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div></td>`);
+      } else {
+        cells.push(`<td><span style="color:var(--text-muted);font-size:11px;">Hanya Lihat</span></td>`);
+      }
     }
     return `<tr data-id="${row.id}">${cells.join("")}</tr>`;
   }).join("") || `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">Belum ada transaksi</td></tr>`;
+
+  const addBkuBtn = document.getElementById("btnAddBku");
+  if(addBkuBtn) addBkuBtn.style.display = isAdmin ? "" : "none";
 
   tbody.querySelectorAll("tr[data-id]").forEach(tr=>{
     const id = Number(tr.dataset.id);
@@ -5284,6 +5470,10 @@ document.getElementById("bkuFormKegiatan").addEventListener("input", ()=>{
   }
 });
 function openBkuForm(key, id){
+  if(currentUser.role !== "Admin"){
+    alert("Akses Ditolak: Hanya Admin/Bendahara yang memiliki wewenang untuk menambah atau mengedit transaksi Buku Kas Umum (BKU).");
+    return;
+  }
   bkuFormKey = key;
   bkuFormEditingId = id;
   const meta = SUMBER_META[key];
@@ -5380,6 +5570,12 @@ function renderRealisasi(){
    ========================================================================= */
 let sppTxSearchQuery = "";
 function renderSppTx(){
+  const isAdmin = currentUser.role === "Admin";
+  const addSppBtn = document.getElementById("btnAddSppTx");
+  if(addSppBtn) addSppBtn.style.display = isAdmin ? "" : "none";
+  const addSppManualBtn = document.getElementById("btnAddSppTxManual");
+  if(addSppManualBtn) addSppManualBtn.style.display = isAdmin ? "" : "none";
+
   const tbody = document.querySelector("#tblSppTx tbody");
   const q = sppTxSearchQuery.trim().toLowerCase();
   const filtered = q ? state.sppTx.filter(row=>{
@@ -5388,6 +5584,9 @@ function renderSppTx(){
   }) : state.sppTx;
   tbody.innerHTML = filtered.map((row,i)=>{
     const s = siswaByNis(row.nis);
+    const actionCell = isAdmin
+      ? `<div class="row-actions"><button class="row-print" data-print="1">Cetak</button><button class="row-wa" data-wa="1">WA</button><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div>`
+      : `<div class="row-actions"><button class="row-print" data-print="1">Cetak</button><button class="row-wa" data-wa="1">WA</button></div>`;
     return `<tr data-id="${row.id}">
       <td style="text-align:center">${i+1}</td>
       <td>${formatTgl(row.tanggal)}</td>
@@ -5397,14 +5596,16 @@ function renderSppTx(){
       <td>${escapeHtml(row.bulan)}</td>
       <td class="num">${rp(row.jumlah)}</td>
       <td>${escapeHtml(row.noKwitansi)}</td>
-      <td><div class="row-actions"><button class="row-print" data-print="1">Cetak</button><button class="row-wa" data-wa="1">WA</button><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div></td></tr>`;
+      <td>${actionCell}</td></tr>`;
   }).join("") || `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:14px;">${q? "Tidak ada transaksi yang cocok dengan pencarian." : "Belum ada transaksi"}</td></tr>`;
   tbody.querySelectorAll("tr[data-id]").forEach(tr=>{
     const id = Number(tr.dataset.id);
     tr.querySelector("[data-print]").addEventListener("click", ()=> printKwitansiSiswaTx(id, "spp"));
     tr.querySelector("[data-wa]").addEventListener("click", ()=> kirimWaKwitansiTx(id, "spp"));
-    tr.querySelector("[data-edit]").addEventListener("click", ()=> openSppTxForm(id));
-    tr.querySelector("[data-del]").addEventListener("click", ()=>{
+    const btnEdit = tr.querySelector("[data-edit]");
+    if(btnEdit) btnEdit.addEventListener("click", ()=> openSppTxForm(id));
+    const btnDel = tr.querySelector("[data-del]");
+    if(btnDel) btnDel.addEventListener("click", ()=>{
       const row = state.sppTx.find(r=>r.id===id);
       const s = row ? siswaByNis(row.nis) : null;
       if(!confirmDelete(`transaksi SPP ${s? "atas nama \""+s.nama+"\"" : ""} bulan ${row?.bulan||"-"}`)) return;
@@ -5414,6 +5615,10 @@ function renderSppTx(){
   document.getElementById("sppTxCount").textContent = state.sppTx.length;
 }
 function openSppTxForm(id){
+  if(currentUser.role !== "Admin"){
+    alert("Akses Ditolak: Hanya Admin/Bendahara yang memiliki wewenang untuk mencatat atau mengedit pembayaran SPP.");
+    return;
+  }
   const isNew = id==null;
   const row = isNew ? newSppTxRow() : state.sppTx.find(r=>r.id===id);
   if(!row) return;
@@ -5532,6 +5737,10 @@ function renderSppAll(){ renderSppTx(); renderRekapSpp(); }
    ========================================================================= */
 let itemTxSearchQuery = "";
 function renderItemTx(){
+  const isAdmin = currentUser.role === "Admin";
+  const addItemBtn = document.getElementById("btnAddItemTx");
+  if(addItemBtn) addItemBtn.style.display = isAdmin ? "" : "none";
+
   const tbody = document.querySelector("#tblItemTx tbody");
   const q = itemTxSearchQuery.trim().toLowerCase();
   const filtered = q ? state.itemTx.filter(row=>{
@@ -5540,6 +5749,9 @@ function renderItemTx(){
   }) : state.itemTx;
   tbody.innerHTML = filtered.map((row,i)=>{
     const s = siswaByNis(row.nis);
+    const actionCell = isAdmin
+      ? `<div class="row-actions"><button class="row-print" data-print="1">Cetak</button><button class="row-wa" data-wa="1">WA</button><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div>`
+      : `<div class="row-actions"><button class="row-print" data-print="1">Cetak</button><button class="row-wa" data-wa="1">WA</button></div>`;
     return `<tr data-id="${row.id}">
       <td style="text-align:center">${i+1}</td>
       <td>${formatTgl(row.tanggal)}</td>
@@ -5548,14 +5760,16 @@ function renderItemTx(){
       <td>${escapeHtml(row.jenisItem)}</td>
       <td class="num">${rp(row.jumlah)}</td>
       <td>${escapeHtml(row.noKwitansi)}</td>
-      <td><div class="row-actions"><button class="row-print" data-print="1">Cetak</button><button class="row-wa" data-wa="1">WA</button><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div></td></tr>`;
+      <td>${actionCell}</td></tr>`;
   }).join("") || `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">${q? "Tidak ada transaksi yang cocok dengan pencarian." : "Belum ada transaksi"}</td></tr>`;
   tbody.querySelectorAll("tr[data-id]").forEach(tr=>{
     const id = Number(tr.dataset.id);
     tr.querySelector("[data-print]").addEventListener("click", ()=> printKwitansiSiswaTx(id, "item"));
     tr.querySelector("[data-wa]").addEventListener("click", ()=> kirimWaKwitansiTx(id, "item"));
-    tr.querySelector("[data-edit]").addEventListener("click", ()=> openItemTxForm(id));
-    tr.querySelector("[data-del]").addEventListener("click", ()=>{
+    const btnEdit = tr.querySelector("[data-edit]");
+    if(btnEdit) btnEdit.addEventListener("click", ()=> openItemTxForm(id));
+    const btnDel = tr.querySelector("[data-del]");
+    if(btnDel) btnDel.addEventListener("click", ()=>{
       const row = state.itemTx.find(r=>r.id===id);
       const s = row ? siswaByNis(row.nis) : null;
       if(!confirmDelete(`transaksi ${row?.jenisItem||"item"} ${s? "atas nama \""+s.nama+"\"" : ""}`)) return;
@@ -5565,6 +5779,10 @@ function renderItemTx(){
   document.getElementById("itemTxCount").textContent = state.itemTx.length;
 }
 function openItemTxForm(id){
+  if(currentUser.role !== "Admin"){
+    alert("Akses Ditolak: Hanya Admin/Bendahara yang memiliki wewenang untuk mencatat atau mengedit pembayaran item lainnya.");
+    return;
+  }
   const isNew = id==null;
   const row = isNew ? newItemTxRow() : state.itemTx.find(r=>r.id===id);
   if(!row) return;
@@ -7035,8 +7253,19 @@ document.getElementById("btnExport").addEventListener("click", ()=>{
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
 });
-document.getElementById("btnImportTrigger").addEventListener("click", ()=> document.getElementById("fileImport").click());
+document.getElementById("btnImportTrigger").addEventListener("click", ()=>{
+  if(currentUser.role !== "Admin"){
+    alert("Akses Ditolak: Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk membuka/merestore cadangan data (.json).");
+    return;
+  }
+  document.getElementById("fileImport").click();
+});
 document.getElementById("fileImport").addEventListener("change", (e)=>{
+  if(currentUser.role !== "Admin"){
+    alert("Akses Ditolak: Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk memuat data dari file cadangan.");
+    e.target.value = "";
+    return;
+  }
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
@@ -7065,6 +7294,10 @@ document.getElementById("fileImport").addEventListener("change", (e)=>{
   e.target.value = "";
 });
 document.getElementById("btnReset").addEventListener("click", ()=>{
+  if(currentUser.role !== "Admin"){
+    alert("Akses Ditolak: Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk mengosongkan seluruh data.");
+    return;
+  }
   /* Lapis kedua (elemen sudah disembunyikan lebih dulu, lihat dekat
      __PRISTINE_HTML__) untuk berjaga-jaga kalau tombolnya sampai
      dimunculkan paksa lewat DevTools pada file hasil "Bagikan Aplikasi". */
@@ -7076,6 +7309,10 @@ document.getElementById("btnReset").addEventListener("click", ()=>{
   }
 });
 document.getElementById("btnLoadSample").addEventListener("click", ()=>{
+  if(currentUser.role !== "Admin"){
+    alert("Akses Ditolak: Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk memuat contoh data.");
+    return;
+  }
   /* Lapis kedua, sama seperti btnReset di atas. */
   if(window.__LOCKED_GSHEET_URL__){ alert('Fitur "Muat Contoh Data" dinonaktifkan pada aplikasi hasil "Bagikan Aplikasi".'); return; }
   if(!confirm("Memuat contoh data akan MENIMPA seluruh data yang sedang terbuka saat ini. Pastikan data penting sudah disimpan (export/kirim) terlebih dahulu. Lanjutkan?")) return;
@@ -7323,6 +7560,7 @@ function startAutoSync(){
    INIT
    ========================================================================= */
 function renderAll(){
+  updateRoleUI();
   renderSekolahForm();
   renderKopSection();
   renderGsheetSection();
