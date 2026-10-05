@@ -4,6 +4,64 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aplikasi Keuangan Sekolah</title>
+<meta name="description" content="Aplikasi Keuangan Sekolah (RKAS) - Rencana Kegiatan dan Anggaran Sekolah untuk pencatatan dan pelaporan keuangan sekolah.">
+<meta property="og:title" content="Aplikasi Keuangan Sekolah">
+<meta property="og:description" content="Aplikasi Keuangan Sekolah (RKAS) - Rencana Kegiatan dan Anggaran Sekolah untuk pencatatan dan pelaporan keuangan sekolah.">
+<script>
+(function(){
+  if (typeof window !== 'undefined') {
+    window.alert = function(msg) {
+      console.warn("[Aplikasi Alert]", msg);
+      try {
+        let toast = document.getElementById('app-custom-alert-toast');
+        if (!toast) {
+          toast = document.createElement('div');
+          toast.id = 'app-custom-alert-toast';
+          toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);max-width:92%;width:420px;background:#1e293b;color:#fff;padding:12px 16px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.35);z-index:999999;font-family:system-ui,-apple-system,sans-serif;font-size:13.5px;line-height:1.45;display:flex;align-items:flex-start;gap:10px;pointer-events:auto;border:1px solid #334155;';
+          if (document.body) {
+            document.body.appendChild(toast);
+          } else {
+            window.addEventListener('DOMContentLoaded', function(){ document.body.appendChild(toast); });
+          }
+        }
+        toast.innerHTML = '<span style="color:#38bdf8;font-size:16px;line-height:1;margin-top:1px;">ℹ</span>' +
+          '<div style="flex:1;word-break:break-word;">' + String(msg).replace(/</g, '&lt;') + '</div>' +
+          '<button style="background:transparent;border:none;color:#94a3b8;cursor:pointer;font-size:15px;line-height:1;padding:0;" onclick="this.parentElement.style.display=\'none\'">✕</button>';
+        toast.style.display = 'flex';
+        clearTimeout(window.__alertTimer);
+        window.__alertTimer = setTimeout(function() { if (toast) toast.style.display = 'none'; }, 5500);
+      } catch(e) {}
+    };
+    const _origOpen = window.open;
+    window.open = function(url, target, features) {
+      try {
+        if (_origOpen) {
+          const w = _origOpen.call(window, url, target, features);
+          if (w) return w;
+        }
+      } catch(e) {}
+      try {
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = target || '_blank';
+        a.rel = 'noopener noreferrer';
+        if (document.body) {
+          document.body.appendChild(a);
+        } else {
+          window.addEventListener('DOMContentLoaded', function(){ document.body.appendChild(a); });
+        }
+        a.click();
+        if (a.parentNode) a.parentNode.removeChild(a);
+      } catch(e) {
+        console.warn("Failed to open link:", url);
+      }
+    };
+  }
+})();
+</script>
+<!-- SheetJS (xlsx) & html2pdf.js for Excel and PDF Exporting -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
 /* Chart.js v4.4.4 - bundled inline for offline/single-file use */
 /*!
@@ -321,10 +379,73 @@ table.print-cal td.othermonth{background:#f7f7f7;}
   @page{ size:A4; margin:8mm; }
 }
 
+/* ---------- Responsive Mobile & Tablet Navigation ---------- */
+.btn-hamburger{
+  display:none; background:#fff; border:1px solid var(--border);
+  border-radius:8px; padding:6px 9px; cursor:pointer; color:var(--text-primary);
+  align-items:center; justify-content:center; flex-shrink:0; transition:all .15s;
+}
+.btn-hamburger:hover{background:#f1f5f9; border-color:#cbd5e1;}
+.sidebar-close-btn{
+  display:none; background:transparent; border:none; color:#c9d4e6;
+  font-size:24px; line-height:1; cursor:pointer; padding:2px 6px; border-radius:6px;
+}
+.sidebar-close-btn:hover{color:#fff; background:rgba(255,255,255,0.15);}
+.sidebar-backdrop{
+  position:fixed; inset:0; background:rgba(15,23,42,0.65); z-index:998;
+  display:none; backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+}
+.sidebar-backdrop.active{display:block;}
+
+.mobile-bottom-bar{
+  display:none; position:fixed; bottom:0; left:0; right:0; height:56px;
+  background:#fff; border-top:1px solid var(--border); z-index:90;
+  justify-content:space-around; align-items:center;
+  box-shadow:0 -2px 10px rgba(0,0,0,0.06);
+}
+.mobile-nav-btn{
+  background:transparent; border:none; color:var(--text-secondary);
+  font-size:10px; font-weight:600; display:flex; flex-direction:column;
+  align-items:center; gap:2px; cursor:pointer; flex:1; padding:6px 0;
+  font-family:inherit;
+}
+.mobile-nav-btn .ic{font-size:17px; line-height:1;}
+.mobile-nav-btn.active, .mobile-nav-btn:hover{color:var(--series-1);}
+
 @media (max-width:980px){
-  .sidebar{display:none;}
-  .stat-grid{grid-template-columns:repeat(2,1fr);}
+  .btn-hamburger{display:inline-flex;}
+  .sidebar-close-btn{display:inline-block;}
+  .sidebar{
+    display:flex !important; flex-direction:column;
+    position:fixed; left:0; top:0; bottom:0; width:285px; max-width:85vw;
+    height:100vh; z-index:999; transform:translateX(-100%);
+    transition:transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:none;
+  }
+  .sidebar.mobile-open{
+    transform:translateX(0);
+    box-shadow:6px 0 30px rgba(0,0,0,0.5);
+  }
+  .topbar{padding:10px 14px; gap:8px;}
+  .topbar h1{font-size:15px;}
+  .topbar-actions{gap:6px;}
+  .topbar-actions .btn{padding:6px 10px; font-size:12px;}
+  .content{padding:14px 12px 60px;}
+  .stat-grid{grid-template-columns:repeat(2,1fr); gap:10px;}
   .form-grid{grid-template-columns:1fr;}
+}
+
+@media (max-width:768px){
+  .mobile-bottom-bar{display:flex;}
+  .content{padding-bottom:80px !important;}
+}
+
+@media (max-width:640px){
+  .stat-grid{grid-template-columns:1fr;}
+  .topbar{flex-direction:column; align-items:stretch;}
+  .topbar > div:first-child{justify-content:flex-start;}
+  .topbar-actions{justify-content:flex-start; margin-top:4px;}
+  .card{padding:14px 12px;}
 }
 </style>
 </head>
@@ -358,9 +479,12 @@ table.print-cal td.othermonth{background:#f7f7f7;}
 
   <!-- ===================== SIDEBAR ===================== -->
   <nav class="sidebar">
-    <div class="brand">
-      <div class="brand-badge">RS</div>
-      <div class="brand-text">Keuangan Sekolah<small>Multi Sumber Dana</small></div>
+    <div class="brand" style="display:flex; justify-content:space-between; align-items:center;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="brand-badge">RS</div>
+        <div class="brand-text">Keuangan Sekolah<small>Multi Sumber Dana</small></div>
+      </div>
+      <button id="btnCloseSidebar" class="sidebar-close-btn" aria-label="Tutup Menu">&times;</button>
     </div>
     <ul class="nav">
       <li><button data-view="dashboard" class="active"><span class="ic">&#9632;</span> Dashboard</button></li>
@@ -395,10 +519,11 @@ table.print-cal td.othermonth{background:#f7f7f7;}
       <li><button data-view="lpjkons"><span class="ic">&#128194;</span> LPJ Konsolidasi</button></li>
       <li><button data-view="cetak"><span class="ic">&#128424;</span> Cetak Laporan</button></li>
     </ul>
-    <div class="nav-section-label">Data</div>
+    <div class="nav-section-label">Ekspor &amp; Data</div>
     <ul class="nav">
-      <li><button id="btnExport"><span class="ic">&#11015;</span> Simpan Data (.json)</button></li>
-      <li><button id="btnImportTrigger"><span class="ic">&#11014;</span> Buka Data (.json)</button></li>
+      <li><button id="btnOpenExportCenter" style="color:var(--text-primary);font-weight:600;"><span class="ic">&#128202;</span> Ekspor Excel &amp; PDF</button></li>
+      <li><button id="btnExport"><span class="ic">&#11015;</span> Simpan Cadangan (.json)</button></li>
+      <li><button id="btnImportTrigger"><span class="ic">&#11014;</span> Buka Cadangan (.json)</button></li>
       <input type="file" id="fileImport" accept=".json" style="display:none">
       <li><button id="btnPushSheetsQuick"><span class="ic">&#11014;</span> Kirim ke Google Sheets</button></li>
       <li><button id="btnPullSheetsQuick"><span class="ic">&#11015;</span> Tarik dari Google Sheets</button></li>
@@ -406,15 +531,26 @@ table.print-cal td.othermonth{background:#f7f7f7;}
     <div class="sidebar-foot">BOS mengacu format RKAS Kemendikbudristek. SPP/Uang Pangkal/Dana Lainnya dikelola terpisah. Data tersimpan otomatis di perangkat ini (tetap bisa dipakai offline) dan otomatis disinkronkan ke Google Sheets saat online. Tetap disarankan <b>Simpan Data (.json)</b> secara berkala sebagai cadangan.</div>
   </nav>
 
+  <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
   <!-- ===================== MAIN ===================== -->
   <div class="main">
     <div class="topbar">
-      <div>
-        <h1 id="topTitle">Dashboard Keuangan Sekolah</h1>
-        <div class="school-sub" id="topSchoolSub">Isi Data Sekolah untuk mulai</div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button id="btnToggleSidebar" class="btn-hamburger" aria-label="Buka Menu" title="Menu Navigasi">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div>
+          <h1 id="topTitle">Dashboard Keuangan Sekolah</h1>
+          <div class="school-sub" id="topSchoolSub">Isi Data Sekolah untuk mulai</div>
+        </div>
       </div>
       <div class="topbar-actions">
         <span id="onlineStatusBadge" class="online-badge" title="Status koneksi internet"></span>
+        <button class="btn" id="btnGoogleAuth" style="display:inline-flex;align-items:center;gap:6px;" title="Masuk dengan akun Google untuk sinkronisasi database">
+          <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+          <span id="btnGoogleAuthLabel">Masuk Google</span>
+        </button>
         <span id="currentUserLabel" style="font-size:12px;color:var(--text-secondary);align-self:center;margin-right:2px;"></span>
         <button class="btn" id="btnSwitchUser">Ganti Pengguna</button>
         <button class="btn" id="btnLoadSample">Muat Contoh Data</button>
@@ -572,8 +708,11 @@ table.print-cal td.othermonth{background:#f7f7f7;}
         <div class="card">
           <h2>Peminjaman GTK</h2>
           <p class="desc">Guru/Staff dapat mengajukan peminjaman dana lewat menu ini. Setiap pengajuan bernomor dokumen resmi dan permanen — jumlah, keperluan, dan tanggal pengajuan tidak bisa diubah lagi setelah disimpan; satu-satunya perubahan yang mungkin adalah proses persetujuan, pencairan, dan pencatatan cicilan yang tercatat sebagai riwayat (tidak bisa dihapus/diedit).</p>
-          <div class="table-actions" style="margin-bottom:12px;">
-            <button class="btn primary small" id="btnAjukanPinjaman">+ Ajukan Peminjaman</button>
+          <div class="table-actions" style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn primary small" id="btnAjukanPinjaman">+ Ajukan Peminjaman</button>
+              <button class="btn small" id="btnExportPjExcel" style="background:#107c41; color:#fff; border-color:#107c41;">&#128202; Ekspor Excel (.xlsx)</button>
+            </div>
             <span class="badge-note">Total Piutang GTK Beredar: <b id="pjTotalBeredarLabel">Rp 0</b></span>
           </div>
           <div class="table-scroll">
@@ -641,8 +780,11 @@ table.print-cal td.othermonth{background:#f7f7f7;}
           <p class="desc">Setiap sumber dana punya buku kas sendiri sehingga saldo tidak tercampur. Pilih sumber dana di bawah.</p>
           <div class="subtabs" id="bkuTabs"></div>
           <div class="table-scroll"><table class="datatable" id="tblBku"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
-          <div class="table-actions">
-            <button class="btn primary small" id="btnAddBku">+ Tambah Transaksi</button>
+          <div class="table-actions" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn primary small" id="btnAddBku">+ Tambah Transaksi</button>
+              <button class="btn small" id="btnExportBkuExcel" style="background:#107c41; color:#fff; border-color:#107c41;">&#128202; Ekspor BKU Ini (Excel)</button>
+            </div>
             <span class="badge-note">Saldo awal: <b id="bkuSaldoAwalLabel">Rp 0</b> (ubah di Data Sekolah)</span>
           </div>
         </div>
@@ -790,6 +932,9 @@ table.print-cal td.othermonth{background:#f7f7f7;}
               <thead></thead><tbody></tbody>
             </table>
           </div>
+          <div class="table-actions" style="margin-top:10px;">
+            <button class="btn small" id="btnExportSppExcel" style="background:#107c41; color:#fff; border-color:#107c41;">&#128202; Ekspor Rekap SPP (Excel)</button>
+          </div>
         </div>
       </section>
 
@@ -863,18 +1008,42 @@ table.print-cal td.othermonth{background:#f7f7f7;}
         </div>
       </section>
 
-      <!-- ============ CETAK ============ -->
+      <!-- ============ CETAK & EKSPOR ============ -->
       <section class="view" id="view-cetak">
         <div class="card">
-          <h2>Cetak Laporan Resmi</h2>
-          <p class="desc">Pilih jenis laporan, pratinjau akan tampil di bawah, lalu klik "Cetak / Simpan PDF".</p>
+          <h2>Cetak &amp; Ekspor Laporan Resmi</h2>
+          <p class="desc">Pilih jenis laporan untuk melihat pratinjau lengkap. Anda dapat mengunduh berkas <b>PDF siap cetak</b> (dengan Kop &amp; Tanda Tangan), mengekspor tabel ke <b>Excel (.xlsx)</b>, atau mencetak langsung.</p>
           <div class="subtabs" id="printTabs"></div>
-          <button class="btn primary" id="btnPrintNow">&#128424; Cetak / Simpan PDF</button>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:14px;">
+            <button class="btn primary" id="btnExportPdfCurrent">&#128196; Unduh Laporan Ini (PDF)</button>
+            <button class="btn" id="btnExportExcelCurrent" style="background:#107c41; color:#fff; border-color:#107c41;">&#128202; Unduh Laporan Ini (Excel)</button>
+            <button class="btn" id="btnExportExcelAll" style="background:#0e7490; color:#fff; border-color:#0e7490;">&#128202; Unduh Semua Buku Kas (Multi-Sheet Excel)</button>
+            <button class="btn" id="btnPrintNow">&#128424; Cetak Browser / Printer</button>
+          </div>
         </div>
         <div class="print-preview-wrap"><div id="printRoot"></div></div>
       </section>
 
     </div>
+
+    <!-- Mobile Bottom Navigation Bar (Phone only) -->
+    <nav class="mobile-bottom-bar" id="mobileBottomBar">
+      <button class="mobile-nav-btn active" data-view="dashboard">
+        <span class="ic">&#9632;</span><span>Beranda</span>
+      </button>
+      <button class="mobile-nav-btn" data-view="program">
+        <span class="ic">&#128203;</span><span>Program</span>
+      </button>
+      <button class="mobile-nav-btn" data-view="bku">
+        <span class="ic">&#128176;</span><span>BKU Kas</span>
+      </button>
+      <button class="mobile-nav-btn" data-view="spp">
+        <span class="ic">&#128197;</span><span>SPP</span>
+      </button>
+      <button class="mobile-nav-btn" id="btnMobileMore">
+        <span class="ic">&#9776;</span><span>Menu</span>
+      </button>
+    </nav>
   </div>
 </div>
 
@@ -1233,6 +1402,82 @@ table.print-cal td.othermonth{background:#f7f7f7;}
     <div class="modal-actions">
       <button class="btn" type="button" data-close="modal-bku-form">Batal</button>
       <button class="btn primary" type="button" id="bkuFormBtnSimpan">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL EKSPOR EXCEL & PDF ===================== -->
+<div class="modal-overlay" id="modal-export-center">
+  <div class="modal-box" style="max-width:680px;">
+    <button class="modal-close" data-close="modal-export-center">&times;</button>
+    <h2>Pusat Ekspor Dokumen &amp; Laporan</h2>
+    <p class="desc">Unduh berkas laporan resmi dalam format <b>PDF</b> rapi (siap cetak/tanda tangan) atau buku kas lengkap dalam format <b>Excel (.xlsx)</b>.</p>
+    
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:16px 0;">
+      <!-- Kolom Excel -->
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <span style="font-size:20px;">📊</span>
+            <h3 style="margin:0; font-size:14px; color:#107c41;">Buku Kas Excel (.xlsx)</h3>
+          </div>
+          <p style="font-size:12px; color:#64748b; line-height:1.45; margin-bottom:12px;">
+            Menghasilkan file Excel resmi dengan rumus jumlah otomatis, pemisah ribuan, dan tab terpisah.
+          </p>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <button class="btn small" id="mecBtnExcelAll" style="background:#107c41; color:#fff; border-color:#107c41; justify-content:center; font-weight:600;">
+              📥 Master Excel (11 Sheet Lengkap)
+            </button>
+            <button class="btn small" id="mecBtnExcelBkuBos" style="justify-content:center;">BKU Dana BOS (.xlsx)</button>
+            <button class="btn small" id="mecBtnExcelBkuSpp" style="justify-content:center;">BKU SPP (.xlsx)</button>
+            <button class="btn small" id="mecBtnExcelSppRekap" style="justify-content:center;">Rekap SPP &amp; Tunggakan (.xlsx)</button>
+            <button class="btn small" id="mecBtnExcelProgram" style="justify-content:center;">RKAS &amp; Program Kerja (.xlsx)</button>
+            <button class="btn small" id="mecBtnExcelPinjaman" style="justify-content:center;">Buku Pinjaman GTK (.xlsx)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kolom PDF -->
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <span style="font-size:20px;">📄</span>
+            <h3 style="margin:0; font-size:14px; color:#b91c1c;">Laporan Resmi PDF</h3>
+          </div>
+          <p style="font-size:12px; color:#64748b; line-height:1.45; margin-bottom:12px;">
+            Dilengkapi Kop Surat resmi sekolah, nomor bukti, tanggal terbit, dan kolom tanda tangan Kepala Sekolah &amp; Bendahara.
+          </p>
+          <div class="field" style="margin-bottom:8px;">
+            <label style="font-size:11px;">Pilih Jenis Laporan:</label>
+            <select id="mecPdfReportSelect" style="font-size:12px; padding:6px 8px;">
+              <option value="realisasi">Laporan Realisasi Anggaran</option>
+              <option value="bku-bos">BKU Dana BOS</option>
+              <option value="bku-spp">BKU SPP</option>
+              <option value="bku-pangkal">BKU Uang Pangkal</option>
+              <option value="bku-lain">BKU Dana Lainnya</option>
+              <option value="lpjbos">LPJ BOS</option>
+              <option value="lpjkons">LPJ Konsolidasi</option>
+              <option value="rekapspp">Rekap SPP Siswa (12 Bulan)</option>
+              <option value="rekappangkal">Rekap Uang Pangkal</option>
+              <option value="rab-bos">RAB BOS</option>
+              <option value="rab-spp">RAB SPP</option>
+              <option value="kalender">Kalender Program Kerja</option>
+            </select>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <button class="btn small primary" id="mecBtnPdfDownload" style="background:#b91c1c; border-color:#b91c1c; justify-content:center; font-weight:600;">
+              📥 Unduh PDF Laporan Terpilih
+            </button>
+            <button class="btn small" id="mecBtnPdfPreview" style="justify-content:center;">
+              👁️ Lihat Pratinjau &amp; Cetak
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top:14px; justify-content:flex-end;">
+      <button class="btn" type="button" data-close="modal-export-center">Tutup</button>
     </div>
   </div>
 </div>
@@ -1939,22 +2184,73 @@ const VIEW_TITLES = {
   spp:"SPP & Tunggakan Siswa", lain:"Uang Pangkal & Item Lainnya",
   lpjbos:"LPJ - Dana BOS", lpjkons:"LPJ Konsolidasi Sekolah", cetak:"Cetak Laporan Resmi",
 };
+function switchView(viewName){
+  if(!VIEW_TITLES[viewName]) return;
+  document.querySelectorAll(".nav button[data-view]").forEach(b=>{
+    if(b.dataset.view === viewName) b.classList.add("active");
+    else b.classList.remove("active");
+  });
+  document.querySelectorAll(".mobile-nav-btn[data-view]").forEach(b=>{
+    if(b.dataset.view === viewName) b.classList.add("active");
+    else b.classList.remove("active");
+  });
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  const targetView = document.getElementById("view-"+viewName);
+  if(targetView) targetView.classList.add("active");
+  const topTitle = document.getElementById("topTitle");
+  if(topTitle) topTitle.textContent = VIEW_TITLES[viewName];
+
+  const renderers = { dashboard:renderDashboard, realisasi:renderRealisasi, spp:renderSppAll, lain:renderLainAll,
+    lpjbos:renderLpjBos, lpjkons:renderLpjKons, cetak:renderPrint, siswa:renderSiswaTable,
+    gtk:renderGtkTable, program:()=>{ renderProgramTabs(); renderProgramTable(); },
+    serahterima:renderSerahTerimaTable, kalenderprogram:renderKalenderProgramView,
+    bku:()=>renderBkuTable(currentBkuKey), kontrolkeuangan:renderKontrolKeuangan,
+    peminjaman:renderPinjamanTable, sekolah:renderSekolahForm };
+  if(renderers[viewName]) renderers[viewName]();
+
+  window.scrollTo({ top:0, behavior:"smooth" });
+}
+
+function openMobileSidebar(){
+  const sb = document.querySelector(".sidebar");
+  const bd = document.getElementById("sidebarBackdrop");
+  if(sb) sb.classList.add("mobile-open");
+  if(bd) bd.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeMobileSidebar(){
+  const sb = document.querySelector(".sidebar");
+  const bd = document.getElementById("sidebarBackdrop");
+  if(sb) sb.classList.remove("mobile-open");
+  if(bd) bd.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
 document.querySelectorAll(".nav button[data-view]").forEach(btn=>{
   btn.addEventListener("click", ()=>{
-    document.querySelectorAll(".nav button[data-view]").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
-    document.getElementById("view-"+btn.dataset.view).classList.add("active");
-    document.getElementById("topTitle").textContent = VIEW_TITLES[btn.dataset.view];
-    const renderers = { dashboard:renderDashboard, realisasi:renderRealisasi, spp:renderSppAll, lain:renderLainAll,
-      lpjbos:renderLpjBos, lpjkons:renderLpjKons, cetak:renderPrint, siswa:renderSiswaTable,
-      gtk:renderGtkTable, program:()=>{ renderProgramTabs(); renderProgramTable(); },
-      serahterima:renderSerahTerimaTable, kalenderprogram:renderKalenderProgramView,
-      bku:()=>renderBkuTable(currentBkuKey), kontrolkeuangan:renderKontrolKeuangan,
-      peminjaman:renderPinjamanTable };
-    if(renderers[btn.dataset.view]) renderers[btn.dataset.view]();
+    switchView(btn.dataset.view);
+    closeMobileSidebar();
   });
 });
+
+document.querySelectorAll(".mobile-nav-btn[data-view]").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    switchView(btn.dataset.view);
+  });
+});
+
+const btnToggleSb = document.getElementById("btnToggleSidebar");
+if(btnToggleSb) btnToggleSb.addEventListener("click", openMobileSidebar);
+
+const btnCloseSb = document.getElementById("btnCloseSidebar");
+if(btnCloseSb) btnCloseSb.addEventListener("click", closeMobileSidebar);
+
+const sbBackdrop = document.getElementById("sidebarBackdrop");
+if(sbBackdrop) sbBackdrop.addEventListener("click", closeMobileSidebar);
+
+const btnMobileMore = document.getElementById("btnMobileMore");
+if(btnMobileMore) btnMobileMore.addEventListener("click", openMobileSidebar);
 function refreshHeader(){
   document.getElementById("topSchoolSub").textContent = state.sekolah.namaSekolah
     ? `${state.sekolah.namaSekolah} · NPSN ${state.sekolah.npsn||"-"} · TA ${state.sekolah.tahunAjaran||"-"}`
@@ -5624,7 +5920,456 @@ function showPreview(which){
 document.getElementById("btnPrintNow").addEventListener("click", ()=>{ renderPrint(); window.print(); });
 
 /* =========================================================================
-   EXPORT / IMPORT
+   EKSPOR EXCEL & PDF LENGKAP
+   ========================================================================= */
+
+function sanitizeFileName(name){
+  return String(name||"").trim().replace(/[^a-zA-Z0-9_\-\.\s]+/g, "").replace(/\s+/g, "_");
+}
+
+function setAutoColWidths(ws, aoa){
+  const colWidths = [];
+  aoa.forEach(row=>{
+    if(!Array.isArray(row)) return;
+    row.forEach((cell, idx)=>{
+      const len = String(cell ?? "").length;
+      colWidths[idx] = Math.max(colWidths[idx] || 10, Math.min(len + 3, 48));
+    });
+  });
+  ws["!cols"] = colWidths.map(w=>({ wch: w }));
+}
+
+/* Master Multi-Sheet Excel Export */
+function exportAllToExcel(){
+  if(typeof XLSX === "undefined"){
+    alert("Pustaka Excel belum siap. Silakan periksa koneksi internet Anda atau coba sesaat lagi.");
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+  const namaSekolah = state.sekolah.namaSekolah || "Sekolah";
+  const ta = state.sekolah.tahunAjaran || "2026-2027";
+
+  // 1. Profil & Ringkasan
+  const s1 = [
+    ["PROFIL DAN RINGKASAN KEUANGAN SEKOLAH"],
+    ["Nama Sekolah", namaSekolah],
+    ["NPSN", state.sekolah.npsn || "-"],
+    ["Tahun Ajaran", ta],
+    ["Alamat", `${state.sekolah.alamat||"-"}, ${state.sekolah.desa||"-"}, ${state.sekolah.kecamatan||"-"}, ${state.sekolah.kabkota||"-"}`],
+    ["Kepala Sekolah", state.sekolah.kepsek || "-", `NIP: ${state.sekolah.nipKepsek||"-"}`],
+    ["Bendahara BOS", state.sekolah.bendaharaBos || "-", `NIP: ${state.sekolah.nipBendaharaBos||"-"}`],
+    [""],
+    ["RINGKASAN SALDO BUKU KAS UMUM (BKU)"],
+    ["Sumber Dana", "Saldo Awal (Rp)", "Penerimaan (Rp)", "Pengeluaran (Rp)", "Saldo Akhir (Rp)"]
+  ];
+  SUMBER_KEYS.forEach(k=>{
+    const tot = bkuTotals(k);
+    s1.push([SUMBER_META[k].label, tot.saldoAwal, tot.penerimaan, tot.pengeluaran, tot.saldoAkhir]);
+  });
+  const ws1 = XLSX.utils.aoa_to_sheet(s1);
+  setAutoColWidths(ws1, s1);
+  XLSX.utils.book_append_sheet(wb, ws1, "Ringkasan & Profil");
+
+  // 2. BKU BOS
+  const bkuBosAoa = [
+    [`BUKU KAS UMUM (BKU) - BOS (TA ${ta})`],
+    ["No", "Tanggal", "No Bukti", "Uraian Transaksi", "Penerimaan (Rp)", "Pengeluaran (Rp)", "Saldo (Rp)"],
+    ["-", "-", "-", "Saldo Awal Kas BOS", bkuTotals('bos').saldoAwal, 0, bkuTotals('bos').saldoAwal]
+  ];
+  bkuWithSaldo('bos').forEach((r,i)=>{
+    bkuBosAoa.push([i+1, r.tanggal, r.noBukti, r.uraian, Number(r.penerimaan)||0, Number(r.pengeluaran)||0, Number(r.saldo)||0]);
+  });
+  const totBos = bkuTotals('bos');
+  bkuBosAoa.push(["", "", "", "TOTAL", totBos.penerimaan, totBos.pengeluaran, totBos.saldoAkhir]);
+  const wsBkuBos = XLSX.utils.aoa_to_sheet(bkuBosAoa);
+  setAutoColWidths(wsBkuBos, bkuBosAoa);
+  XLSX.utils.book_append_sheet(wb, wsBkuBos, "BKU BOS");
+
+  // 3. BKU SPP
+  const bkuSppAoa = [
+    [`BUKU KAS UMUM (BKU) - SPP (TA ${ta})`],
+    ["No", "Tanggal", "No Bukti", "Uraian Transaksi", "Penerimaan (Rp)", "Pengeluaran (Rp)", "Saldo (Rp)"],
+    ["-", "-", "-", "Saldo Awal Kas SPP", bkuTotals('spp').saldoAwal, 0, bkuTotals('spp').saldoAwal]
+  ];
+  bkuWithSaldo('spp').forEach((r,i)=>{
+    bkuSppAoa.push([i+1, r.tanggal, r.noBukti, r.uraian, Number(r.penerimaan)||0, Number(r.pengeluaran)||0, Number(r.saldo)||0]);
+  });
+  const totSpp = bkuTotals('spp');
+  bkuSppAoa.push(["", "", "", "TOTAL", totSpp.penerimaan, totSpp.pengeluaran, totSpp.saldoAkhir]);
+  const wsBkuSpp = XLSX.utils.aoa_to_sheet(bkuSppAoa);
+  setAutoColWidths(wsBkuSpp, bkuSppAoa);
+  XLSX.utils.book_append_sheet(wb, wsBkuSpp, "BKU SPP");
+
+  // 4. BKU Uang Pangkal
+  const bkuPklAoa = [
+    [`BUKU KAS UMUM (BKU) - UANG PANGKAL (TA ${ta})`],
+    ["No", "Tanggal", "No Bukti", "Uraian Transaksi", "Penerimaan (Rp)", "Pengeluaran (Rp)", "Saldo (Rp)"],
+    ["-", "-", "-", "Saldo Awal Kas Pangkal", bkuTotals('pangkal').saldoAwal, 0, bkuTotals('pangkal').saldoAwal]
+  ];
+  bkuWithSaldo('pangkal').forEach((r,i)=>{
+    bkuPklAoa.push([i+1, r.tanggal, r.noBukti, r.uraian, Number(r.penerimaan)||0, Number(r.pengeluaran)||0, Number(r.saldo)||0]);
+  });
+  const totPkl = bkuTotals('pangkal');
+  bkuPklAoa.push(["", "", "", "TOTAL", totPkl.penerimaan, totPkl.pengeluaran, totPkl.saldoAkhir]);
+  const wsBkuPkl = XLSX.utils.aoa_to_sheet(bkuPklAoa);
+  setAutoColWidths(wsBkuPkl, bkuPklAoa);
+  XLSX.utils.book_append_sheet(wb, wsBkuPkl, "BKU Uang Pangkal");
+
+  // 5. BKU Dana Lainnya
+  const bkuLainAoa = [
+    [`BUKU KAS UMUM (BKU) - DANA LAINNYA (TA ${ta})`],
+    ["No", "Tanggal", "No Bukti", "Uraian Transaksi", "Penerimaan (Rp)", "Pengeluaran (Rp)", "Saldo (Rp)"],
+    ["-", "-", "-", "Saldo Awal Kas Lainnya", bkuTotals('lain').saldoAwal, 0, bkuTotals('lain').saldoAwal]
+  ];
+  bkuWithSaldo('lain').forEach((r,i)=>{
+    bkuLainAoa.push([i+1, r.tanggal, r.noBukti, r.uraian, Number(r.penerimaan)||0, Number(r.pengeluaran)||0, Number(r.saldo)||0]);
+  });
+  const totLain = bkuTotals('lain');
+  bkuLainAoa.push(["", "", "", "TOTAL", totLain.penerimaan, totLain.pengeluaran, totLain.saldoAkhir]);
+  const wsBkuLain = XLSX.utils.aoa_to_sheet(bkuLainAoa);
+  setAutoColWidths(wsBkuLain, bkuLainAoa);
+  XLSX.utils.book_append_sheet(wb, wsBkuLain, "BKU Dana Lain");
+
+  // 6. Rencana & Realisasi RKAS
+  const progAoa = [
+    [`PROGRAM KERJA & REALISASI RKAS (TA ${ta})`],
+    ["No", "Sumber Dana", "Nama Program", "Pengaju", "Penanggung Jawab (PJ)", "Status", "Jadwal Pelaksanaan", "Anggaran Rencana (Rp)", "Realisasi (Rp)", "Sisa Anggaran (Rp)"]
+  ];
+  let pIdx = 1;
+  SUMBER_KEYS.forEach(k=>{
+    (state.program[k]||[]).forEach(p=>{
+      const ang = programBudgetTotal(p);
+      const real = (p.realisasi||[]).reduce((s,r)=> s + (Number(r.anggaranTerpakai)||0), 0);
+      progAoa.push([
+        pIdx++,
+        SUMBER_META[k].label,
+        p.namaProgram || "-",
+        p.namaPengaju || "-",
+        p.pj || "-",
+        p.status || "-",
+        (p.tanggal||[]).map(formatTgl).join(", "),
+        ang,
+        real,
+        ang - real
+      ]);
+    });
+  });
+  const wsProg = XLSX.utils.aoa_to_sheet(progAoa);
+  setAutoColWidths(wsProg, progAoa);
+  XLSX.utils.book_append_sheet(wb, wsProg, "Program & RKAS");
+
+  // 7. Rekap SPP Siswa
+  const sppAoa = [
+    [`REKAPITULASI PEMBAYARAN SPP SISWA (TA ${ta})`],
+    ["No", "NIS", "Nama Siswa", "Kelas", "Tarif SPP (Rp)", ...BULAN_LIST, "Total Dibayar (Rp)", "Tunggakan (Rp)"]
+  ];
+  (state.siswa||[]).forEach((s,idx)=>{
+    const rk = sppRekapForSiswa(s);
+    const monthsStatus = rk.perBulan.map(b=> b.status==='ok'?'Lunas':b.status==='partial'?'Sebagian':b.status==='bad'?'Belum':'-');
+    sppAoa.push([idx+1, s.nis, s.nama, s.kelas, Number(s.tarifSpp)||0, ...monthsStatus, rk.totalDibayar, rk.tunggakan]);
+  });
+  const wsSpp = XLSX.utils.aoa_to_sheet(sppAoa);
+  setAutoColWidths(wsSpp, sppAoa);
+  XLSX.utils.book_append_sheet(wb, wsSpp, "Rekap SPP Siswa");
+
+  // 8. Rekap Uang Pangkal
+  const pklAoa = [
+    [`REKAPITULASI UANG PANGKAL SISWA (TA ${ta})`],
+    ["No", "NIS", "Nama Siswa", "Kelas", "Tarif Pangkal (Rp)", "Total Dibayar (Rp)", "Sisa Tagihan (Rp)", "Status"]
+  ];
+  (state.siswa||[]).forEach((s,idx)=>{
+    const rk = pangkalRekapForSiswa(s);
+    const st = rk.status==='ok'?'Lunas':rk.status==='partial'?'Sebagian':rk.status==='bad'?'Belum Bayar':'-';
+    pklAoa.push([idx+1, s.nis, s.nama, s.kelas, Number(s.tarifPangkal)||0, rk.totalDibayar, rk.sisa, st]);
+  });
+  const wsPkl = XLSX.utils.aoa_to_sheet(pklAoa);
+  setAutoColWidths(wsPkl, pklAoa);
+  XLSX.utils.book_append_sheet(wb, wsPkl, "Rekap Uang Pangkal");
+
+  // 9. Pinjaman GTK
+  const pjAoa = [
+    [`BUKU PINJAMAN & PIUTANG GTK`],
+    ["No", "No Permohonan", "Nama GTK", "Jabatan", "Tanggal Pengajuan", "Sumber Dana", "Jumlah Pinjaman (Rp)", "Keperluan", "Status", "Total Cicilan (Rp)", "Sisa Pinjaman (Rp)"]
+  ];
+  (state.pinjaman||[]).forEach((pj,idx)=>{
+    const totCicilan = (pj.cicilan||[]).reduce((s,c)=> s + (Number(c.nominal)||0), 0);
+    const sisa = Math.max(0, (Number(pj.nominal)||0) - totCicilan);
+    pjAoa.push([idx+1, pj.noPermohonan||"-", pj.nama, pj.jabatan, pj.tanggal, SUMBER_META[pj.sumberDana]?.label||pj.sumberDana, Number(pj.nominal)||0, pj.keperluan, pj.status, totCicilan, sisa]);
+  });
+  const wsPj = XLSX.utils.aoa_to_sheet(pjAoa);
+  setAutoColWidths(wsPj, pjAoa);
+  XLSX.utils.book_append_sheet(wb, wsPj, "Pinjaman GTK");
+
+  // 10. Data Siswa
+  const siswaAoa = [
+    ["DATA INDUK SISWA"],
+    ["No", "NIS", "Nama Siswa", "Kelas", "Tarif SPP (Rp)", "Tarif Pangkal (Rp)", "Status", "No WA Ortu"]
+  ];
+  (state.siswa||[]).forEach((s,idx)=>{
+    siswaAoa.push([idx+1, s.nis, s.nama, s.kelas, Number(s.tarifSpp)||0, Number(s.tarifPangkal)||0, s.status, s.waOrtu||""]);
+  });
+  const wsSiswa = XLSX.utils.aoa_to_sheet(siswaAoa);
+  setAutoColWidths(wsSiswa, siswaAoa);
+  XLSX.utils.book_append_sheet(wb, wsSiswa, "Data Siswa");
+
+  // 11. Data GTK
+  const gtkAoa = [
+    ["DATA GURU & TENAGA KEPENDIDIKAN (GTK)"],
+    ["No", "Nama Lengkap", "NIP", "Jabatan"]
+  ];
+  (state.gtk||[]).forEach((g,idx)=>{
+    gtkAoa.push([idx+1, g.nama, g.nip, g.jabatan]);
+  });
+  const wsGtk = XLSX.utils.aoa_to_sheet(gtkAoa);
+  setAutoColWidths(wsGtk, gtkAoa);
+  XLSX.utils.book_append_sheet(wb, wsGtk, "Data GTK");
+
+  const fileName = `Master_Keuangan_${sanitizeFileName(namaSekolah)}_${sanitizeFileName(ta)}.xlsx`;
+  XLSX.writeFile(wb, fileName);
+}
+
+/* Export Single BKU to Excel */
+function exportBkuKeyToExcel(key){
+  if(typeof XLSX === "undefined"){ alert("Pustaka Excel belum siap."); return; }
+  const meta = SUMBER_META[key] || { label:key };
+  const namaSekolah = state.sekolah.namaSekolah || "Sekolah";
+  const ta = state.sekolah.tahunAjaran || "TA";
+  const wb = XLSX.utils.book_new();
+
+  const aoa = [
+    [`BUKU KAS UMUM (BKU) - ${meta.label.toUpperCase()}`],
+    [`${namaSekolah} · Tahun Ajaran ${ta}`],
+    [""],
+    ["No", "Tanggal", "No Bukti", "Uraian Transaksi", "Penerimaan (Rp)", "Pengeluaran (Rp)", "Saldo (Rp)"],
+    ["-", "-", "-", `Saldo Awal Kas ${meta.label}`, bkuTotals(key).saldoAwal, 0, bkuTotals(key).saldoAwal]
+  ];
+  bkuWithSaldo(key).forEach((r,i)=>{
+    aoa.push([i+1, r.tanggal, r.noBukti, r.uraian, Number(r.penerimaan)||0, Number(r.pengeluaran)||0, Number(r.saldo)||0]);
+  });
+  const tot = bkuTotals(key);
+  aoa.push(["", "", "", "TOTAL", tot.penerimaan, tot.pengeluaran, tot.saldoAkhir]);
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  setAutoColWidths(ws, aoa);
+  XLSX.utils.book_append_sheet(wb, ws, `BKU_${meta.label}`.slice(0,31));
+  XLSX.writeFile(wb, `BKU_${sanitizeFileName(meta.label)}_${sanitizeFileName(namaSekolah)}.xlsx`);
+}
+
+/* Export Current Active Report Table to Excel */
+function exportCurrentReportToExcel(){
+  const activePage = document.querySelector("#printRoot .print-page.showpreview");
+  if(!activePage){
+    alert("Silakan pilih jenis laporan yang ingin diekspor terlebih dahulu.");
+    return;
+  }
+  const table = activePage.querySelector("table");
+  if(!table){
+    alert("Laporan ini tidak memiliki tabel tabular untuk diekspor ke Excel. Gunakan tombol 'Unduh PDF'.");
+    return;
+  }
+  if(typeof XLSX === "undefined"){
+    alert("Pustaka Excel belum siap.");
+    return;
+  }
+  const tabObj = PRINT_TABS.find(t=> t.key === currentPrintTab);
+  const tabLabel = tabObj ? tabObj.label : "Laporan";
+  const namaSekolah = state.sekolah.namaSekolah || "Sekolah";
+  const fileName = `${sanitizeFileName(tabLabel)}_${sanitizeFileName(namaSekolah)}.xlsx`;
+
+  const wb = XLSX.utils.table_to_book(table, { raw:false });
+  XLSX.writeFile(wb, fileName);
+}
+
+/* Export Current Report to PDF */
+async function exportCurrentReportToPdf(){
+  renderPrint();
+  const activePage = document.querySelector("#printRoot .print-page.showpreview");
+  if(!activePage){
+    alert("Silakan pilih laporan yang ingin diekspor terlebih dahulu.");
+    return;
+  }
+  const btn = document.getElementById("btnExportPdfCurrent");
+  const origHtml = btn ? btn.innerHTML : "";
+  if(btn){ btn.disabled = true; btn.innerHTML = "⏳ Menyiapkan PDF..."; }
+
+  try{
+    if(typeof html2pdf === "undefined"){
+      alert("Pustaka PDF sedang dimuat atau koneksi terputus. Mengalihkan ke dialog cetak browser (pilih 'Simpan sebagai PDF')...");
+      window.print();
+      return;
+    }
+    const isWide = activePage.classList.contains("wide");
+    const namaSekolah = state.sekolah.namaSekolah || "Sekolah";
+    const tabObj = PRINT_TABS.find(t=> t.key === currentPrintTab);
+    const tabLabel = tabObj ? tabObj.label : "Laporan";
+    const fileName = `${sanitizeFileName(tabLabel)}_${sanitizeFileName(namaSekolah)}.pdf`;
+
+    const opt = {
+      margin: isWide ? [6, 6, 6, 6] : [8, 8, 8, 8],
+      filename: fileName,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: isWide ? 'landscape' : 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] }
+    };
+    await html2pdf().set(opt).from(activePage).save();
+  }catch(err){
+    console.error("Gagal export PDF:", err);
+    alert("Terjadi kendala saat unduh PDF otomatis: " + (err.message||err) + ". Mengalihkan ke cetak browser...");
+    window.print();
+  }finally{
+    if(btn){ btn.disabled = false; btn.innerHTML = origHtml; }
+  }
+}
+
+/* Export Specific Report Key to PDF */
+async function exportSpecificReportToPdf(key){
+  currentPrintTab = key;
+  renderPrint();
+  const tabWrap = document.getElementById("printTabs");
+  if(tabWrap){
+    tabWrap.querySelectorAll("button").forEach(b=>{
+      if(b.dataset.p === key) b.classList.add("active");
+      else b.classList.remove("active");
+    });
+  }
+  await exportCurrentReportToPdf();
+}
+
+/* Wire Event Listeners for Export & Print */
+document.getElementById("btnExportPdfCurrent").addEventListener("click", exportCurrentReportToPdf);
+document.getElementById("btnExportExcelCurrent").addEventListener("click", exportCurrentReportToExcel);
+document.getElementById("btnExportExcelAll").addEventListener("click", exportAllToExcel);
+
+// Quick export buttons from tables
+const btnExpBku = document.getElementById("btnExportBkuExcel");
+if(btnExpBku) btnExpBku.addEventListener("click", ()=> exportBkuKeyToExcel(currentBkuKey));
+
+const btnExpSpp = document.getElementById("btnExportSppExcel");
+if(btnExpSpp) btnExpSpp.addEventListener("click", ()=>{
+  if(typeof XLSX === "undefined"){ alert("Pustaka Excel belum siap."); return; }
+  const wb = XLSX.utils.book_new();
+  const ta = state.sekolah.tahunAjaran || "TA";
+  const sppAoa = [
+    [`REKAPITULASI PEMBAYARAN SPP SISWA (TA ${ta})`],
+    ["No", "NIS", "Nama Siswa", "Kelas", "Tarif SPP (Rp)", ...BULAN_LIST, "Total Dibayar (Rp)", "Tunggakan (Rp)"]
+  ];
+  (state.siswa||[]).forEach((s,idx)=>{
+    const rk = sppRekapForSiswa(s);
+    const monthsStatus = rk.perBulan.map(b=> b.status==='ok'?'Lunas':b.status==='partial'?'Sebagian':b.status==='bad'?'Belum':'-');
+    sppAoa.push([idx+1, s.nis, s.nama, s.kelas, Number(s.tarifSpp)||0, ...monthsStatus, rk.totalDibayar, rk.tunggakan]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(sppAoa);
+  setAutoColWidths(ws, sppAoa);
+  XLSX.utils.book_append_sheet(wb, ws, "Rekap SPP");
+  XLSX.writeFile(wb, `Rekap_SPP_${sanitizeFileName(state.sekolah.namaSekolah||"Sekolah")}.xlsx`);
+});
+
+const btnExpPj = document.getElementById("btnExportPjExcel");
+if(btnExpPj) btnExpPj.addEventListener("click", ()=>{
+  if(typeof XLSX === "undefined"){ alert("Pustaka Excel belum siap."); return; }
+  const wb = XLSX.utils.book_new();
+  const pjAoa = [
+    ["BUKU PINJAMAN & PIUTANG GTK"],
+    ["No", "No Permohonan", "Nama GTK", "Jabatan", "Tanggal Pengajuan", "Sumber Dana", "Jumlah Pinjaman (Rp)", "Keperluan", "Status", "Total Cicilan (Rp)", "Sisa Pinjaman (Rp)"]
+  ];
+  (state.pinjaman||[]).forEach((pj,idx)=>{
+    const totCicilan = (pj.cicilan||[]).reduce((s,c)=> s + (Number(c.nominal)||0), 0);
+    const sisa = Math.max(0, (Number(pj.nominal)||0) - totCicilan);
+    pjAoa.push([idx+1, pj.noPermohonan||"-", pj.nama, pj.jabatan, pj.tanggal, SUMBER_META[pj.sumberDana]?.label||pj.sumberDana, Number(pj.nominal)||0, pj.keperluan, pj.status, totCicilan, sisa]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(pjAoa);
+  setAutoColWidths(ws, pjAoa);
+  XLSX.utils.book_append_sheet(wb, ws, "Pinjaman GTK");
+  XLSX.writeFile(wb, `Pinjaman_GTK_${sanitizeFileName(state.sekolah.namaSekolah||"Sekolah")}.xlsx`);
+});
+
+// Modal Export Center triggers
+const btnOpenMec = document.getElementById("btnOpenExportCenter");
+if(btnOpenMec) btnOpenMec.addEventListener("click", ()=> openModal("modal-export-center"));
+
+const mecAll = document.getElementById("mecBtnExcelAll");
+if(mecAll) mecAll.addEventListener("click", ()=>{ exportAllToExcel(); closeModal("modal-export-center"); });
+
+const mecBos = document.getElementById("mecBtnExcelBkuBos");
+if(mecBos) mecBos.addEventListener("click", ()=>{ exportBkuKeyToExcel("bos"); closeModal("modal-export-center"); });
+
+const mecSpp = document.getElementById("mecBtnExcelBkuSpp");
+if(mecSpp) mecSpp.addEventListener("click", ()=>{ exportBkuKeyToExcel("spp"); closeModal("modal-export-center"); });
+
+const mecSppRekap = document.getElementById("mecBtnExcelSppRekap");
+if(mecSppRekap) mecSppRekap.addEventListener("click", ()=>{
+  document.getElementById("btnExportSppExcel").click();
+  closeModal("modal-export-center");
+});
+
+const mecProg = document.getElementById("mecBtnExcelProgram");
+if(mecProg) mecProg.addEventListener("click", ()=>{
+  if(typeof XLSX === "undefined"){ alert("Pustaka Excel belum siap."); return; }
+  const wb = XLSX.utils.book_new();
+  const ta = state.sekolah.tahunAjaran || "TA";
+  const progAoa = [
+    [`PROGRAM KERJA & REALISASI RKAS (TA ${ta})`],
+    ["No", "Sumber Dana", "Nama Program", "Pengaju", "Penanggung Jawab (PJ)", "Status", "Jadwal Pelaksanaan", "Anggaran Rencana (Rp)", "Realisasi (Rp)", "Sisa Anggaran (Rp)"]
+  ];
+  let pIdx = 1;
+  SUMBER_KEYS.forEach(k=>{
+    (state.program[k]||[]).forEach(p=>{
+      const ang = programBudgetTotal(p);
+      const real = (p.realisasi||[]).reduce((s,r)=> s + (Number(r.anggaranTerpakai)||0), 0);
+      progAoa.push([
+        pIdx++,
+        SUMBER_META[k].label,
+        p.namaProgram || "-",
+        p.namaPengaju || "-",
+        p.pj || "-",
+        p.status || "-",
+        (p.tanggal||[]).map(formatTgl).join(", "),
+        ang,
+        real,
+        ang - real
+      ]);
+    });
+  });
+  const ws = XLSX.utils.aoa_to_sheet(progAoa);
+  setAutoColWidths(ws, progAoa);
+  XLSX.utils.book_append_sheet(wb, ws, "Program RKAS");
+  XLSX.writeFile(wb, `Program_RKAS_${sanitizeFileName(state.sekolah.namaSekolah||"Sekolah")}.xlsx`);
+  closeModal("modal-export-center");
+});
+
+const mecPj = document.getElementById("mecBtnExcelPinjaman");
+if(mecPj) mecPj.addEventListener("click", ()=>{
+  document.getElementById("btnExportPjExcel").click();
+  closeModal("modal-export-center");
+});
+
+const mecPdfDown = document.getElementById("mecBtnPdfDownload");
+if(mecPdfDown) mecPdfDown.addEventListener("click", async ()=>{
+  const sel = document.getElementById("mecPdfReportSelect");
+  const repKey = sel ? sel.value : "realisasi";
+  closeModal("modal-export-center");
+  await exportSpecificReportToPdf(repKey);
+});
+
+const mecPdfPrev = document.getElementById("mecBtnPdfPreview");
+if(mecPdfPrev) mecPdfPrev.addEventListener("click", ()=>{
+  const sel = document.getElementById("mecPdfReportSelect");
+  const repKey = sel ? sel.value : "realisasi";
+  closeModal("modal-export-center");
+  switchView("cetak");
+  currentPrintTab = repKey;
+  renderPrint();
+  const tabWrap = document.getElementById("printTabs");
+  if(tabWrap){
+    tabWrap.querySelectorAll("button").forEach(b=>{
+      if(b.dataset.p === repKey) b.classList.add("active");
+      else b.classList.remove("active");
+    });
+  }
+});
+
+/* =========================================================================
+   EXPORT / IMPORT JSON
    ========================================================================= */
 document.getElementById("btnExport").addEventListener("click", ()=>{
   const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
@@ -5797,10 +6542,56 @@ function loadSampleData(){
       Tombol Tarik/Kirim manual yang sudah ada tetap berfungsi seperti biasa.
    ========================================================================= */
 const AUTOSAVE_KEY = "keuanganSekolahAutosaveV1";
+let currentAuthToken = null;
+let currentAuthUser = null;
+let cloudSyncInFlight = false;
+
+async function syncStateToCloudDatabase() {
+  if (!currentAuthToken || cloudSyncInFlight || !navigator.onLine) return;
+  cloudSyncInFlight = true;
+  try {
+    const res = await fetch('/api/school-data', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + currentAuthToken
+      },
+      body: JSON.stringify({ state })
+    });
+    if (res.status === 401 && currentAuthUser) {
+      currentAuthToken = await currentAuthUser.getIdToken(true);
+    }
+  } catch (err) {
+    console.warn("Cloud sync error:", err);
+  } finally {
+    cloudSyncInFlight = false;
+  }
+}
+
+async function loadStateFromCloudDatabase() {
+  if (!currentAuthToken) return null;
+  try {
+    const res = await fetch('/api/school-data', {
+      headers: {
+        'Authorization': 'Bearer ' + currentAuthToken
+      }
+    });
+    if (!res.ok) return null;
+    const body = await res.json();
+    return body.data;
+  } catch (err) {
+    console.warn("Load cloud data error:", err);
+    return null;
+  }
+}
+
 function saveStateToLocalStorage(){
   try{
     localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ savedAt:new Date().toISOString(), state }));
-  }catch(err){ /* localStorage tidak tersedia (mis. mode privat/kuota penuh) — abaikan diam-diam, aplikasi tetap jalan normal di memori */ }
+  }catch(err){ /* localStorage tidak tersedia — abaikan diam-diam */ }
+  if (currentAuthToken) {
+    syncStateToCloudDatabase();
+  }
 }
 function loadStateFromLocalStorage(){
   try{
@@ -5902,6 +6693,93 @@ startAutoSync();
    di HTML sejak awal (yang dibuat dinamis lewat JS punya pemanggilan
    wireCurrencyInput/wireCurrencyInputs sendiri di titik pembuatannya). */
 wireCurrencyInputs(document);
+</script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
+import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+
+async function initClientAuth() {
+  try {
+    const res = await fetch('/api/firebase-config');
+    if (!res.ok) return;
+    const config = await res.json();
+    const app = initializeApp(config);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    const btn = document.getElementById('btnGoogleAuth');
+    const label = document.getElementById('btnGoogleAuthLabel');
+
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        if (!auth) return;
+        if (currentAuthUser) {
+          if (confirm("Keluar dari akun Google?")) {
+            await signOut(auth);
+            currentAuthToken = null;
+            currentAuthUser = null;
+            if (label) label.textContent = "Masuk Google";
+            if (btn) btn.title = "Masuk dengan akun Google untuk sinkronisasi database";
+          }
+        } else {
+          try {
+            btn.disabled = true;
+            if (label) label.textContent = "Menghubungkan...";
+            const cred = await signInWithPopup(auth, provider);
+            currentAuthUser = cred.user;
+            currentAuthToken = await cred.user.getIdToken();
+          } catch(err) {
+            console.error("Login error:", err);
+            alert("Gagal masuk dengan Google: " + (err.message || err));
+          } finally {
+            btn.disabled = false;
+          }
+        }
+      });
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      currentAuthUser = user;
+      if (user) {
+        currentAuthToken = await user.getIdToken();
+        const displayName = user.displayName || user.email || "Akun Google";
+        if (label) label.textContent = displayName;
+        if (btn) btn.title = "Masuk sebagai: " + (user.email || displayName) + " (Klik untuk keluar)";
+
+        try {
+          await fetch('/api/auth/sync-user', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + currentAuthToken
+            }
+          });
+          const cloudState = await loadStateFromCloudDatabase();
+          if (cloudState && typeof cloudState === 'object' && Object.keys(cloudState).length > 0) {
+            state = cloudState;
+            restoreAutosavedStateIfAny();
+            renderAll();
+          } else {
+            syncStateToCloudDatabase();
+          }
+        } catch(e) {
+          console.warn("Cloud initial sync error:", e);
+        }
+      } else {
+        currentAuthToken = null;
+        if (label) label.textContent = "Masuk Google";
+        if (btn) btn.title = "Masuk dengan akun Google untuk sinkronisasi database";
+      }
+    });
+  } catch(err) {
+    console.warn("Client auth init error:", err);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initClientAuth);
+} else {
+  initClientAuth();
+}
 </script>
 </body>
 </html>

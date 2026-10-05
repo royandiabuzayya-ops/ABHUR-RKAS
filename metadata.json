@@ -1,0 +1,8 @@
+{
+  "name": "Aplikasi Keuangan Sekolah",
+  "description": "Aplikasi Keuangan Sekolah (RKAS) - Rencana Kegiatan dan Anggaran Sekolah untuk pencatatan dan pelaporan keuangan sekolah.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
