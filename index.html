@@ -148,6 +148,7 @@ body{
 .topbar-actions{display:flex; gap:8px; flex-wrap:wrap;}
 .online-badge{font-size:11px; font-weight:700; padding:4px 10px; border-radius:12px; align-self:center; white-space:nowrap;}
 .online-badge.online{background:#e3f7e9; color:#1a7a3d;}
+.online-badge.syncing{background:#e0f2fe; color:#0369a1;}
 .online-badge.offline{background:#fdeaea; color:#b23030;}
 
 .btn{
@@ -7483,6 +7484,9 @@ function saveStateToLocalStorage(){
   try{
     localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ savedAt:new Date().toISOString(), state }));
   }catch(err){ /* localStorage tidak tersedia — abaikan diam-diam */ }
+  if (typeof window.syncStateToFirestore === 'function') {
+    window.syncStateToFirestore();
+  }
   if (currentAuthToken) {
     syncStateToCloudDatabase();
   }
@@ -7596,15 +7600,202 @@ wireCurrencyInputs(document);
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
 import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import { getFirestore, doc, setDoc, onSnapshot, getDocFromServer } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
+
+const defaultFirebaseConfig = {
+  projectId: "robust-lore-ccb1c",
+  appId: "1:313861927330:web:4e367ee24df800fbf582fb",
+  apiKey: "AIzaSyC3OgN8WC3yMB-2fGY4EPD5V9zJYlbJH0s",
+  authDomain: "robust-lore-ccb1c.firebaseapp.com",
+  firestoreDatabaseId: "ai-studio-abhurrkas-dabc7792-4000-4801-ae43-67bf9b14c8de",
+  storageBucket: "robust-lore-ccb1c.firebasestorage.app",
+  messagingSenderId: "313861927330"
+};
+
+const OperationType = {
+  CREATE: 'create',
+  UPDATE: 'update',
+  DELETE: 'delete',
+  LIST: 'list',
+  GET: 'get',
+  WRITE: 'write',
+};
+
+let app = null;
+let db = null;
+let auth = null;
+let isApplyingCloudSnapshot = false;
+let lastPushedTimestamp = null;
+let firestorePushTimer = null;
+
+function handleFirestoreError(error, operationType, path) {
+  const errInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth && auth.currentUser ? auth.currentUser.uid : null,
+      email: auth && auth.currentUser ? auth.currentUser.email : null,
+      emailVerified: auth && auth.currentUser ? auth.currentUser.emailVerified : null,
+      isAnonymous: auth && auth.currentUser ? auth.currentUser.isAnonymous : null,
+      tenantId: auth && auth.currentUser ? auth.currentUser.tenantId : null,
+      providerInfo: (auth && auth.currentUser && auth.currentUser.providerData) ? auth.currentUser.providerData.map(p => ({
+        providerId: p.providerId,
+        email: p.email,
+      })) : []
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
+function updateOnlineBadge(isOnline, text, isSyncing = false) {
+  const badge = document.getElementById("onlineStatusBadge");
+  if (!badge) return;
+  badge.textContent = text;
+  badge.className = "online-badge " + (isSyncing ? "syncing" : (isOnline ? "online" : "offline"));
+  badge.title = isOnline 
+    ? "Firestore Realtime Aktif: Semua perubahan data tersinkronisasi otomatis antar-perangkat!" 
+    : "Koneksi terputus. Data tersimpan di penyimpanan lokal dan akan sinkron saat online.";
+}
+
+function showSyncToast(msg) {
+  let toast = document.getElementById("firestoreSyncToast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "firestoreSyncToast";
+    toast.style.cssText = "position:fixed;bottom:20px;right:20px;background:#0f172a;color:#f8fafc;padding:10px 16px;border-radius:8px;font-size:12.5px;font-weight:600;box-shadow:0 10px 25px -5px rgba(0,0,0,0.3);z-index:99999;transition:opacity 0.3s, transform 0.3s;opacity:0;transform:translateY(10px);pointer-events:none;";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = "1";
+  toast.style.transform = "translateY(0)";
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(10px)";
+  }, 2500);
+}
+
+async function testConnection() {
+  try {
+    await getDocFromServer(doc(db, 'test', 'connection'));
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('the client is offline')) {
+      console.error("Please check your Firebase configuration.");
+    }
+  }
+}
+
+async function pushStateToFirestore(immediate = false) {
+  if (isApplyingCloudSnapshot || !db) return;
+
+  clearTimeout(firestorePushTimer);
+  const doPush = async () => {
+    try {
+      updateOnlineBadge(true, "● Menyimpan...", true);
+      const timestamp = new Date().toISOString();
+      lastPushedTimestamp = timestamp;
+      const payload = {
+        sekolah: (typeof state !== 'undefined' && state.sekolah) ? state.sekolah : {},
+        siswa: (typeof state !== 'undefined' && state.siswa) ? state.siswa : [],
+        gtk: (typeof state !== 'undefined' && state.gtk) ? state.gtk : [],
+        program: (typeof state !== 'undefined' && state.program) ? state.program : {},
+        bku: (typeof state !== 'undefined' && state.bku) ? state.bku : {},
+        sppTx: (typeof state !== 'undefined' && state.sppTx) ? state.sppTx : [],
+        itemTx: (typeof state !== 'undefined' && state.itemTx) ? state.itemTx : [],
+        pinjaman: (typeof state !== 'undefined' && state.pinjaman) ? state.pinjaman : [],
+        lpj: (typeof state !== 'undefined' && state.lpj) ? state.lpj : {},
+        docCounters: (typeof state !== 'undefined' && state.docCounters) ? state.docCounters : {},
+        updatedAt: timestamp,
+        updatedBy: (window.currentUser && window.currentUser.name) || (auth && auth.currentUser ? auth.currentUser.email : "Pengguna"),
+      };
+      await setDoc(doc(db, 'schools', 'default'), payload);
+      updateOnlineBadge(true, "● Realtime Online");
+    } catch (err) {
+      console.warn("Firestore push error:", err);
+      updateOnlineBadge(navigator.onLine, navigator.onLine ? "● Gagal Sync Cloud" : "● Offline");
+      handleFirestoreError(err, OperationType.WRITE, 'schools/default');
+    }
+  };
+
+  if (immediate) {
+    await doPush();
+  } else {
+    firestorePushTimer = setTimeout(doPush, 600);
+  }
+}
+window.syncStateToFirestore = pushStateToFirestore;
+
+function setupFirestoreRealtime() {
+  const schoolDocRef = doc(db, 'schools', 'default');
+
+  onSnapshot(schoolDocRef, (snap) => {
+    updateOnlineBadge(true, "● Realtime Online");
+    if (!snap.exists()) {
+      if (typeof state !== 'undefined' && state.sekolah && !sekolahLooksUnconfigured()) {
+        pushStateToFirestore(true);
+      }
+      return;
+    }
+
+    const cloudData = snap.data();
+    if (!cloudData || !cloudData.sekolah) return;
+
+    // Ignore echo of our own recent write
+    if (cloudData.updatedAt && cloudData.updatedAt === lastPushedTimestamp) {
+      return;
+    }
+
+    isApplyingCloudSnapshot = true;
+    try {
+      state = {
+        sekolah: Object.assign(emptySekolah(), cloudData.sekolah || {}),
+        siswa: Array.isArray(cloudData.siswa) ? cloudData.siswa : [],
+        gtk: Array.isArray(cloudData.gtk) ? cloudData.gtk : [],
+        program: Object.assign({ bos: [], spp: [], pangkal: [], lain: [] }, cloudData.program || {}),
+        bku: Object.assign({ bos: [], spp: [], pangkal: [], lain: [] }, cloudData.bku || {}),
+        sppTx: Array.isArray(cloudData.sppTx) ? cloudData.sppTx : [],
+        itemTx: Array.isArray(cloudData.itemTx) ? cloudData.itemTx : [],
+        pinjaman: Array.isArray(cloudData.pinjaman) ? cloudData.pinjaman : [],
+        lpj: Object.assign({ periode: "Triwulan I", danaDiterima: 0, penerimaanLain: 0 }, cloudData.lpj || {}),
+        docCounters: Object.assign({ kwitansi: 0, bast: 0, peminjaman: 0 }, cloudData.docCounters || {})
+      };
+      restoreAutosavedStateIfAny();
+      try {
+        localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ savedAt: new Date().toISOString(), state }));
+      } catch(e) {}
+      renderAll();
+      showSyncToast("⚡ Data disinkronkan realtime dari cloud!");
+    } finally {
+      isApplyingCloudSnapshot = false;
+    }
+  }, (err) => {
+    updateOnlineBadge(false, "● Firestore Terputus");
+    handleFirestoreError(err, OperationType.GET, 'schools/default');
+  });
+}
 
 async function initClientAuth() {
   try {
-    const res = await fetch('/api/firebase-config');
-    if (!res.ok) return;
-    const config = await res.json();
-    const app = initializeApp(config);
-    const auth = getAuth(app);
+    let config = defaultFirebaseConfig;
+    try {
+      const res = await fetch('/api/firebase-config');
+      if (res.ok) {
+        const serverConfig = await res.json();
+        config = { ...defaultFirebaseConfig, ...serverConfig };
+      }
+    } catch(e) {
+      // Direct client usage (GitHub Pages) uses defaultFirebaseConfig
+    }
+
+    app = initializeApp(config);
+    db = getFirestore(app, config.firestoreDatabaseId);
+    auth = getAuth(app);
     const provider = new GoogleAuthProvider();
+
+    await testConnection();
+    setupFirestoreRealtime();
 
     const btn = document.getElementById('btnGoogleAuth');
     const label = document.getElementById('btnGoogleAuthLabel');
@@ -7658,16 +7849,8 @@ async function initClientAuth() {
               'Authorization': 'Bearer ' + window.currentAuthToken
             }
           });
-          const cloudState = await loadStateFromCloudDatabase();
-          if (cloudState && typeof cloudState === 'object' && Object.keys(cloudState).length > 0) {
-            state = cloudState;
-            restoreAutosavedStateIfAny();
-            renderAll();
-          } else {
-            syncStateToCloudDatabase();
-          }
         } catch(e) {
-          console.warn("Cloud initial sync error:", e);
+          // Ignore if running static without node server
         }
       } else {
         window.currentAuthToken = null;
@@ -7679,7 +7862,8 @@ async function initClientAuth() {
       }
     });
   } catch(err) {
-    console.warn("Client auth init error:", err);
+    console.warn("Client auth & firestore init error:", err);
+    updateOnlineBadge(false, "● Firestore Error");
   }
 }
 

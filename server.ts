@@ -26,6 +26,7 @@ app.get('/api/firebase-config', (_req, res) => {
     authDomain: firebaseConfig.authDomain,
     storageBucket: firebaseConfig.storageBucket,
     messagingSenderId: firebaseConfig.messagingSenderId,
+    firestoreDatabaseId: firebaseConfig.firestoreDatabaseId,
   });
 });
 

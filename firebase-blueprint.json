@@ -1,0 +1,66 @@
+{
+  "entities": {
+    "SchoolData": {
+      "title": "SchoolData",
+      "description": "Complete centralized financial and operational data of the school",
+      "type": "object",
+      "properties": {
+        "sekolah": {
+          "type": "object",
+          "description": "School identity, initial balances, and configuration settings"
+        },
+        "siswa": {
+          "type": "array",
+          "description": "Student master records"
+        },
+        "gtk": {
+          "type": "array",
+          "description": "Teachers and staff master records"
+        },
+        "program": {
+          "type": "object",
+          "description": "Work programs categorized by funding sources"
+        },
+        "bku": {
+          "type": "object",
+          "description": "General Cash Book (BKU) transactions per funding source"
+        },
+        "sppTx": {
+          "type": "array",
+          "description": "Monthly tuition fee payment transactions"
+        },
+        "itemTx": {
+          "type": "array",
+          "description": "Entrance fee and other miscellaneous payment transactions"
+        },
+        "pinjaman": {
+          "type": "array",
+          "description": "Teacher and staff loan requests and repayment records"
+        },
+        "lpj": {
+          "type": "object",
+          "description": "Accountability reporting configuration and parameters"
+        },
+        "docCounters": {
+          "type": "object",
+          "description": "Document serial numbering counters"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the record was last modified"
+        },
+        "updatedBy": {
+          "type": "string",
+          "description": "Identifier of the user who last saved the document"
+        }
+      },
+      "required": ["sekolah", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/schools/{schoolId}": {
+      "schema": "SchoolData",
+      "description": "Central school operational and financial data shared across all authorized devices in real time"
+    }
+  }
+}
