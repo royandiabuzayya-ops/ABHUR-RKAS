@@ -235,13 +235,7 @@ table.datatable tfoot td{font-weight:700; background:#eef2f8; padding:9px 7px;}
 .table-actions{display:flex; justify-content:space-between; align-items:center; margin-top:12px; flex-wrap:wrap; gap:8px;}
 .badge-note{font-size:11.5px; color:var(--text-muted);}
 
-/* ---------- Google Sheets sync status ---------- */
-.gsheet-status{font-size:11.5px; color:var(--text-secondary); max-width:100%;}
-.gsheet-status .status-line{font-weight:600; color:var(--text-primary); margin-bottom:6px;}
-.gsheet-status .status-line.err{color:var(--critical);}
-.gsheet-status .chip-row{display:flex; flex-wrap:wrap; gap:6px;}
-.gsheet-status .chip{background:#eef2f8; border-radius:6px; padding:3px 9px; font-weight:600; color:var(--text-primary); font-size:11px;}
-.gsheet-status .chip-detail{margin-top:6px; font-size:10.8px; color:var(--text-muted); line-height:1.7;}
+
 
 /* ---------- Sumber dana badges ---------- */
 .badge-sumber{display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; color:#fff;}
@@ -541,16 +535,11 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
       <li><button data-view="lpjkons"><span class="ic">&#128194;</span> LPJ Konsolidasi</button></li>
       <li><button data-view="cetak"><span class="ic">&#128424;</span> Cetak Laporan</button></li>
     </ul>
-    <div class="nav-section-label">Ekspor &amp; Data</div>
+    <div class="nav-section-label">Ekspor Laporan</div>
     <ul class="nav">
       <li><button id="btnOpenExportCenter" style="color:var(--text-primary);font-weight:600;"><span class="ic">&#128202;</span> Ekspor Excel &amp; PDF</button></li>
-      <li><button id="btnExport"><span class="ic">&#11015;</span> Simpan Cadangan (.json)</button></li>
-      <li><button id="btnImportTrigger"><span class="ic">&#11014;</span> Buka Cadangan (.json)</button></li>
-      <input type="file" id="fileImport" accept=".json" style="display:none">
-      <li><button id="btnPushSheetsQuick"><span class="ic">&#11014;</span> Kirim ke Google Sheets</button></li>
-      <li><button id="btnPullSheetsQuick"><span class="ic">&#11015;</span> Tarik dari Google Sheets</button></li>
     </ul>
-    <div class="sidebar-foot">BOS mengacu format RKAS Kemendikbudristek. SPP/Uang Pangkal/Dana Lainnya dikelola terpisah. Data tersimpan otomatis di perangkat ini (tetap bisa dipakai offline) dan otomatis disinkronkan ke Google Sheets saat online. Tetap disarankan <b>Simpan Data (.json)</b> secara berkala sebagai cadangan.</div>
+    <div class="sidebar-foot">BOS mengacu format RKAS Kemendikbudristek. SPP/Uang Pangkal/Dana Lainnya dikelola terpisah. Seluruh data tersimpan dan tersinkronisasi otomatis secara realtime antar-perangkat melalui basis data cloud Firebase Firestore.</div>
   </nav>
 
   <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
@@ -702,40 +691,15 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
         </div>
 
         <div class="card">
-          <h2>Sinkronisasi dengan Google Sheets</h2>
-          <p class="desc">Sinkronisasi 2 arah dengan Google Sheets milik Anda sendiri. <b>Kirim</b> = sebelum mengirim, aplikasi menarik dulu data terbaru di Spreadsheet dan menggabungkannya dengan data lokal (data yang baru ditambahkan pengguna lain di Spreadsheet tidak akan hilang; jika ada data dengan kunci yang sama di kedua sisi, versi lokal yang dipakai), baru kemudian hasil gabungannya dikirim. <b>Tarik</b> = ambil data dari Spreadsheet ke aplikasi ini (menimpa penuh data yang sedang terbuka di aplikasi ini — pastikan perubahan lokal penting sudah dikirim dulu). Penggabungan otomatis ini membantu memperkecil risiko saat beberapa orang (mis. Guru dan Admin) memakai aplikasi di sesi terpisah, tapi tidak menjamin bebas konflik jika catatan yang persis sama diedit bersamaan di kedua sisi.</p>
-          <div class="form-grid" style="grid-template-columns:1fr; margin-bottom:12px;">
-            <div class="field">
-              <label>URL Web App Google Apps Script</label>
-              <input type="url" id="gsheetUrl" placeholder="https://script.google.com/macros/s/xxxxx/exec">
-              <div id="gsheetUrlLockNote" class="desc" style="display:none; margin-top:4px; color:#a15c00;">&#128274; URL ini terkunci pada file aplikasi hasil "Bagikan Aplikasi" &mdash; sudah otomatis tersambung ke Google Sheets yang sama dan tidak bisa diganti dari sini.</div>
+          <h2>Basis Data Cloud Realtime (Firebase Firestore)</h2>
+          <p class="desc">Aplikasi ini terhubung langsung ke basis data cloud Firebase Firestore. Semua data keuangan sekolah (identitas sekolah, siswa, GTK, program kerja, BKU, SPP, dan peminjaman) otomatis disinkronkan secara realtime ke seluruh perangkat tanpa perlu Google Spreadsheet atau cadangan manual.</p>
+          <div style="display:flex; align-items:center; gap:12px; margin-top:14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px 16px;">
+            <span style="font-size:22px;">🟢</span>
+            <div>
+              <div style="font-weight:700; color:#166534; font-size:13.5px;">Cloud Database Realtime Terhubung &amp; Aktif</div>
+              <div style="font-size:12px; color:#15803d; margin-top:2px;">Setiap penambahan, perubahan, atau penghapusan data otomatis tersimpan dan diperbarui langsung ke semua perangkat secara instan.</div>
             </div>
           </div>
-          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-            <button class="btn primary" id="btnPushSheets">&#11014; Kirim ke Google Sheets</button>
-            <button class="btn" id="btnPullSheets">&#11015; Tarik dari Google Sheets</button>
-            <button class="btn" id="btnShareApp" type="button">&#128203; Bagikan Aplikasi</button>
-          </div>
-          <div class="desc" style="margin-top:8px;">"Bagikan Aplikasi" membuat file aplikasi baru (kosong, tanpa data) dengan URL Google Sheets di atas sudah terpasang &amp; terkunci di dalamnya, supaya rekan kerja yang menerima file tersebut otomatis tersambung ke Spreadsheet yang sama tanpa perlu mengatur URL sendiri. Kirimkan file hasilnya (mis. lewat WhatsApp/email/flashdisk) ke rekan kerja untuk dipakai di laptopnya.</div>
-          <div class="gsheet-status" id="gsheetStatus" style="margin-top:12px;">Belum pernah disinkronkan.</div>
-          <details style="margin-top:16px;">
-            <summary style="cursor:pointer; font-weight:600; font-size:13px;">Cara setup (sekali saja, ± 5 menit)</summary>
-            <div style="margin-top:12px; font-size:12.5px; color:var(--text-secondary); line-height:1.7;">
-              <ol style="padding-left:18px; margin:0 0 12px;">
-                <li>Buat Google Sheets baru (kosong) yang akan dipakai sebagai tempat sinkronisasi.</li>
-                <li>Buka menu <b>Ekstensi &rarr; Apps Script</b> di Sheets tersebut.</li>
-                <li>Hapus semua kode bawaan, lalu <b>salin-tempel</b> kode di bawah ini.</li>
-                <li>Klik <b>Deploy &rarr; New deployment</b>, pilih tipe <b>Web app</b>.</li>
-                <li>Isi "Execute as": <b>Me</b>, dan "Who has access": <b>Anyone</b>. Klik Deploy dan izinkan akses saat diminta. (Satu deployment ini otomatis melayani Kirim maupun Tarik.)</li>
-                <li>Salin URL Web App yang muncul, lalu tempel ke kolom URL di atas.</li>
-              </ol>
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                <b>Kode Apps Script:</b>
-                <button class="btn small" id="btnCopyScript" type="button">Salin Kode</button>
-              </div>
-              <pre id="gasCode" style="background:#0b0b0b; color:#d9f7d9; padding:12px; border-radius:8px; font-size:11px; overflow-x:auto; max-height:260px;"></pre>
-            </div>
-          </details>
         </div>
       </section>
 
@@ -1185,7 +1149,7 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
         <button class="btn primary" type="button" id="arcBtnSimpanBaru">Simpan Kode Baru &amp; Masuk sebagai Admin</button>
       </div>
     </div>
-    <p class="desc" style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px;">Tidak ingat jawaban keamanan sama sekali? Jika sinkronisasi Google Sheets sudah pernah diaktifkan, kode Admin bisa direset dengan mengosongkan kolom <b>adminPassword</b> &amp; <b>securityAnswer</b> pada sheet "Data Sekolah", lalu masuk sementara sebagai Guru dan klik "Tarik dari Google Sheets". Atau minta bantuan siapa pun yang menyimpan file cadangan (.json) aplikasi ini.</p>
+    <p class="desc" style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px;">Lupa jawaban keamanan? Hubungi Kepala Sekolah atau pengelola akun utama untuk mengatur ulang kode akses Admin.</p>
   </div>
 </div>
 
@@ -2368,10 +2332,6 @@ function renderSekolahForm(){
     if(!isAdmin){
       noteEl.innerHTML = `🔒 <b>Akses Terbatas:</b> Anda masuk sebagai <b>${escapeHtml(currentUser.name)} (${escapeHtml(currentUser.role)})</b>. Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk mengubah identitas sekolah, saldo awal kas, batas kas menipis, dan kop surat. Seluruh field di bawah terkunci.`;
     }
-  }
-  const gsheetInp = document.getElementById("gsheetUrl");
-  if(gsheetInp) gsheetInp.disabled = !isAdmin;
-
   const secCard = document.getElementById("cardAdminSecurity");
   if(secCard){
     secCard.style.display = isAdmin ? "" : "none";
@@ -2586,663 +2546,10 @@ if(cashBadge){
   });
 }
 
-/* =========================================================================
-   SINKRONISASI GOOGLE SHEETS (2 ARAH: KIRIM & TARIK)
-   ========================================================================= */
-const GAS_CODE = `/**
- * Apps Script sinkronisasi 2 arah untuk Aplikasi Keuangan Sekolah.
- * Tempel kode ini di Extensions > Apps Script pada Google Sheets tujuan sinkronisasi,
- * lalu Deploy sebagai Web App (Execute as: Me, Who has access: Anyone).
- * doPost = menerima kiriman data dari aplikasi. doGet = mengirim data ke aplikasi saat "Tarik".
- */
-var SUMBER_LABELS = { bos:'BOS', spp:'SPP', pangkal:'UangPangkal', lain:'DanaLainnya' };
-
-function doPost(e) {
-  try {
-    var data = JSON.parse(e.postData.contents);
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-
-    writeSheet(ss, 'Data Sekolah', objectToRows(data.sekolah));
-    writeSheet(ss, 'Data Siswa', arrayToRows(data.siswa, ['nis','nama','kelas','tarifSpp','tarifPangkal','status','waOrtu']));
-    writeSheet(ss, 'GTK', arrayToRows(data.gtk, ['nama','nip','jabatan']));
-
-    Object.keys(SUMBER_LABELS).forEach(function(key){
-      var label = SUMBER_LABELS[key];
-      var progCols = ['namaPengaju','namaProgram','deskripsi','tanggal','status','pj','budgetsJson','realisasiJson','serahTerimaJson','pengembalianJson'];
-      var progRows = ((data.program || {})[key] || []).map(function(p){
-        return {
-          namaPengaju: p.namaPengaju, namaProgram: p.namaProgram, deskripsi: p.deskripsi,
-          tanggal: (p.tanggal || []).join('; '), status: p.status, pj: p.pj,
-          budgetsJson: JSON.stringify(p.budgets || []), realisasiJson: JSON.stringify(p.realisasi || []),
-          serahTerimaJson: JSON.stringify(p.serahTerima || []), pengembalianJson: JSON.stringify(p.pengembalianUangMuka || [])
-        };
-      });
-      writeSheet(ss, 'Program_' + label, arrayToRows(progRows, progCols));
-
-      var bkuCols = ['tanggal','noBukti','uraian','kegiatan','keterangan','penerimaan','pengeluaran','autoRealisasiId','autoSerahTerimaId','autoPengembalianId','autoPiutangId'];
-      writeSheet(ss, 'BKU-' + label, arrayToRows((data.bku || {})[key], bkuCols));
-    });
-
-    writeSheet(ss, 'Transaksi SPP', arrayToRows(data.sppTx, ['tanggal','nis','bulan','jumlah','noKwitansi','keterangan']));
-    writeSheet(ss, 'Transaksi Item Lainnya', arrayToRows(data.itemTx, ['tanggal','nis','jenisItem','jumlah','noKwitansi','keterangan']));
-
-    var pinjamanCols = ['namaPeminjam','nip','jabatan','tanggalPengajuan','jumlah','sumberDana','keperluan','jangkaWaktuBulan',
-      'status','noSurat','noPersetujuan','noKwitansi','catatan','approvedBy','approvedAt','tanggalCair',
-      'createdBy','createdAt','cicilanJson'];
-    var pinjamanRows = (data.pinjaman || []).map(function(pj){
-      return {
-        namaPeminjam: pj.namaPeminjam, nip: pj.nip, jabatan: pj.jabatan, tanggalPengajuan: pj.tanggalPengajuan,
-        jumlah: pj.jumlah, sumberDana: pj.sumberDana, keperluan: pj.keperluan, jangkaWaktuBulan: pj.jangkaWaktuBulan, status: pj.status,
-        noSurat: pj.noSurat, noPersetujuan: pj.noPersetujuan, noKwitansi: pj.noKwitansi, catatan: pj.catatan,
-        approvedBy: pj.approvedBy, approvedAt: pj.approvedAt, tanggalCair: pj.tanggalCair,
-        createdBy: pj.createdBy, createdAt: pj.createdAt, cicilanJson: JSON.stringify(pj.cicilan || [])
-      };
-    });
-    writeSheet(ss, 'Peminjaman GTK', arrayToRows(pinjamanRows, pinjamanCols));
-
-    var info = ss.getSheetByName('Info Sinkronisasi') || ss.insertSheet('Info Sinkronisasi');
-    info.clear();
-    info.getRange(1, 1, 2, 2).setValues([
-      ['Terakhir Dikirim dari Aplikasi', 'Nama Sekolah'],
-      [Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss'), (data.sekolah && data.sekolah.namaSekolah) || '']
-    ]);
-
-    return ContentService.createTextOutput(JSON.stringify({ ok: true, time: new Date().toISOString() }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ ok: false, message: String(err) }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function doGet(e) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var data = {};
-    data.sekolah = readObjectSheet(ss, 'Data Sekolah');
-    data.siswa = readArraySheet(ss, 'Data Siswa');
-    data.gtk = readArraySheet(ss, 'GTK');
-    data.program = {}; data.bku = {};
-    Object.keys(SUMBER_LABELS).forEach(function(key){
-      var label = SUMBER_LABELS[key];
-      var rawProg = readArraySheet(ss, 'Program_' + label);
-      data.program[key] = rawProg.map(function(p){
-        var budgets = [], realisasi = [], serahTerima = [], pengembalian = [];
-        try { budgets = JSON.parse(p.budgetsJson || '[]'); } catch(e) { budgets = []; }
-        try { realisasi = JSON.parse(p.realisasiJson || '[]'); } catch(e) { realisasi = []; }
-        try { serahTerima = JSON.parse(p.serahTerimaJson || '[]'); } catch(e) { serahTerima = []; }
-        try { pengembalian = JSON.parse(p.pengembalianJson || '[]'); } catch(e) { pengembalian = []; }
-        return {
-          namaPengaju: p.namaPengaju, namaProgram: p.namaProgram, deskripsi: p.deskripsi,
-          tanggal: p.tanggal ? String(p.tanggal).split(';').map(function(s){ return s.trim(); }).filter(Boolean) : [],
-          status: p.status, pj: p.pj, budgets: budgets, realisasi: realisasi,
-          serahTerima: serahTerima, pengembalianUangMuka: pengembalian
-        };
-      });
-      data.bku[key] = readArraySheet(ss, 'BKU-' + label);
-    });
-    data.sppTx = readArraySheet(ss, 'Transaksi SPP');
-    data.itemTx = readArraySheet(ss, 'Transaksi Item Lainnya');
-
-    var rawPinjaman = readArraySheet(ss, 'Peminjaman GTK');
-    data.pinjaman = rawPinjaman.map(function(pj){
-      var cicilan = [];
-      try { cicilan = JSON.parse(pj.cicilanJson || '[]'); } catch(e) { cicilan = []; }
-      return {
-        namaPeminjam: pj.namaPeminjam, nip: pj.nip, jabatan: pj.jabatan, tanggalPengajuan: pj.tanggalPengajuan,
-        jumlah: pj.jumlah, keperluan: pj.keperluan, jangkaWaktuBulan: pj.jangkaWaktuBulan, status: pj.status,
-        noSurat: pj.noSurat, noPersetujuan: pj.noPersetujuan, noKwitansi: pj.noKwitansi, catatan: pj.catatan,
-        approvedBy: pj.approvedBy, approvedAt: pj.approvedAt, tanggalCair: pj.tanggalCair,
-        createdBy: pj.createdBy, createdAt: pj.createdAt, cicilan: cicilan
-      };
-    });
-
-    return ContentService.createTextOutput(JSON.stringify({ ok: true, data: data }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ ok: false, message: String(err) }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function writeSheet(ss, name, rows) {
-  var sheet = ss.getSheetByName(name) || ss.insertSheet(name);
-  sheet.clear();
-  if (rows.length) {
-    var range = sheet.getRange(1, 1, rows.length, rows[0].length);
-    range.setNumberFormat('@'); // paksa teks: cegah NIS/tanggal berubah tipe otomatis
-    range.setValues(rows);
-  }
-}
-
-function arrayToRows(arr, cols) {
-  arr = arr || [];
-  var rows = [cols.slice()];
-  arr.forEach(function(item){
-    rows.push(cols.map(function(c){ return (item[c] === undefined || item[c] === null) ? '' : String(item[c]); }));
-  });
-  return rows;
-}
-
-function objectToRows(obj) {
-  obj = obj || {};
-  var rows = [['Field', 'Nilai']];
-  Object.keys(obj).forEach(function(k){
-    if (k === 'gsheetUrl') return; // jangan simpan URL konfigurasi ke dalam data
-    rows.push([k, obj[k] === undefined || obj[k] === null ? '' : String(obj[k])]);
-  });
-  return rows;
-}
-
-function readArraySheet(ss, name) {
-  var sheet = ss.getSheetByName(name);
-  if (!sheet || sheet.getLastRow() < 2) return [];
-  var values = sheet.getDataRange().getValues();
-  var headers = values[0];
-  return values.slice(1)
-    .filter(function(row){ return row.some(function(v){ return v !== '' && v !== null; }); })
-    .map(function(row){
-      var obj = {};
-      headers.forEach(function(h, i){ obj[h] = row[i]; });
-      return obj;
-    });
-}
-
-function readObjectSheet(ss, name) {
-  var sheet = ss.getSheetByName(name);
-  if (!sheet || sheet.getLastRow() < 2) return {};
-  var values = sheet.getDataRange().getValues();
-  var obj = {};
-  values.slice(1).forEach(function(row){
-    if (row[0] !== '' && row[0] !== null) obj[row[0]] = row[1];
-  });
-  return obj;
-}`;
-
-function renderGsheetSection(){
-  /* Jika file ini adalah hasil "Bagikan Aplikasi" (lihat btnShareApp),
-     window.__LOCKED_GSHEET_URL__ sudah dipasang oleh baris <script> kecil
-     yang disisipkan ke file salinan sebelum <body> — paksa state memakai
-     URL tersebut setiap kali bagian ini digambar ulang (dipanggil di
-     hampir semua renderAll(), termasuk setelah reset/impor/tarik data),
-     supaya URL tidak bisa "lepas kunci" lewat jalur manapun. */
-  if(window.__LOCKED_GSHEET_URL__){ state.sekolah.gsheetUrl = window.__LOCKED_GSHEET_URL__; }
-  const urlInput = document.getElementById("gsheetUrl");
-  urlInput.value = state.sekolah.gsheetUrl || "";
-  urlInput.readOnly = !!window.__LOCKED_GSHEET_URL__;
-  const lockNoteEl = document.getElementById("gsheetUrlLockNote");
-  if(window.__LOCKED_GSHEET_URL__ && sekolahLooksUnconfigured()){
-    lockNoteEl.style.display = "";
-    lockNoteEl.style.color = "#b3261e";
-    lockNoteEl.innerHTML = '&#128274; URL ini terkunci &mdash; aplikasi ini sudah otomatis tersambung ke Google Sheets yang sama. <b>Klik "Tarik dari Google Sheets" dulu sebelum melakukan perubahan apa pun</b>, supaya Data Sekolah (nama sekolah, saldo awal, kode Admin, dst.) ikut terisi dan tidak tertimpa kosong.';
-  } else {
-    lockNoteEl.style.display = window.__LOCKED_GSHEET_URL__ ? "" : "none";
-    lockNoteEl.style.color = "#a15c00";
-    lockNoteEl.innerHTML = '&#128274; URL ini terkunci pada file aplikasi hasil "Bagikan Aplikasi" &mdash; sudah otomatis tersambung ke Google Sheets yang sama dan tidak bisa diganti dari sini.';
-  }
-  document.getElementById("gasCode").textContent = GAS_CODE;
-}
-document.getElementById("gsheetUrl").addEventListener("input", (e)=>{
-  if(window.__LOCKED_GSHEET_URL__) return; // dikunci, abaikan perubahan
-  state.sekolah.gsheetUrl = e.target.value;
-});
-document.getElementById("btnShareApp").addEventListener("click", ()=>{
-  const url = (state.sekolah.gsheetUrl || "").trim();
-  if(!url){ alert('Atur & simpan URL Web App Google Apps Script terlebih dahulu (lihat "Cara setup" di atas) sebelum membagikan aplikasi ini.'); return; }
-  if(!confirm('File aplikasi baru akan dibuat dengan URL Google Sheets di atas sudah terpasang & TERKUNCI (penerima tidak bisa menggantinya). Data yang sedang ada di aplikasi ini TIDAK ikut disalin ke file baru tersebut — setelah dibuka, penerima cukup klik "Tarik dari Google Sheets" untuk mengambil data yang sama. Lanjutkan membuat file?')) return;
-  try{
-    const safeUrlLiteral = JSON.stringify(url).replace(/</g, "\\u003c");
-    const lockTag = `<script>window.__LOCKED_GSHEET_URL__=${safeUrlLiteral};<\/script>\n`;
-    const html = "<!DOCTYPE html>\n" + __PRISTINE_HTML__.replace("<body>", "<body>\n" + lockTag);
-    const blob = new Blob([html], {type:"text/html"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    const namaFile = (state.sekolah.namaSekolah || "aplikasi_keuangan_sekolah").trim().replace(/[^a-z0-9]+/gi, "_").replace(/^_+|_+$/g, "") || "aplikasi_keuangan_sekolah";
-    a.download = namaFile + "_dibagikan.html";
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(()=> URL.revokeObjectURL(a.href), 5000);
-  }catch(err){ alert("Gagal membuat file aplikasi untuk dibagikan: " + err.message); }
-});
-document.getElementById("btnCopyScript").addEventListener("click", async ()=>{
-  try{
-    await navigator.clipboard.writeText(GAS_CODE);
-    const btn = document.getElementById("btnCopyScript");
-    const orig = btn.textContent;
-    btn.textContent = "Tersalin!";
-    setTimeout(()=>{ btn.textContent = orig; }, 1500);
-  }catch(err){ alert("Gagal menyalin otomatis. Silakan seleksi dan salin kode secara manual."); }
-});
-
-function gsheetButtons(){
-  return [document.getElementById("btnPushSheets"), document.getElementById("btnPushSheetsQuick"),
-          document.getElementById("btnPullSheets"), document.getElementById("btnPullSheetsQuick")].filter(Boolean);
-}
-function goToSekolahView(){
-  document.querySelectorAll(".nav button[data-view]").forEach(b=>b.classList.remove("active"));
-  document.querySelector('.nav button[data-view="sekolah"]').classList.add("active");
-  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
-  document.getElementById("view-sekolah").classList.add("active");
-  document.getElementById("topTitle").textContent = VIEW_TITLES.sekolah;
-}
-/* ---------- Diffing helpers: figure out exactly which items changed ---------- */
-function stripIds(obj){
-  if(Array.isArray(obj)) return obj.map(stripIds);
-  if(obj && typeof obj === "object"){
-    const out = {};
-    Object.keys(obj).forEach(k=>{ if(k!=="id") out[k] = stripIds(obj[k]); });
-    return out;
-  }
-  return obj;
-}
-function diffArrays(oldArr, newArr, keyFn, labelFn){
-  oldArr = oldArr || []; newArr = newArr || [];
-  const oldMap = new Map(oldArr.map(o=>[keyFn(o), o]));
-  const newMap = new Map(newArr.map(o=>[keyFn(o), o]));
-  const added = [], changed = [], removed = [];
-  newMap.forEach((val,key)=>{
-    if(!oldMap.has(key)){ added.push(labelFn(val)); return; }
-    const a = JSON.stringify(stripIds(val));
-    const b = JSON.stringify(stripIds(oldMap.get(key)));
-    if(a!==b) changed.push(labelFn(val));
-  });
-  oldMap.forEach((val,key)=>{ if(!newMap.has(key)) removed.push(labelFn(val)); });
-  return { added, changed, removed, total:newArr.length };
-}
-
-/* Kunci identitas berbasis konten (bukan `id`, yang selalu dibuat ulang setiap
-   kali data ditarik dari server) — dipakai bersama oleh diff (ringkasan
-   perubahan) dan merge (penggabungan sebelum kirim, lihat mergeByKey). */
-const SYNC_KEYS = {
-  siswa: s=> s.nis? "nis:"+s.nis : "nama:"+s.nama+"|"+s.kelas,
-  gtk: g=> "nama:"+g.nama,
-  program: p=> [p.sumberDana,p.namaPengaju,p.namaProgram].join("|"),
-  bku: r=> [r.tanggal,r.noBukti,r.uraian].join("|"),
-  sppTx: t=> [t.nis,t.bulan,t.tanggal].join("|"),
-  itemTx: t=> [t.nis,t.jenisItem,t.tanggal,t.noKwitansi].join("|"),
-  /* noSurat dibuat SEKALI saat pengajuan dan tidak pernah berubah lagi
-     (lihat catatan "data aman" di dekat newPinjamanRow) — kunci paling stabil
-     untuk mencocokkan satu pengajuan yang sama di lokal & server meskipun
-     status/riwayat cicilannya sudah berubah sejak sinkronisasi terakhir. */
-  pinjaman: pj=> pj.noSurat? "noSurat:"+pj.noSurat : [pj.namaPeminjam,pj.tanggalPengajuan,pj.jumlah].join("|"),
-};
-
-/* Gabungkan array remote (dari server) dengan array lokal berdasarkan kunci
-   konten: entri yang HANYA ada di salah satu sisi selalu dipertahankan (tidak
-   pernah hilang diam-diam); entri dengan kunci yang sama di kedua sisi, versi
-   LOKAL yang dipakai (karena itu yang sedang aktif diedit oleh pengguna saat
-   ini). Ini mencegah "Kirim" menimpa/menghapus data yang baru ditambahkan
-   pengguna lain di server sejak sinkronisasi terakhir. */
-function mergeByKey(remoteArr, localArr, keyFn){
-  const map = new Map();
-  (remoteArr||[]).forEach(r=> map.set(keyFn(r), r));
-  (localArr||[]).forEach(l=> map.set(keyFn(l), l));
-  return Array.from(map.values());
-}
-
-function buildSyncDiff(oldState, newState){
-  oldState = oldState || {}; newState = newState || {};
-
-  const oldSekolah = JSON.stringify(Object.assign({}, oldState.sekolah||{}, {gsheetUrl:undefined}));
-  const newSekolah = JSON.stringify(Object.assign({}, newState.sekolah||{}, {gsheetUrl:undefined}));
-
-  const siswaLabel = s=> `${s.nama||"(tanpa nama)"}${s.kelas? " ("+s.kelas+")" : ""}`;
-  const namaByNis = nis=> { const s=(newState.siswa||[]).find(x=>x.nis===nis); return s? s.nama : (nis||"(tanpa NIS)"); };
-
-  const program = {}, bku = {};
-  SUMBER_KEYS.forEach(k=>{
-    const progLabel = p=> p.namaProgram || "(tanpa nama program)";
-    program[k] = diffArrays((oldState.program||{})[k], (newState.program||{})[k], SYNC_KEYS.program, progLabel);
-
-    const bkuLabel = r=> `${r.uraian||"(tanpa uraian)"}${r.tanggal? " - "+r.tanggal : ""}`;
-    bku[k] = diffArrays((oldState.bku||{})[k], (newState.bku||{})[k], SYNC_KEYS.bku, bkuLabel);
-  });
-
-  const sppLabel = t=> `${namaByNis(t.nis)} - ${t.bulan}`;
-  const itemLabel = t=> `${t.jenisItem||"Lainnya"} - ${namaByNis(t.nis)}`;
-  const gtkLabel = g=> g.nama || "(tanpa nama)";
-  const pinjamanLabel = pj=> `${pj.namaPeminjam||"(tanpa nama)"} - ${rp(pj.jumlah)}`;
-
-  return {
-    sekolah: { changed: oldSekolah !== newSekolah },
-    siswa: diffArrays(oldState.siswa, newState.siswa, SYNC_KEYS.siswa, siswaLabel),
-    gtk: diffArrays(oldState.gtk, newState.gtk, SYNC_KEYS.gtk, gtkLabel),
-    program, bku,
-    sppTx: diffArrays(oldState.sppTx, newState.sppTx, SYNC_KEYS.sppTx, sppLabel),
-    itemTx: diffArrays(oldState.itemTx, newState.itemTx, SYNC_KEYS.itemTx, itemLabel),
-    pinjaman: diffArrays(oldState.pinjaman, newState.pinjaman, SYNC_KEYS.pinjaman, pinjamanLabel),
-  };
-}
-
-function fmtDeltaChip(label, total, addedN, changedN, removedN){
-  const parts = [];
-  if(addedN) parts.push(`+${addedN} baru`);
-  if(changedN) parts.push(`${changedN} diubah`);
-  if(removedN) parts.push(`-${removedN} dihapus`);
-  return `${label}: ${total} item${parts.length? ` (${parts.join(", ")})` : ""}`;
-}
-function fmtDetailLine(label, d){
-  const items = [];
-  d.added.slice(0,5).forEach(n=> items.push(`+ ${n}`));
-  d.changed.slice(0,5).forEach(n=> items.push(`~ ${n}`));
-  d.removed.slice(0,5).forEach(n=> items.push(`- ${n}`));
-  if(!items.length) return null;
-  const shown = Math.min(5,d.added.length)+Math.min(5,d.changed.length)+Math.min(5,d.removed.length);
-  const totalChanges = d.added.length+d.changed.length+d.removed.length;
-  let txt = `${label}: ${items.join(", ")}`;
-  if(totalChanges>shown) txt += `, dan ${totalChanges-shown} lainnya`;
-  return txt;
-}
-
-function renderSyncStatus(prefix, diff, waktu, isError){
-  const statusEl = document.getElementById("gsheetStatus");
-  if(!statusEl) return;
-  if(isError){
-    statusEl.innerHTML = `<div class="status-line err">${escapeHtml(prefix)}</div>`;
-    return;
-  }
-  const chips = [];
-  const detailLines = [];
-
-  chips.push(diff.sekolah.changed? "Data Sekolah: diperbarui" : "Data Sekolah: tidak berubah");
-
-  chips.push(fmtDeltaChip("Data Siswa", diff.siswa.total, diff.siswa.added.length, diff.siswa.changed.length, diff.siswa.removed.length));
-  const siswaLine = fmtDetailLine("Data Siswa", diff.siswa);
-  if(siswaLine) detailLines.push(siswaLine);
-
-  let progTotal=0, progAdd=0, progChg=0, progRem=0;
-  SUMBER_KEYS.forEach(k=>{
-    const d = diff.program[k];
-    progTotal+=d.total; progAdd+=d.added.length; progChg+=d.changed.length; progRem+=d.removed.length;
-    const line = fmtDetailLine(`Program ${SUMBER_META[k].label}`, d);
-    if(line) detailLines.push(line);
-  });
-  chips.push(fmtDeltaChip("Program Kerja", progTotal, progAdd, progChg, progRem));
-
-  chips.push(fmtDeltaChip("Data GTK", diff.gtk.total, diff.gtk.added.length, diff.gtk.changed.length, diff.gtk.removed.length));
-  const gtkLine = fmtDetailLine("Data GTK", diff.gtk);
-  if(gtkLine) detailLines.push(gtkLine);
-
-  let bkuTotal=0, bkuAdd=0, bkuChg=0, bkuRem=0;
-  SUMBER_KEYS.forEach(k=>{
-    const d = diff.bku[k];
-    bkuTotal+=d.total; bkuAdd+=d.added.length; bkuChg+=d.changed.length; bkuRem+=d.removed.length;
-    const line = fmtDetailLine(`BKU ${SUMBER_META[k].label}`, d);
-    if(line) detailLines.push(line);
-  });
-  chips.push(fmtDeltaChip("Data BKU", bkuTotal, bkuAdd, bkuChg, bkuRem));
-
-  chips.push(fmtDeltaChip("Transaksi SPP", diff.sppTx.total, diff.sppTx.added.length, diff.sppTx.changed.length, diff.sppTx.removed.length));
-  const sppLine = fmtDetailLine("Transaksi SPP", diff.sppTx);
-  if(sppLine) detailLines.push(sppLine);
-
-  chips.push(fmtDeltaChip("Transaksi Item Lainnya", diff.itemTx.total, diff.itemTx.added.length, diff.itemTx.changed.length, diff.itemTx.removed.length));
-  const itemLine = fmtDetailLine("Transaksi Item Lainnya", diff.itemTx);
-  if(itemLine) detailLines.push(itemLine);
-
-  if(diff.pinjaman){
-    chips.push(fmtDeltaChip("Peminjaman GTK", diff.pinjaman.total, diff.pinjaman.added.length, diff.pinjaman.changed.length, diff.pinjaman.removed.length));
-    const pinjamanLine = fmtDetailLine("Peminjaman GTK", diff.pinjaman);
-    if(pinjamanLine) detailLines.push(pinjamanLine);
-  }
-
-  const detailHtml = detailLines.length
-    ? detailLines.map(l=>escapeHtml(l)).join("<br>")
-    : "Tidak ada perubahan pada item manapun sejak sinkronisasi terakhir.";
-
-  statusEl.innerHTML = `
-    <div class="status-line">${escapeHtml(prefix)} &middot; ${escapeHtml(waktu)}</div>
-    <div class="chip-row">${chips.map(c=>`<span class="chip">${escapeHtml(c)}</span>`).join("")}</div>
-    <div class="chip-detail">${detailHtml}</div>`;
-}
-
-function requireGsheetUrl(actionLabel){
-  const url = (state.sekolah.gsheetUrl || "").trim();
-  if(!url){
-    goToSekolahView();
-    alert(`Atur URL Web App Google Apps Script terlebih dahulu (lihat panduan setup di halaman ini), lalu klik "${actionLabel}".`);
-    return null;
-  }
-  return url;
-}
-
-/* Data Sekolah (nama sekolah, alamat, bendahara, saldo awal, kode Admin,
-   dst.) TIDAK ikut digabung seperti data siswa/program/BKU saat "Kirim"
-   (lihat mergeByKey vs payload.sekolah di pushToGoogleSheets) — kalau
-   Data Sekolah lokal masih kosong (mis. baru buka file hasil "Bagikan
-   Aplikasi" dan belum sempat "Tarik"), mengirim akan MENIMPA Data Sekolah
-   asli di server jadi kosong, termasuk kode Admin & saldo awal. Dipakai
-   untuk mencegah "Kirim" (manual maupun otomatis) menimpa data server
-   dengan Data Sekolah yang belum diisi. */
 function sekolahLooksUnconfigured(){
-  return !(state.sekolah.namaSekolah||"").trim();
+  const s = state.sekolah || {};
+  return !(s.namaSekolah||"").trim() && !(s.npsn||"").trim();
 }
-
-async function pushToGoogleSheets(){
-  const url = requireGsheetUrl("Kirim ke Google Sheets");
-  if(!url) return;
-  if(sekolahLooksUnconfigured()){
-    const lanjut = confirm('Data Sekolah pada aplikasi ini masih KOSONG (Nama Sekolah belum diisi). Mengirim sekarang akan MENIMPA Data Sekolah asli di Google Sheets — termasuk kode Admin, saldo awal, dan info bendahara — menjadi kosong. Sangat disarankan klik "Tarik dari Google Sheets" terlebih dahulu supaya Data Sekolah ikut terisi. Tetap lanjutkan Kirim sekarang?');
-    if(!lanjut) return;
-  }
-  const statusEl = document.getElementById("gsheetStatus");
-  gsheetButtons().forEach(b=> b.disabled = true);
-  if(statusEl) statusEl.textContent = "Memeriksa data terbaru di Google Sheets sebelum mengirim...";
-  let mergedWithRemote = false;
-  try{
-    const beforeKirim = JSON.parse(JSON.stringify(state));
-
-    /* Tarik dulu data yang sedang ada di server, lalu gabungkan dengan data
-       lokal SEBELUM mengirim. Ini mencegah "Kirim" menghapus data yang baru
-       ditambahkan pengguna lain (mis. Guru mengajukan Program, lalu Admin
-       yang belum sempat Tarik meng-klik Kirim) — lihat mergeByKey di atas.
-       Entri dengan kunci yang sama di kedua sisi memakai versi lokal, karena
-       itu yang sedang aktif diedit di sesi ini. Kalau tarik gagal (mis. baru
-       pertama kali sinkron, atau sedang offline), lanjut kirim data lokal
-       apa adanya seperti sebelumnya. */
-    try{
-      const getRes = await fetch(url, { method:"GET" });
-      const getText = await getRes.text();
-      let getPayload;
-      try{ getPayload = JSON.parse(getText); }catch(e){ getPayload = { ok:false }; }
-      if(getPayload.ok){
-        const remote = normalizeRemoteData(getPayload.data || {});
-        state.siswa = mergeByKey(remote.siswa, state.siswa, SYNC_KEYS.siswa);
-        state.gtk = mergeByKey(remote.gtk, state.gtk, SYNC_KEYS.gtk);
-        SUMBER_KEYS.forEach(key=>{
-          state.program[key] = mergeByKey(remote.program[key], state.program[key], SYNC_KEYS.program);
-          state.bku[key] = mergeByKey(remote.bku[key], state.bku[key], SYNC_KEYS.bku);
-        });
-        state.sppTx = mergeByKey(remote.sppTx, state.sppTx, SYNC_KEYS.sppTx);
-        state.itemTx = mergeByKey(remote.itemTx, state.itemTx, SYNC_KEYS.itemTx);
-        state.pinjaman = mergeByKey(remote.pinjaman, state.pinjaman, SYNC_KEYS.pinjaman);
-        SUMBER_KEYS.forEach(key=> syncBkuUangMuka(key));
-        mergedWithRemote = true;
-        renderAll();
-      }
-    }catch(getErr){ /* lanjut kirim data lokal apa adanya jika tarik-untuk-gabung gagal */ }
-
-    if(statusEl) statusEl.textContent = mergedWithRemote ? "Mengirim data gabungan ke Google Sheets..." : "Mengirim data ke Google Sheets...";
-    const payload = JSON.parse(JSON.stringify(state));
-    delete payload.sekolah.gsheetUrl;
-    const res = await fetch(url, {
-      method:"POST",
-      headers:{ "Content-Type":"text/plain;charset=utf-8" },
-      body: JSON.stringify(payload)
-    });
-    const text = await res.text();
-    let data;
-    try{ data = JSON.parse(text); }catch(e){ data = { ok:false, message:text.slice(0,200) }; }
-    if(data.ok){
-      const waktu = new Date().toLocaleString("id-ID");
-      const diff = buildSyncDiff(beforeKirim, payload);
-      const prefix = mergedWithRemote ? "Kirim & gabung data berhasil" : "Kirim data berhasil (data terbaru di server tidak sempat diperiksa)";
-      renderSyncStatus(prefix, diff, waktu, false);
-      lastSyncSnapshot = JSON.parse(JSON.stringify(payload));
-      saveStateToLocalStorage();
-    } else {
-      renderSyncStatus("Gagal mengirim: " + (data.message || "respons tidak dikenali."), null, null, true);
-    }
-  }catch(err){
-    renderSyncStatus("Gagal terhubung ke Google Sheets. Periksa URL dan koneksi internet Anda.", null, null, true);
-  }finally{
-    gsheetButtons().forEach(b=> b.disabled = false);
-  }
-}
-
-/* Ubah data mentah hasil GET dari Apps Script menjadi bentuk siap pakai
-   (id baru via uid(), koersi tipe) — dipakai bersama oleh Tarik (menimpa
-   seluruh state lokal) dan Kirim (digabung dengan state lokal, lihat
-   mergeByKey/pushToGoogleSheets). Fungsi ini TIDAK mengubah `state` sendiri. */
-function normalizeRemoteData(data){
-  data = data || {};
-  const siswa = (data.siswa||[]).map(s=>({
-    id:uid(), nis:String(s.nis??""), nama:String(s.nama??""), kelas:String(s.kelas??""),
-    tarifSpp:Number(s.tarifSpp)||0, tarifPangkal:Number(s.tarifPangkal)||0, status:String(s.status??"Aktif")||"Aktif",
-    waOrtu:String(s.waOrtu??"")
-  }));
-
-  const gtk = (data.gtk||[]).map(g=>({ id:uid(), nama:String(g.nama??""), nip:String(g.nip??""), jabatan:String(g.jabatan??"") }));
-
-  const program = { bos:[], spp:[], pangkal:[], lain:[] };
-  const bku = { bos:[], spp:[], pangkal:[], lain:[] };
-  SUMBER_KEYS.forEach(key=>{
-    program[key] = ((data.program && data.program[key]) || []).map(p=>{
-      const tanggal = Array.isArray(p.tanggal) ? p.tanggal.map(t=>String(t??"")) : [];
-      const budgets = (p.budgets||[]).map(b=>{
-        const row = { id:uid(), tanggal:String(b.tanggal??""),
-          uraian:String(b.uraian??""), volume:Number(b.volume)||0, satuan:String(b.satuan??""), harga:Number(b.harga)||0 };
-        return row;
-      });
-      /* realisasi: tiap tanggal boleh punya banyak tahap (lihat newProgramRow).
-         Tetap kompatibel membaca data lama dari sinkronisasi sebelumnya, yang
-         formatnya satu entri per tanggal dengan field "status" (Belum/
-         Terealisasi/Batal) alih-alih array tahap datar. */
-      const realisasi = [];
-      const realisasiBatal = [];
-      (p.realisasi||[]).forEach(r=>{
-        const tgl = String(r.tanggal??"");
-        if(!tgl) return;
-        const legacyStatus = r.status;
-        if(legacyStatus===REALISASI_STATUS.BATAL){ if(!realisasiBatal.includes(tgl)) realisasiBatal.push(tgl); return; }
-        if(legacyStatus===REALISASI_STATUS.BELUM) return; // belum direalisasikan = tidak ada tahap tercatat
-        realisasi.push({ id:uid(), tanggal:tgl, tanggalReal:String(r.tanggalReal??""), anggaranTerpakai:Number(r.anggaranTerpakai)||0, keterangan:String(r.keterangan??"") });
-      });
-      (p.realisasiBatal||[]).forEach(t=>{ const tgl=String(t??""); if(tgl && !realisasiBatal.includes(tgl)) realisasiBatal.push(tgl); });
-      const serahTerima = (p.serahTerima||[]).map(r=>({
-        id:uid(), tanggal:String(r.tanggal??""), nominal:Number(r.nominal)||0,
-        dates:Array.isArray(r.dates)? r.dates.map(t=>String(t??"")) : [], mode:String(r.mode??"total")||"total",
-        noBast:String(r.noBast??""), budgetRef: r.budgetRef!=null? Number(r.budgetRef)||0 : null,
-      }));
-      const pengembalianUangMuka = (p.pengembalianUangMuka||[]).map(r=>({
-        id:uid(), tanggal:String(r.tanggal??""), nominal:Number(r.nominal)||0, keterangan:String(r.keterangan??"")
-      }));
-      return {
-        id:uid(), sumberDana:key, namaPengaju:String(p.namaPengaju??""), namaProgram:String(p.namaProgram??""),
-        deskripsi:String(p.deskripsi??""), tanggal, status:String(p.status??PROGRAM_STATUS.MENUNGGU)||PROGRAM_STATUS.MENUNGGU,
-        pj:String(p.pj??""), budgets, realisasi, realisasiBatal, serahTerima, pengembalianUangMuka
-      };
-    });
-    bku[key] = ((data.bku && data.bku[key]) || []).map(r=>{
-      const row = { id:uid(), tanggal:String(r.tanggal??""),
-        noBukti:String(r.noBukti??""), uraian:String(r.uraian??""), kegiatan:String(r.kegiatan??""), keterangan:String(r.keterangan??""),
-        penerimaan:Number(r.penerimaan)||0, pengeluaran:Number(r.pengeluaran)||0 };
-      if(r.autoRealisasiId!==undefined && r.autoRealisasiId!==null && r.autoRealisasiId!=="") row.autoRealisasiId = Number(r.autoRealisasiId)||undefined;
-      if(r.autoSerahTerimaId!==undefined && r.autoSerahTerimaId!==null && r.autoSerahTerimaId!=="") row.autoSerahTerimaId = Number(r.autoSerahTerimaId)||undefined;
-      if(r.autoPengembalianId!==undefined && r.autoPengembalianId!==null && r.autoPengembalianId!=="") row.autoPengembalianId = Number(r.autoPengembalianId)||undefined;
-      /* autoPiutangId lama (kalau ada) akan disingkirkan otomatis oleh
-         syncBkuUangMuka setelah data ditarik, karena id program berganti
-         (uid() baru di atas) — baris catatan piutang yang benar akan dibuat
-         ulang dari nol mengikuti Sisa di PJ terbaru, sama seperti perlakuan
-         autoRealisasiId/autoSerahTerimaId/autoPengembalianId. */
-      if(r.autoPiutangId!==undefined && r.autoPiutangId!==null && r.autoPiutangId!=="") row.autoPiutangId = Number(r.autoPiutangId)||undefined;
-      return row;
-    });
-  });
-
-  const sppTx = (data.sppTx||[]).map(t=>({
-    id:uid(), tanggal:String(t.tanggal??""), nis:String(t.nis??""), bulan:String(t.bulan??"Juli")||"Juli",
-    jumlah:Number(t.jumlah)||0, noKwitansi:String(t.noKwitansi??""), keterangan:String(t.keterangan??"")
-  }));
-  const itemTx = (data.itemTx||[]).map(t=>({
-    id:uid(), tanggal:String(t.tanggal??""), nis:String(t.nis??""), jenisItem:String(t.jenisItem??"Lainnya")||"Lainnya",
-    jumlah:Number(t.jumlah)||0, noKwitansi:String(t.noKwitansi??""), keterangan:String(t.keterangan??"")
-  }));
-
-  const pinjaman = (data.pinjaman||[]).map(pj=>({
-    id:uid(), namaPeminjam:String(pj.namaPeminjam??""), nip:String(pj.nip??""), jabatan:String(pj.jabatan??""),
-    tanggalPengajuan:String(pj.tanggalPengajuan??""), jumlah:Number(pj.jumlah)||0,
-    /* sumberDana: field baru — default ke SUMBER_KEYS[0] untuk data lama yang
-       ditarik dari Google Sheets sebelum field ini ada (pola sama seperti
-       waOrtu pada siswa). */
-    sumberDana: SUMBER_KEYS.includes(String(pj.sumberDana)) ? String(pj.sumberDana) : SUMBER_KEYS[0],
-    keperluan:String(pj.keperluan??""),
-    jangkaWaktuBulan:Number(pj.jangkaWaktuBulan)||1, status:String(pj.status??PINJAMAN_STATUS.MENUNGGU)||PINJAMAN_STATUS.MENUNGGU,
-    noSurat:String(pj.noSurat??""), noPersetujuan:String(pj.noPersetujuan??""), noKwitansi:String(pj.noKwitansi??""),
-    catatan:String(pj.catatan??""), approvedBy:String(pj.approvedBy??""), approvedAt:String(pj.approvedAt??""),
-    tanggalCair:String(pj.tanggalCair??""), createdBy:String(pj.createdBy??""), createdAt:String(pj.createdAt??""),
-    cicilan:(pj.cicilan||[]).map(c=>({ id:uid(), tanggal:String(c.tanggal??""), jumlah:Number(c.jumlah)||0, noBukti:String(c.noBukti??"") })),
-  }));
-
-  return { sekolah: data.sekolah || {}, siswa, gtk, program, bku, sppTx, itemTx, pinjaman };
-}
-
-function applyPulledData(data){
-  const keepUrl = state.sekolah.gsheetUrl;
-  const n = normalizeRemoteData(data);
-  state.sekolah = Object.assign(emptySekolah(), n.sekolah);
-  state.sekolah.gsheetUrl = keepUrl;
-  ["saldoAwalBos","saldoAwalSpp","saldoAwalPangkal","saldoAwalLain"].forEach(k=>{ state.sekolah[k] = Number(state.sekolah[k])||0; });
-
-  state.siswa = n.siswa;
-  state.gtk = n.gtk;
-  state.program = n.program;
-  state.bku = n.bku;
-  state.sppTx = n.sppTx;
-  state.itemTx = n.itemTx;
-  state.pinjaman = n.pinjaman;
-  SUMBER_KEYS.forEach(k=> syncBkuUangMuka(k));
-
-  renderAll();
-  saveStateToLocalStorage();
-}
-
-async function pullFromGoogleSheets(){
-  if(currentUser.role !== "Admin"){
-    alert("Akses Ditolak: Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk menarik data dari Google Sheets.");
-    return;
-  }
-  const url = requireGsheetUrl("Tarik dari Google Sheets");
-  if(!url) return;
-  if(!confirm("Menarik data akan MENIMPA seluruh data yang sedang terbuka di aplikasi ini dengan data dari Google Sheets. Pastikan data penting sudah dikirim/disimpan terlebih dahulu. Lanjutkan?")) return;
-  const statusEl = document.getElementById("gsheetStatus");
-  gsheetButtons().forEach(b=> b.disabled = true);
-  if(statusEl) statusEl.textContent = "Menarik data dari Google Sheets...";
-  const beforeState = JSON.parse(JSON.stringify(state));
-  try{
-    const res = await fetch(url, { method:"GET" });
-    const text = await res.text();
-    let payload;
-    try{ payload = JSON.parse(text); }catch(e){ payload = { ok:false, message:text.slice(0,200) }; }
-    if(payload.ok){
-      applyPulledData(payload.data || {});
-      const waktu = new Date().toLocaleString("id-ID");
-      const diff = buildSyncDiff(beforeState, state);
-      renderSyncStatus("Data diperbarui", diff, waktu, false);
-      lastSyncSnapshot = JSON.parse(JSON.stringify(state));
-    } else {
-      renderSyncStatus("Gagal menarik data: " + (payload.message || "respons tidak dikenali."), null, null, true);
-    }
-  }catch(err){
-    renderSyncStatus("Gagal terhubung ke Google Sheets. Periksa URL dan koneksi internet Anda.", null, null, true);
-  }finally{
-    gsheetButtons().forEach(b=> b.disabled = false);
-  }
-}
-
-document.getElementById("btnPushSheets").addEventListener("click", pushToGoogleSheets);
-document.getElementById("btnPushSheetsQuick").addEventListener("click", pushToGoogleSheets);
-document.getElementById("btnPullSheets").addEventListener("click", pullFromGoogleSheets);
-document.getElementById("btnPullSheetsQuick").addEventListener("click", pullFromGoogleSheets);
 
 /* =========================================================================
    DATA SISWA
@@ -3454,19 +2761,7 @@ function updateRoleUI(){
     btnLoadSample.style.display = (isAdmin && !window.__LOCKED_GSHEET_URL__) ? "" : "none";
   }
 
-  // 2. Sidebar Menu Khusus Admin (Buka Cadangan JSON, Kirim/Tarik Google Sheets)
-  const btnImportTrigger = document.getElementById("btnImportTrigger");
-  if(btnImportTrigger && btnImportTrigger.parentElement){
-    btnImportTrigger.parentElement.style.display = isAdmin ? "" : "none";
-  }
-  const btnPullSheetsQuick = document.getElementById("btnPullSheetsQuick");
-  if(btnPullSheetsQuick && btnPullSheetsQuick.parentElement){
-    btnPullSheetsQuick.parentElement.style.display = isAdmin ? "" : "none";
-  }
-  const btnPushSheetsQuick = document.getElementById("btnPushSheetsQuick");
-  if(btnPushSheetsQuick && btnPushSheetsQuick.parentElement){
-    btnPushSheetsQuick.parentElement.style.display = isAdmin ? "" : "none";
-  }
+
 
   // 3. Label Akun & Peran di Topbar
   const lbl = document.getElementById("currentUserLabel");
@@ -3496,10 +2791,7 @@ function updateRoleUI(){
   const btnAddItemTx = document.getElementById("btnAddItemTx");
   if(btnAddItemTx) btnAddItemTx.style.display = isAdmin ? "" : "none";
 
-  const btnPushSheets = document.getElementById("btnPushSheets");
-  if(btnPushSheets) btnPushSheets.style.display = isAdmin ? "" : "none";
-  const btnPullSheets = document.getElementById("btnPullSheets");
-  if(btnPullSheets) btnPullSheets.style.display = isAdmin ? "" : "none";
+
 }
 
 function loginAs(name, role){
@@ -7242,58 +6534,7 @@ if(mecPdfPrev) mecPdfPrev.addEventListener("click", ()=>{
   }
 });
 
-/* =========================================================================
-   EXPORT / IMPORT JSON
-   ========================================================================= */
-document.getElementById("btnExport").addEventListener("click", ()=>{
-  const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  const namaFile = (state.sekolah.namaSekolah || "data_keuangan_sekolah").replace(/[^a-z0-9]+/gi,"_");
-  a.href = url; a.download = `keuangan_${namaFile}.json`;
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
-});
-document.getElementById("btnImportTrigger").addEventListener("click", ()=>{
-  if(currentUser.role !== "Admin"){
-    alert("Akses Ditolak: Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk membuka/merestore cadangan data (.json).");
-    return;
-  }
-  document.getElementById("fileImport").click();
-});
-document.getElementById("fileImport").addEventListener("change", (e)=>{
-  if(currentUser.role !== "Admin"){
-    alert("Akses Ditolak: Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk memuat data dari file cadangan.");
-    e.target.value = "";
-    return;
-  }
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev)=>{
-    try{
-      const loaded = JSON.parse(ev.target.result);
-      state = Object.assign({ sekolah:emptySekolah(), siswa:[], gtk:[], program:{bos:[],spp:[],pangkal:[],lain:[]}, bku:{bos:[],spp:[],pangkal:[],lain:[]}, sppTx:[], itemTx:[], pinjaman:[], lpj:{periode:"Triwulan I",danaDiterima:0,penerimaanLain:0}, docCounters:{kwitansi:0,bast:0,peminjaman:0} }, loaded);
-      state.sekolah = Object.assign(emptySekolah(), loaded.sekolah || {});
-      state.docCounters = Object.assign({kwitansi:0,bast:0,peminjaman:0}, loaded.docCounters||{});
-      Object.values(state.program).flat().forEach(p=>{ p.realisasi = p.realisasi||[]; p.realisasiBatal = p.realisasiBatal||[]; p.budgets = p.budgets||[]; p.serahTerima = p.serahTerima||[]; p.pengembalianUangMuka = p.pengembalianUangMuka||[]; });
-      state.pinjaman = state.pinjaman||[];
-      state.pinjaman.forEach(pj=>{ pj.cicilan = pj.cicilan||[]; if(!SUMBER_KEYS.includes(pj.sumberDana)) pj.sumberDana = SUMBER_KEYS[0]; });
-      const programBudgetIds = Object.values(state.program).flat().flatMap(p=>(p.budgets||[]).map(b=>b.id||0));
-      const programRealisasiIds = Object.values(state.program).flat().flatMap(p=>(p.realisasi||[]).map(r=>r.id||0));
-      const programSerahTerimaIds = Object.values(state.program).flat().flatMap(p=>(p.serahTerima||[]).map(r=>r.id||0));
-      const programPengembalianIds = Object.values(state.program).flat().flatMap(p=>(p.pengembalianUangMuka||[]).map(r=>r.id||0));
-      const pinjamanCicilanIds = state.pinjaman.flatMap(pj=>(pj.cicilan||[]).map(c=>c.id||0));
-      const allIds = [...state.siswa, ...state.gtk, ...state.sppTx, ...state.itemTx, ...state.pinjaman, ...Object.values(state.program).flat(), ...Object.values(state.bku).flat()].map(r=>r.id||0).concat(programBudgetIds, programRealisasiIds, programSerahTerimaIds, programPengembalianIds, pinjamanCicilanIds);
-      uidCounter = (allIds.length? Math.max(...allIds) : 0) + 1;
-      renderAll();
-      saveStateToLocalStorage();
-      alert("Data berhasil dimuat dari file.");
-    }catch(err){ alert("Gagal membaca file. Pastikan file adalah hasil export dari aplikasi ini (.json)."); }
-  };
-  reader.readAsText(file);
-  e.target.value = "";
-});
+
 document.getElementById("btnReset").addEventListener("click", ()=>{
   if(currentUser.role !== "Admin"){
     alert("Akses Ditolak: Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk mengosongkan seluruh data.");
@@ -7303,7 +6544,7 @@ document.getElementById("btnReset").addEventListener("click", ()=>{
      __PRISTINE_HTML__) untuk berjaga-jaga kalau tombolnya sampai
      dimunculkan paksa lewat DevTools pada file hasil "Bagikan Aplikasi". */
   if(window.__LOCKED_GSHEET_URL__){ alert('Fitur "Kosongkan Semua" dinonaktifkan pada aplikasi hasil "Bagikan Aplikasi".'); return; }
-  if(confirm("Yakin ingin mengosongkan seluruh data? Pastikan sudah menyimpan (export) data terlebih dahulu.")){
+  if(confirm("Yakin ingin mengosongkan seluruh data? Data yang sudah tersimpan di Firestore akan dibersihkan.")){
     state = { sekolah:emptySekolah(), siswa:[], gtk:[], program:{bos:[],spp:[],pangkal:[],lain:[]}, bku:{bos:[],spp:[],pangkal:[],lain:[]}, sppTx:[], itemTx:[], pinjaman:[], lpj:{periode:"Triwulan I",danaDiterima:0,penerimaanLain:0}, docCounters:{kwitansi:0,bast:0,peminjaman:0} };
     renderAll();
     saveStateToLocalStorage();
@@ -7316,7 +6557,7 @@ document.getElementById("btnLoadSample").addEventListener("click", ()=>{
   }
   /* Lapis kedua, sama seperti btnReset di atas. */
   if(window.__LOCKED_GSHEET_URL__){ alert('Fitur "Muat Contoh Data" dinonaktifkan pada aplikasi hasil "Bagikan Aplikasi".'); return; }
-  if(!confirm("Memuat contoh data akan MENIMPA seluruh data yang sedang terbuka saat ini. Pastikan data penting sudah disimpan (export/kirim) terlebih dahulu. Lanjutkan?")) return;
+  if(!confirm("Memuat contoh data akan menimpa seluruh data yang sedang terbuka saat ini. Lanjutkan?")) return;
   loadSampleData(); renderAll();
   saveStateToLocalStorage();
 });
@@ -7428,11 +6669,8 @@ function loadSampleData(){
       data tanpa perlu menyisipkan hook ke puluhan handler CRUD yang sudah
       ada (risiko lebih rendah, coverage tetap memadai untuk kasus reload/
       tutup tab yang wajar).
-   2) Saat status online terdeteksi/pulih DAN URL Google Sheets sudah diisi,
-      otomatis "Kirim" (yang sudah menggabungkan data server lebih dulu
-      sebelum mengirim, lihat pushToGoogleSheets) tanpa perlu klik manual,
-      lalu diulang berkala tiap 5 menit selama aplikasi tetap terbuka.
-      Tombol Tarik/Kirim manual yang sudah ada tetap berfungsi seperti biasa.
+   2) Perubahan data otomatis disinkronkan secara realtime ke cloud database
+      Firebase Firestore dan tersimpan di penyimpanan lokal.
    ========================================================================= */
 const AUTOSAVE_KEY = "keuanganSekolahAutosaveV1";
 window.currentAuthToken = window.currentAuthToken || null;
@@ -7535,29 +6773,10 @@ function updateOnlineStatusBadge(){
   badge.textContent = online ? "● Online" : "● Offline";
   badge.className = "online-badge " + (online ? "online" : "offline");
 }
-let autoSyncIntervalId = null;
-let autoSyncInFlight = false;
-async function runAutoSyncIfEligible(){
-  if(autoSyncInFlight || !navigator.onLine) return;
-  if(!(state.sekolah.gsheetUrl||"").trim()) return; // belum diatur -> tidak ada yang perlu disinkronkan otomatis
-  /* Jangan kirim otomatis (tanpa konfirmasi apa pun ke pengguna) selama
-     Data Sekolah lokal masih kosong — mis. file hasil "Bagikan Aplikasi"
-     yang baru dibuka dan belum sempat "Tarik". Kirim otomatis dalam
-     kondisi ini bisa menimpa Data Sekolah asli di server jadi kosong
-     tanpa pengguna sadar (lihat sekolahLooksUnconfigured & catatan di
-     pushToGoogleSheets). Begitu "Tarik" berhasil (Data Sekolah lokal
-     terisi), sinkronisasi otomatis berjalan normal lagi seperti biasa. */
-  if(sekolahLooksUnconfigured()) return;
-  autoSyncInFlight = true;
-  try{ await pushToGoogleSheets(); }
-  finally{ autoSyncInFlight = false; }
-}
 function startAutoSync(){
   updateOnlineStatusBadge();
-  if(!autoSyncIntervalId) autoSyncIntervalId = setInterval(runAutoSyncIfEligible, 5*60*1000);
-  window.addEventListener("online", ()=>{ updateOnlineStatusBadge(); runAutoSyncIfEligible(); });
+  window.addEventListener("online", updateOnlineStatusBadge);
   window.addEventListener("offline", updateOnlineStatusBadge);
-  if(navigator.onLine) setTimeout(runAutoSyncIfEligible, 1500);
 }
 
 /* =========================================================================
@@ -7567,7 +6786,6 @@ function renderAll(){
   updateRoleUI();
   renderSekolahForm();
   renderKopSection();
-  renderGsheetSection();
   refreshHeader();
   renderSiswaTable();
   renderGtkTable();

@@ -4,6 +4,64 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aplikasi Keuangan Sekolah</title>
+<meta name="description" content="Aplikasi Keuangan Sekolah (RKAS) - Rencana Kegiatan dan Anggaran Sekolah untuk pencatatan dan pelaporan keuangan sekolah.">
+<meta property="og:title" content="Aplikasi Keuangan Sekolah">
+<meta property="og:description" content="Aplikasi Keuangan Sekolah (RKAS) - Rencana Kegiatan dan Anggaran Sekolah untuk pencatatan dan pelaporan keuangan sekolah.">
+<script>
+(function(){
+  if (typeof window !== 'undefined') {
+    window.alert = function(msg) {
+      console.warn("[Aplikasi Alert]", msg);
+      try {
+        let toast = document.getElementById('app-custom-alert-toast');
+        if (!toast) {
+          toast = document.createElement('div');
+          toast.id = 'app-custom-alert-toast';
+          toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);max-width:92%;width:420px;background:#1e293b;color:#fff;padding:12px 16px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.35);z-index:999999;font-family:system-ui,-apple-system,sans-serif;font-size:13.5px;line-height:1.45;display:flex;align-items:flex-start;gap:10px;pointer-events:auto;border:1px solid #334155;';
+          if (document.body) {
+            document.body.appendChild(toast);
+          } else {
+            window.addEventListener('DOMContentLoaded', function(){ document.body.appendChild(toast); });
+          }
+        }
+        toast.innerHTML = '<span style="color:#38bdf8;font-size:16px;line-height:1;margin-top:1px;">ℹ</span>' +
+          '<div style="flex:1;word-break:break-word;">' + String(msg).replace(/</g, '&lt;') + '</div>' +
+          '<button style="background:transparent;border:none;color:#94a3b8;cursor:pointer;font-size:15px;line-height:1;padding:0;" onclick="this.parentElement.style.display=\'none\'">✕</button>';
+        toast.style.display = 'flex';
+        clearTimeout(window.__alertTimer);
+        window.__alertTimer = setTimeout(function() { if (toast) toast.style.display = 'none'; }, 5500);
+      } catch(e) {}
+    };
+    const _origOpen = window.open;
+    window.open = function(url, target, features) {
+      try {
+        if (_origOpen) {
+          const w = _origOpen.call(window, url, target, features);
+          if (w) return w;
+        }
+      } catch(e) {}
+      try {
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = target || '_blank';
+        a.rel = 'noopener noreferrer';
+        if (document.body) {
+          document.body.appendChild(a);
+        } else {
+          window.addEventListener('DOMContentLoaded', function(){ document.body.appendChild(a); });
+        }
+        a.click();
+        if (a.parentNode) a.parentNode.removeChild(a);
+      } catch(e) {
+        console.warn("Failed to open link:", url);
+      }
+    };
+  }
+})();
+</script>
+<!-- SheetJS (xlsx) & html2pdf.js for Excel and PDF Exporting -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
 /* Chart.js v4.4.4 - bundled inline for offline/single-file use */
 /*!
@@ -90,6 +148,7 @@ body{
 .topbar-actions{display:flex; gap:8px; flex-wrap:wrap;}
 .online-badge{font-size:11px; font-weight:700; padding:4px 10px; border-radius:12px; align-self:center; white-space:nowrap;}
 .online-badge.online{background:#e3f7e9; color:#1a7a3d;}
+.online-badge.syncing{background:#e0f2fe; color:#0369a1;}
 .online-badge.offline{background:#fdeaea; color:#b23030;}
 
 .btn{
@@ -176,13 +235,7 @@ table.datatable tfoot td{font-weight:700; background:#eef2f8; padding:9px 7px;}
 .table-actions{display:flex; justify-content:space-between; align-items:center; margin-top:12px; flex-wrap:wrap; gap:8px;}
 .badge-note{font-size:11.5px; color:var(--text-muted);}
 
-/* ---------- Google Sheets sync status ---------- */
-.gsheet-status{font-size:11.5px; color:var(--text-secondary); max-width:100%;}
-.gsheet-status .status-line{font-weight:600; color:var(--text-primary); margin-bottom:6px;}
-.gsheet-status .status-line.err{color:var(--critical);}
-.gsheet-status .chip-row{display:flex; flex-wrap:wrap; gap:6px;}
-.gsheet-status .chip{background:#eef2f8; border-radius:6px; padding:3px 9px; font-weight:600; color:var(--text-primary); font-size:11px;}
-.gsheet-status .chip-detail{margin-top:6px; font-size:10.8px; color:var(--text-muted); line-height:1.7;}
+
 
 /* ---------- Sumber dana badges ---------- */
 .badge-sumber{display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; color:#fff;}
@@ -277,8 +330,16 @@ table.print-cal td.othermonth{background:#f7f7f7;}
 #loginGate{position:fixed;inset:0;background:var(--page-plane);display:flex;align-items:center;justify-content:center;z-index:300;padding:20px;}
 #loginGate .card{max-width:420px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.15);}
 .app-shell.hidden-until-login{display:none;}
+html.user-logged-in #loginGate{display:none !important;}
+html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
 .login-chip{background:#eef2f8;border:1px solid #dbe3f0;border-radius:16px;padding:6px 13px;font-size:12.5px;font-weight:600;color:var(--text-primary);cursor:pointer;}
 .login-chip:hover{background:var(--accent,#3568e0);color:#fff;border-color:transparent;}
+
+/* ---------- Peringatan Kas Menipis & Kop Gambar ---------- */
+.cash-warning-badge{display:inline-flex;align-items:center;gap:5px;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;padding:4px 10px;border-radius:14px;font-size:11.5px;font-weight:700;cursor:pointer;animation:pulse-warn 2.5s infinite;}
+@keyframes pulse-warn{0%,100%{transform:scale(1);}50%{transform:scale(1.04);}}
+.kop-image-wrap{text-align:center;margin-bottom:14px;}
+.kop-image-wrap img{max-width:100%;width:100%;max-height:160px;object-fit:contain;display:block;margin:0 auto;}
 
 /* ---------- PJ chip / kalender ---------- */
 .pj-chip{display:block;padding:1px 6px;border-radius:5px;font-size:10px;font-weight:700;color:#fff;margin:1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;cursor:default;}
@@ -321,12 +382,88 @@ table.print-cal td.othermonth{background:#f7f7f7;}
   @page{ size:A4; margin:8mm; }
 }
 
+/* ---------- Responsive Mobile & Tablet Navigation ---------- */
+.btn-hamburger{
+  display:none; background:#fff; border:1px solid var(--border);
+  border-radius:8px; padding:6px 9px; cursor:pointer; color:var(--text-primary);
+  align-items:center; justify-content:center; flex-shrink:0; transition:all .15s;
+}
+.btn-hamburger:hover{background:#f1f5f9; border-color:#cbd5e1;}
+.sidebar-close-btn{
+  display:none; background:transparent; border:none; color:#c9d4e6;
+  font-size:24px; line-height:1; cursor:pointer; padding:2px 6px; border-radius:6px;
+}
+.sidebar-close-btn:hover{color:#fff; background:rgba(255,255,255,0.15);}
+.sidebar-backdrop{
+  position:fixed; inset:0; background:rgba(15,23,42,0.65); z-index:998;
+  display:none; backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+}
+.sidebar-backdrop.active{display:block;}
+
+.mobile-bottom-bar{
+  display:none; position:fixed; bottom:0; left:0; right:0; height:56px;
+  background:#fff; border-top:1px solid var(--border); z-index:90;
+  justify-content:space-around; align-items:center;
+  box-shadow:0 -2px 10px rgba(0,0,0,0.06);
+}
+.mobile-nav-btn{
+  background:transparent; border:none; color:var(--text-secondary);
+  font-size:10px; font-weight:600; display:flex; flex-direction:column;
+  align-items:center; gap:2px; cursor:pointer; flex:1; padding:6px 0;
+  font-family:inherit;
+}
+.mobile-nav-btn .ic{font-size:17px; line-height:1;}
+.mobile-nav-btn.active, .mobile-nav-btn:hover{color:var(--series-1);}
+
 @media (max-width:980px){
-  .sidebar{display:none;}
-  .stat-grid{grid-template-columns:repeat(2,1fr);}
+  .btn-hamburger{display:inline-flex;}
+  .sidebar-close-btn{display:inline-block;}
+  .sidebar{
+    display:flex !important; flex-direction:column;
+    position:fixed; left:0; top:0; bottom:0; width:285px; max-width:85vw;
+    height:100vh; z-index:999; transform:translateX(-100%);
+    transition:transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:none;
+  }
+  .sidebar.mobile-open{
+    transform:translateX(0);
+    box-shadow:6px 0 30px rgba(0,0,0,0.5);
+  }
+  .topbar{padding:10px 14px; gap:8px;}
+  .topbar h1{font-size:15px;}
+  .topbar-actions{gap:6px;}
+  .topbar-actions .btn{padding:6px 10px; font-size:12px;}
+  .content{padding:14px 12px 60px;}
+  .stat-grid{grid-template-columns:repeat(2,1fr); gap:10px;}
   .form-grid{grid-template-columns:1fr;}
 }
+
+@media (max-width:768px){
+  .mobile-bottom-bar{display:flex;}
+  .content{padding-bottom:80px !important;}
+}
+
+@media (max-width:640px){
+  .stat-grid{grid-template-columns:1fr;}
+  .topbar{flex-direction:column; align-items:stretch;}
+  .topbar > div:first-child{justify-content:flex-start;}
+  .topbar-actions{justify-content:flex-start; margin-top:4px;}
+  .card{padding:14px 12px;}
+}
 </style>
+<script>
+(function(){
+  try {
+    var raw = localStorage.getItem("keuanganSekolahUserSessionV1");
+    if(raw) {
+      var u = JSON.parse(raw);
+      if(u && u.name) {
+        document.documentElement.classList.add("user-logged-in");
+      }
+    }
+  } catch(e){}
+})();
+</script>
 </head>
 <body>
 
@@ -358,9 +495,12 @@ table.print-cal td.othermonth{background:#f7f7f7;}
 
   <!-- ===================== SIDEBAR ===================== -->
   <nav class="sidebar">
-    <div class="brand">
-      <div class="brand-badge">RS</div>
-      <div class="brand-text">Keuangan Sekolah<small>Multi Sumber Dana</small></div>
+    <div class="brand" style="display:flex; justify-content:space-between; align-items:center;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="brand-badge">RS</div>
+        <div class="brand-text">Keuangan Sekolah<small>Multi Sumber Dana</small></div>
+      </div>
+      <button id="btnCloseSidebar" class="sidebar-close-btn" aria-label="Tutup Menu">&times;</button>
     </div>
     <ul class="nav">
       <li><button data-view="dashboard" class="active"><span class="ic">&#9632;</span> Dashboard</button></li>
@@ -395,26 +535,34 @@ table.print-cal td.othermonth{background:#f7f7f7;}
       <li><button data-view="lpjkons"><span class="ic">&#128194;</span> LPJ Konsolidasi</button></li>
       <li><button data-view="cetak"><span class="ic">&#128424;</span> Cetak Laporan</button></li>
     </ul>
-    <div class="nav-section-label">Data</div>
+    <div class="nav-section-label">Ekspor Laporan</div>
     <ul class="nav">
-      <li><button id="btnExport"><span class="ic">&#11015;</span> Simpan Data (.json)</button></li>
-      <li><button id="btnImportTrigger"><span class="ic">&#11014;</span> Buka Data (.json)</button></li>
-      <input type="file" id="fileImport" accept=".json" style="display:none">
-      <li><button id="btnPushSheetsQuick"><span class="ic">&#11014;</span> Kirim ke Google Sheets</button></li>
-      <li><button id="btnPullSheetsQuick"><span class="ic">&#11015;</span> Tarik dari Google Sheets</button></li>
+      <li><button id="btnOpenExportCenter" style="color:var(--text-primary);font-weight:600;"><span class="ic">&#128202;</span> Ekspor Excel &amp; PDF</button></li>
     </ul>
-    <div class="sidebar-foot">BOS mengacu format RKAS Kemendikbudristek. SPP/Uang Pangkal/Dana Lainnya dikelola terpisah. Data tersimpan otomatis di perangkat ini (tetap bisa dipakai offline) dan otomatis disinkronkan ke Google Sheets saat online. Tetap disarankan <b>Simpan Data (.json)</b> secara berkala sebagai cadangan.</div>
+    <div class="sidebar-foot">BOS mengacu format RKAS Kemendikbudristek. SPP/Uang Pangkal/Dana Lainnya dikelola terpisah. Seluruh data tersimpan dan tersinkronisasi otomatis secara realtime antar-perangkat melalui basis data cloud Firebase Firestore.</div>
   </nav>
+
+  <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
 
   <!-- ===================== MAIN ===================== -->
   <div class="main">
     <div class="topbar">
-      <div>
-        <h1 id="topTitle">Dashboard Keuangan Sekolah</h1>
-        <div class="school-sub" id="topSchoolSub">Isi Data Sekolah untuk mulai</div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button id="btnToggleSidebar" class="btn-hamburger" aria-label="Buka Menu" title="Menu Navigasi">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div>
+          <h1 id="topTitle">Dashboard Keuangan Sekolah</h1>
+          <div class="school-sub" id="topSchoolSub">Isi Data Sekolah untuk mulai</div>
+        </div>
       </div>
       <div class="topbar-actions">
+        <span id="cashWarningBadge" class="cash-warning-badge" style="display:none;" title="Klik untuk melihat rincian kas di Dashboard">⚠️ Kas Menipis</span>
         <span id="onlineStatusBadge" class="online-badge" title="Status koneksi internet"></span>
+        <button class="btn" id="btnGoogleAuth" style="display:inline-flex;align-items:center;gap:6px;" title="Masuk dengan akun Google untuk sinkronisasi database">
+          <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+          <span id="btnGoogleAuthLabel">Masuk Google</span>
+        </button>
         <span id="currentUserLabel" style="font-size:12px;color:var(--text-secondary);align-self:center;margin-right:2px;"></span>
         <button class="btn" id="btnSwitchUser">Ganti Pengguna</button>
         <button class="btn" id="btnLoadSample">Muat Contoh Data</button>
@@ -426,6 +574,7 @@ table.print-cal td.othermonth{background:#f7f7f7;}
 
       <!-- ============ DASHBOARD ============ -->
       <section class="view active" id="view-dashboard">
+        <div id="dashboardCashAlert" style="display:none; margin-bottom:16px;"></div>
         <div class="stat-grid">
           <div class="stat-card">
             <div class="stat-label">Total Anggaran (Semua Dana)</div>
@@ -452,6 +601,31 @@ table.print-cal td.othermonth{background:#f7f7f7;}
         <div class="stat-grid" id="statSumberGrid"></div>
 
         <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+            <div>
+              <h2 style="margin:0 0 4px 0;">Tren Penerimaan &amp; Pengeluaran Kas per Bulan</h2>
+              <p class="desc" style="margin:0;">Pantau histori arus kas masuk (penerimaan), arus kas keluar (pengeluaran), dan surplus/defisit bulanan untuk memonitor kesehatan keuangan sekolah.</p>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <select id="trendFilterSumber" style="padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid var(--border); background:var(--card-bg, #fff); color:var(--text-primary); font-weight:600;">
+                <option value="all">Semua Sumber Dana</option>
+                <option value="bos">Dana BOS</option>
+                <option value="spp">Dana SPP</option>
+                <option value="pangkal">Uang Pangkal</option>
+                <option value="lain">Dana Lainnya</option>
+              </select>
+              <select id="trendFilterTahun" style="padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid var(--border); background:var(--card-bg, #fff); color:var(--text-primary); font-weight:600;"></select>
+            </div>
+          </div>
+
+          <div class="stat-grid" id="trendKpiGrid" style="grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); margin-bottom:16px;"></div>
+
+          <div class="chart-wrap" style="height:320px; position:relative;">
+            <canvas id="chartTrendBulanan"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
           <h2>Anggaran vs Realisasi per Sumber Dana</h2>
           <p class="desc">Perbandingan rencana anggaran (RAB) dengan realisasi belanja aktual (dari BKU) pada tiap sumber dana.</p>
           <div class="chart-wrap"><canvas id="chartSumber"></canvas></div>
@@ -473,6 +647,34 @@ table.print-cal td.othermonth{background:#f7f7f7;}
           <div class="form-grid" id="formSekolah"></div>
         </div>
 
+        <!-- ============ KOP LAPORAN RESMI (GAMBAR / TEKS) ============ -->
+        <div class="card">
+          <h2>Kop Surat Laporan Resmi</h2>
+          <p class="desc">Atur tampilan kop surat yang akan dicetak di bagian paling atas setiap dokumen &amp; laporan resmi (Kwitansi, BAST, BKU, RAB, LPJ BOS, LPJ Konsolidasi, Realisasi, dll). Anda dapat mengunggah gambar kop surat resmi (banner lengkap dengan logo dan garis pembatas), atau menggunakan format teks standar otomatis dari data sekolah di atas.</p>
+          
+          <div style="display:flex; flex-direction:column; gap:14px; max-width:680px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <input type="checkbox" id="chkUseKopGambar" style="width:18px; height:18px; cursor:pointer;">
+              <label for="chkUseKopGambar" style="font-weight:600; cursor:pointer; font-size:13px;">Gunakan Gambar Kop Surat pada Seluruh Laporan Cetak</label>
+            </div>
+
+            <div id="kopGambarUploadBox" style="border:2px dashed var(--border); border-radius:8px; padding:18px; text-align:center; background:#fafafa;">
+              <div id="kopGambarPreviewWrap" style="display:none; margin-bottom:12px;">
+                <p style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:6px;">Pratinjau Gambar Kop Saat Ini:</p>
+                <img id="kopGambarPreview" src="" alt="Pratinjau Kop Surat" style="max-width:100%; max-height:160px; object-fit:contain; border:1px solid #ddd; border-radius:4px; padding:4px; background:#fff; margin:0 auto; display:block;">
+              </div>
+              <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
+                <label class="btn primary small" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                  <span>📁 Unggah Gambar Kop (PNG/JPG)</span>
+                  <input type="file" id="inpKopGambar" accept="image/png, image/jpeg, image/webp" style="display:none;">
+                </label>
+                <button type="button" class="btn danger small" id="btnHapusKopGambar" style="display:none;">Hapus Gambar Kop</button>
+              </div>
+              <div style="font-size:11.5px; color:var(--text-muted); margin-top:8px;">Format file: PNG, JPG, atau WebP. Disarankan gambar memanjang horizontal (rasio lebar min. 1000px). Gambar otomatis dioptimasi agar dokumen cetak jernih dan ringan.</div>
+            </div>
+          </div>
+        </div>
+
         <div class="card" id="cardAdminSecurity" style="display:none;">
           <h2>Keamanan Akun Admin</h2>
           <p class="desc">Kode Admin mencegah siapa saja memilih peran "Admin / Kepala Sekolah" begitu saja saat masuk — hanya orang yang tahu kodenya yang bisa mendapat akses penuh ke seluruh data keuangan. Ini bukan enkripsi tingkat tinggi (aplikasi berjalan penuh di perangkat Anda, tanpa server), namun cukup untuk mencegah akses tidak sengaja/tidak berwenang.</p>
@@ -489,40 +691,15 @@ table.print-cal td.othermonth{background:#f7f7f7;}
         </div>
 
         <div class="card">
-          <h2>Sinkronisasi dengan Google Sheets</h2>
-          <p class="desc">Sinkronisasi 2 arah dengan Google Sheets milik Anda sendiri. <b>Kirim</b> = sebelum mengirim, aplikasi menarik dulu data terbaru di Spreadsheet dan menggabungkannya dengan data lokal (data yang baru ditambahkan pengguna lain di Spreadsheet tidak akan hilang; jika ada data dengan kunci yang sama di kedua sisi, versi lokal yang dipakai), baru kemudian hasil gabungannya dikirim. <b>Tarik</b> = ambil data dari Spreadsheet ke aplikasi ini (menimpa penuh data yang sedang terbuka di aplikasi ini — pastikan perubahan lokal penting sudah dikirim dulu). Penggabungan otomatis ini membantu memperkecil risiko saat beberapa orang (mis. Guru dan Admin) memakai aplikasi di sesi terpisah, tapi tidak menjamin bebas konflik jika catatan yang persis sama diedit bersamaan di kedua sisi.</p>
-          <div class="form-grid" style="grid-template-columns:1fr; margin-bottom:12px;">
-            <div class="field">
-              <label>URL Web App Google Apps Script</label>
-              <input type="url" id="gsheetUrl" placeholder="https://script.google.com/macros/s/xxxxx/exec">
-              <div id="gsheetUrlLockNote" class="desc" style="display:none; margin-top:4px; color:#a15c00;">&#128274; URL ini terkunci pada file aplikasi hasil "Bagikan Aplikasi" &mdash; sudah otomatis tersambung ke Google Sheets yang sama dan tidak bisa diganti dari sini.</div>
+          <h2>Basis Data Cloud Realtime (Firebase Firestore)</h2>
+          <p class="desc">Aplikasi ini terhubung langsung ke basis data cloud Firebase Firestore. Semua data keuangan sekolah (identitas sekolah, siswa, GTK, program kerja, BKU, SPP, dan peminjaman) otomatis disinkronkan secara realtime ke seluruh perangkat tanpa perlu Google Spreadsheet atau cadangan manual.</p>
+          <div style="display:flex; align-items:center; gap:12px; margin-top:14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px 16px;">
+            <span style="font-size:22px;">🟢</span>
+            <div>
+              <div style="font-weight:700; color:#166534; font-size:13.5px;">Cloud Database Realtime Terhubung &amp; Aktif</div>
+              <div style="font-size:12px; color:#15803d; margin-top:2px;">Setiap penambahan, perubahan, atau penghapusan data otomatis tersimpan dan diperbarui langsung ke semua perangkat secara instan.</div>
             </div>
           </div>
-          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-            <button class="btn primary" id="btnPushSheets">&#11014; Kirim ke Google Sheets</button>
-            <button class="btn" id="btnPullSheets">&#11015; Tarik dari Google Sheets</button>
-            <button class="btn" id="btnShareApp" type="button">&#128203; Bagikan Aplikasi</button>
-          </div>
-          <div class="desc" style="margin-top:8px;">"Bagikan Aplikasi" membuat file aplikasi baru (kosong, tanpa data) dengan URL Google Sheets di atas sudah terpasang &amp; terkunci di dalamnya, supaya rekan kerja yang menerima file tersebut otomatis tersambung ke Spreadsheet yang sama tanpa perlu mengatur URL sendiri. Kirimkan file hasilnya (mis. lewat WhatsApp/email/flashdisk) ke rekan kerja untuk dipakai di laptopnya.</div>
-          <div class="gsheet-status" id="gsheetStatus" style="margin-top:12px;">Belum pernah disinkronkan.</div>
-          <details style="margin-top:16px;">
-            <summary style="cursor:pointer; font-weight:600; font-size:13px;">Cara setup (sekali saja, ± 5 menit)</summary>
-            <div style="margin-top:12px; font-size:12.5px; color:var(--text-secondary); line-height:1.7;">
-              <ol style="padding-left:18px; margin:0 0 12px;">
-                <li>Buat Google Sheets baru (kosong) yang akan dipakai sebagai tempat sinkronisasi.</li>
-                <li>Buka menu <b>Ekstensi &rarr; Apps Script</b> di Sheets tersebut.</li>
-                <li>Hapus semua kode bawaan, lalu <b>salin-tempel</b> kode di bawah ini.</li>
-                <li>Klik <b>Deploy &rarr; New deployment</b>, pilih tipe <b>Web app</b>.</li>
-                <li>Isi "Execute as": <b>Me</b>, dan "Who has access": <b>Anyone</b>. Klik Deploy dan izinkan akses saat diminta. (Satu deployment ini otomatis melayani Kirim maupun Tarik.)</li>
-                <li>Salin URL Web App yang muncul, lalu tempel ke kolom URL di atas.</li>
-              </ol>
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                <b>Kode Apps Script:</b>
-                <button class="btn small" id="btnCopyScript" type="button">Salin Kode</button>
-              </div>
-              <pre id="gasCode" style="background:#0b0b0b; color:#d9f7d9; padding:12px; border-radius:8px; font-size:11px; overflow-x:auto; max-height:260px;"></pre>
-            </div>
-          </details>
         </div>
       </section>
 
@@ -572,8 +749,11 @@ table.print-cal td.othermonth{background:#f7f7f7;}
         <div class="card">
           <h2>Peminjaman GTK</h2>
           <p class="desc">Guru/Staff dapat mengajukan peminjaman dana lewat menu ini. Setiap pengajuan bernomor dokumen resmi dan permanen — jumlah, keperluan, dan tanggal pengajuan tidak bisa diubah lagi setelah disimpan; satu-satunya perubahan yang mungkin adalah proses persetujuan, pencairan, dan pencatatan cicilan yang tercatat sebagai riwayat (tidak bisa dihapus/diedit).</p>
-          <div class="table-actions" style="margin-bottom:12px;">
-            <button class="btn primary small" id="btnAjukanPinjaman">+ Ajukan Peminjaman</button>
+          <div class="table-actions" style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn primary small" id="btnAjukanPinjaman">+ Ajukan Peminjaman</button>
+              <button class="btn small" id="btnExportPjExcel" style="background:#107c41; color:#fff; border-color:#107c41;">&#128202; Ekspor Excel (.xlsx)</button>
+            </div>
             <span class="badge-note">Total Piutang GTK Beredar: <b id="pjTotalBeredarLabel">Rp 0</b></span>
           </div>
           <div class="table-scroll">
@@ -596,6 +776,7 @@ table.print-cal td.othermonth{background:#f7f7f7;}
               <button class="btn small" id="btnToggleAnggaranAwalLock" type="button"></button>
             </div>
           </div>
+          <div id="programUserNotice" style="display:none; margin-bottom:12px; background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; padding:10px 14px; border-radius:6px; font-size:12.5px;"></div>
           <div class="subtabs" id="programTabs"></div>
           <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:12px;">
             <div class="field" style="max-width:260px;" id="programStatusFilterWrap">
@@ -639,10 +820,14 @@ table.print-cal td.othermonth{background:#f7f7f7;}
         <div class="card">
           <h2>Buku Kas Umum (BKU)</h2>
           <p class="desc">Setiap sumber dana punya buku kas sendiri sehingga saldo tidak tercampur. Pilih sumber dana di bawah.</p>
+          <div id="bkuCashAlert" style="display:none; margin-bottom:12px;"></div>
           <div class="subtabs" id="bkuTabs"></div>
           <div class="table-scroll"><table class="datatable" id="tblBku"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
-          <div class="table-actions">
-            <button class="btn primary small" id="btnAddBku">+ Tambah Transaksi</button>
+          <div class="table-actions" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn primary small" id="btnAddBku">+ Tambah Transaksi</button>
+              <button class="btn small" id="btnExportBkuExcel" style="background:#107c41; color:#fff; border-color:#107c41;">&#128202; Ekspor BKU Ini (Excel)</button>
+            </div>
             <span class="badge-note">Saldo awal: <b id="bkuSaldoAwalLabel">Rp 0</b> (ubah di Data Sekolah)</span>
           </div>
         </div>
@@ -790,6 +975,9 @@ table.print-cal td.othermonth{background:#f7f7f7;}
               <thead></thead><tbody></tbody>
             </table>
           </div>
+          <div class="table-actions" style="margin-top:10px;">
+            <button class="btn small" id="btnExportSppExcel" style="background:#107c41; color:#fff; border-color:#107c41;">&#128202; Ekspor Rekap SPP (Excel)</button>
+          </div>
         </div>
       </section>
 
@@ -863,18 +1051,42 @@ table.print-cal td.othermonth{background:#f7f7f7;}
         </div>
       </section>
 
-      <!-- ============ CETAK ============ -->
+      <!-- ============ CETAK & EKSPOR ============ -->
       <section class="view" id="view-cetak">
         <div class="card">
-          <h2>Cetak Laporan Resmi</h2>
-          <p class="desc">Pilih jenis laporan, pratinjau akan tampil di bawah, lalu klik "Cetak / Simpan PDF".</p>
+          <h2>Cetak &amp; Ekspor Laporan Resmi</h2>
+          <p class="desc">Pilih jenis laporan untuk melihat pratinjau lengkap. Anda dapat mengunduh berkas <b>PDF siap cetak</b> (dengan Kop &amp; Tanda Tangan), mengekspor tabel ke <b>Excel (.xlsx)</b>, atau mencetak langsung.</p>
           <div class="subtabs" id="printTabs"></div>
-          <button class="btn primary" id="btnPrintNow">&#128424; Cetak / Simpan PDF</button>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:14px;">
+            <button class="btn primary" id="btnExportPdfCurrent">&#128196; Unduh Laporan Ini (PDF)</button>
+            <button class="btn" id="btnExportExcelCurrent" style="background:#107c41; color:#fff; border-color:#107c41;">&#128202; Unduh Laporan Ini (Excel)</button>
+            <button class="btn" id="btnExportExcelAll" style="background:#0e7490; color:#fff; border-color:#0e7490;">&#128202; Unduh Semua Buku Kas (Multi-Sheet Excel)</button>
+            <button class="btn" id="btnPrintNow">&#128424; Cetak Browser / Printer</button>
+          </div>
         </div>
         <div class="print-preview-wrap"><div id="printRoot"></div></div>
       </section>
 
     </div>
+
+    <!-- Mobile Bottom Navigation Bar (Phone only) -->
+    <nav class="mobile-bottom-bar" id="mobileBottomBar">
+      <button class="mobile-nav-btn active" data-view="dashboard">
+        <span class="ic">&#9632;</span><span>Beranda</span>
+      </button>
+      <button class="mobile-nav-btn" data-view="program">
+        <span class="ic">&#128203;</span><span>Program</span>
+      </button>
+      <button class="mobile-nav-btn" data-view="bku">
+        <span class="ic">&#128176;</span><span>BKU Kas</span>
+      </button>
+      <button class="mobile-nav-btn" data-view="spp">
+        <span class="ic">&#128197;</span><span>SPP</span>
+      </button>
+      <button class="mobile-nav-btn" id="btnMobileMore">
+        <span class="ic">&#9776;</span><span>Menu</span>
+      </button>
+    </nav>
   </div>
 </div>
 
@@ -937,7 +1149,7 @@ table.print-cal td.othermonth{background:#f7f7f7;}
         <button class="btn primary" type="button" id="arcBtnSimpanBaru">Simpan Kode Baru &amp; Masuk sebagai Admin</button>
       </div>
     </div>
-    <p class="desc" style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px;">Tidak ingat jawaban keamanan sama sekali? Jika sinkronisasi Google Sheets sudah pernah diaktifkan, kode Admin bisa direset dengan mengosongkan kolom <b>adminPassword</b> &amp; <b>securityAnswer</b> pada sheet "Data Sekolah", lalu masuk sementara sebagai Guru dan klik "Tarik dari Google Sheets". Atau minta bantuan siapa pun yang menyimpan file cadangan (.json) aplikasi ini.</p>
+    <p class="desc" style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px;">Lupa jawaban keamanan? Hubungi Kepala Sekolah atau pengelola akun utama untuk mengatur ulang kode akses Admin.</p>
   </div>
 </div>
 
@@ -1040,7 +1252,7 @@ table.print-cal td.othermonth{background:#f7f7f7;}
       <h3 style="font-size:12.5px;margin:0 0 8px;">Riwayat Serah Terima &amp; Pengembalian</h3>
       <div id="stRiwayat"></div>
     </div>
-    <div style="max-width:420px;">
+    <div id="stFormDisburseWrap" style="max-width:420px;">
       <h3 style="font-size:12.5px;margin:0 0 8px;">Catat Serah Terima Baru</h3>
       <div class="field" style="margin-bottom:10px;">
         <label><input type="radio" name="stMode" value="total" checked> Total Keseluruhan Program</label><br>
@@ -1058,6 +1270,7 @@ table.print-cal td.othermonth{background:#f7f7f7;}
       <button class="btn primary" type="button" id="stBtnCetak">Catat &amp; Cetak Serah Terima</button>
       <p class="desc" style="margin-top:10px;">Catatan: pengembalian sisa dana uang muka yang tidak habis terpakai sekarang dicatat lewat menu <b>Realisasi</b> (tombol Update Realisasi), bukan di sini lagi.</p>
     </div>
+    <div id="stGuruNote" style="display:none; color:var(--text-secondary); font-size:12px; margin-top:8px; padding:10px; background:#f9fafb; border-radius:6px; border:1px solid var(--border);">ℹ️ Penyerahan uang muka kegiatan baru dicatat oleh Bendahara/Admin Sekolah. Anda dapat melihat riwayat dan mencetak ulang BAST di atas.</div>
     <div class="modal-actions">
       <button class="btn" type="button" data-close="modal-serahterima">Tutup</button>
     </div>
@@ -1230,9 +1443,87 @@ table.print-cal td.othermonth{background:#f7f7f7;}
       <div class="field"><label>Keterangan (opsional)</label><input type="text" id="bkuFormKeterangan"></div>
     </div>
 
+    <div id="bkuFormWarning" style="display:none; font-size:12px; padding:8px 12px; border-radius:6px; margin:10px 0;"></div>
+
     <div class="modal-actions">
       <button class="btn" type="button" data-close="modal-bku-form">Batal</button>
       <button class="btn primary" type="button" id="bkuFormBtnSimpan">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL EKSPOR EXCEL & PDF ===================== -->
+<div class="modal-overlay" id="modal-export-center">
+  <div class="modal-box" style="max-width:680px;">
+    <button class="modal-close" data-close="modal-export-center">&times;</button>
+    <h2>Pusat Ekspor Dokumen &amp; Laporan</h2>
+    <p class="desc">Unduh berkas laporan resmi dalam format <b>PDF</b> rapi (siap cetak/tanda tangan) atau buku kas lengkap dalam format <b>Excel (.xlsx)</b>.</p>
+    
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:16px 0;">
+      <!-- Kolom Excel -->
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <span style="font-size:20px;">📊</span>
+            <h3 style="margin:0; font-size:14px; color:#107c41;">Buku Kas Excel (.xlsx)</h3>
+          </div>
+          <p style="font-size:12px; color:#64748b; line-height:1.45; margin-bottom:12px;">
+            Menghasilkan file Excel resmi dengan rumus jumlah otomatis, pemisah ribuan, dan tab terpisah.
+          </p>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <button class="btn small" id="mecBtnExcelAll" style="background:#107c41; color:#fff; border-color:#107c41; justify-content:center; font-weight:600;">
+              📥 Master Excel (11 Sheet Lengkap)
+            </button>
+            <button class="btn small" id="mecBtnExcelBkuBos" style="justify-content:center;">BKU Dana BOS (.xlsx)</button>
+            <button class="btn small" id="mecBtnExcelBkuSpp" style="justify-content:center;">BKU SPP (.xlsx)</button>
+            <button class="btn small" id="mecBtnExcelSppRekap" style="justify-content:center;">Rekap SPP &amp; Tunggakan (.xlsx)</button>
+            <button class="btn small" id="mecBtnExcelProgram" style="justify-content:center;">RKAS &amp; Program Kerja (.xlsx)</button>
+            <button class="btn small" id="mecBtnExcelPinjaman" style="justify-content:center;">Buku Pinjaman GTK (.xlsx)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kolom PDF -->
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <span style="font-size:20px;">📄</span>
+            <h3 style="margin:0; font-size:14px; color:#b91c1c;">Laporan Resmi PDF</h3>
+          </div>
+          <p style="font-size:12px; color:#64748b; line-height:1.45; margin-bottom:12px;">
+            Dilengkapi Kop Surat resmi sekolah, nomor bukti, tanggal terbit, dan kolom tanda tangan Kepala Sekolah &amp; Bendahara.
+          </p>
+          <div class="field" style="margin-bottom:8px;">
+            <label style="font-size:11px;">Pilih Jenis Laporan:</label>
+            <select id="mecPdfReportSelect" style="font-size:12px; padding:6px 8px;">
+              <option value="realisasi">Laporan Realisasi Anggaran</option>
+              <option value="bku-bos">BKU Dana BOS</option>
+              <option value="bku-spp">BKU SPP</option>
+              <option value="bku-pangkal">BKU Uang Pangkal</option>
+              <option value="bku-lain">BKU Dana Lainnya</option>
+              <option value="lpjbos">LPJ BOS</option>
+              <option value="lpjkons">LPJ Konsolidasi</option>
+              <option value="rekapspp">Rekap SPP Siswa (12 Bulan)</option>
+              <option value="rekappangkal">Rekap Uang Pangkal</option>
+              <option value="rab-bos">RAB BOS</option>
+              <option value="rab-spp">RAB SPP</option>
+              <option value="kalender">Kalender Program Kerja</option>
+            </select>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <button class="btn small primary" id="mecBtnPdfDownload" style="background:#b91c1c; border-color:#b91c1c; justify-content:center; font-weight:600;">
+              📥 Unduh PDF Laporan Terpilih
+            </button>
+            <button class="btn small" id="mecBtnPdfPreview" style="justify-content:center;">
+              👁️ Lihat Pratinjau &amp; Cetak
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top:14px; justify-content:flex-end;">
+      <button class="btn" type="button" data-close="modal-export-center">Tutup</button>
     </div>
   </div>
 </div>
@@ -1291,6 +1582,7 @@ const SEKOLAH_FIELDS = [
   ["komite","Nama Ketua Komite Sekolah","text"], ["tahunAjaran","Tahun Ajaran/Anggaran","text"],
   ["saldoAwalBos","Saldo Awal Kas BOS (Rp)","currency"], ["saldoAwalSpp","Saldo Awal Kas SPP (Rp)","currency"],
   ["saldoAwalPangkal","Saldo Awal Kas Uang Pangkal (Rp)","currency"], ["saldoAwalLain","Saldo Awal Kas Dana Lainnya (Rp)","currency"],
+  ["batasKasMenipis","Batas Minimum Peringatan Kas Menipis (Rp)","currency"],
   ["kotaCetak","Kota untuk Cetak Dokumen","text"],
 ];
 const PROGRAM_STATUS = { MENUNGGU:"Menunggu Persetujuan", PERBAIKAN:"Anggaran Perlu Perbaikan", DISETUJUI:"Disetujui", DITOLAK:"Ditolak" };
@@ -1303,7 +1595,8 @@ function uid(){ return uidCounter++; }
 function emptySekolah(){
   return { namaSekolah:"", npsn:"", alamat:"", desa:"", kecamatan:"", kabkota:"", provinsi:"",
     kepsek:"", nipKepsek:"", bendaharaBos:"", nipBendaharaBos:"", bendaharaKomite:"", nipBendaharaKomite:"",
-    komite:"", tahunAjaran:"2026/2027", saldoAwalBos:0, saldoAwalSpp:0, saldoAwalPangkal:0, saldoAwalLain:0, kotaCetak:"",
+    komite:"", tahunAjaran:"2026/2027", saldoAwalBos:0, saldoAwalSpp:0, saldoAwalPangkal:0, saldoAwalLain:0,
+    batasKasMenipis:1000000, kopGambar:"", useKopGambar:false, kotaCetak:"",
     /* Kode akses Admin + pertanyaan/jawaban keamanan untuk pemulihan (lihat
        requestAdminAccess/openAdminRecoverModal) — kosong berarti kode Admin
        belum pernah dibuat, sehingga login Admin berikutnya akan memicu
@@ -1345,7 +1638,11 @@ function nextDocNumber(kind, prefix){
   return nomor;
 }
 
-/* Session-only current user (login gate). NEVER persisted to state/localStorage. */
+/* Sesi Pengguna & Tampilan Aktif — disimpan di localStorage agar tetap pada
+   pengguna dan halaman terakhir saat di-refresh. */
+const USER_SESSION_KEY = "keuanganSekolahUserSessionV1";
+const ACTIVE_VIEW_KEY = "keuanganSekolahActiveViewV1";
+const RECENT_LOGINS_KEY = "keuanganSekolahRecentLoginsV1";
 let currentUser = { name:"", role:"Admin" };
 
 /* Snapshot of the data as it stood at the last successful push/pull, used to
@@ -1527,6 +1824,13 @@ function pjColor(name){
   for(let i=0;i<s.length;i++) h += s.charCodeAt(i);
   return PJ_COLORS[h % PJ_COLORS.length];
 }
+function getProgramSumberKey(prog){
+  if(prog && prog.sumberDana && SUMBER_KEYS.includes(prog.sumberDana)) return prog.sumberDana;
+  for(const k of SUMBER_KEYS){
+    if((state.program[k]||[]).some(p=>p.id===prog?.id)) return k;
+  }
+  return SUMBER_KEYS[0];
+}
 function formatTgl(iso){
   if(!iso) return "-";
   const d = new Date(iso+"T00:00:00");
@@ -1620,40 +1924,11 @@ function bkuWithSaldo(key){
 function syncBkuFromRealisasi(key){
   const meta = SUMBER_META[key];
   if(!meta) return;
-  const validIds = new Set();
-  const desired = [];
-  (state.program[key]||[]).forEach(prog=>{
-    /* Program yang sudah pakai skema Uang Muka (punya riwayat Serah Terima)
-       TIDAK dibuatkan baris BKU dari Realisasi lagi — uangnya sudah dicatat
-       keluar saat Serah Terima (lihat syncBkuFromSerahTerima), supaya tidak
-       dobel hitung. Realisasi di program itu jadi murni laporan
-       pertanggungjawaban, bukan pemicu pengeluaran kas baru. */
-    if(programPakaiSkemaUangMuka(prog)) return;
-    (prog.realisasi||[]).forEach(r=>{
-      validIds.add(r.id);
-      desired.push({
-        autoId: r.id,
-        tanggal: r.tanggalReal || r.tanggal,
-        uraian: `Realisasi: ${prog.namaProgram}${r.keterangan? " — "+r.keterangan : ""}`,
-        pengeluaran: Number(r.anggaranTerpakai)||0,
-      });
-    });
-  });
-  /* Kalau sebuah program baru saja pindah skema (dapat Serah Terima Dana
-     pertamanya setelah sebelumnya sempat punya baris auto-realisasi), baris
-     auto-realisasi lama untuk program itu juga harus disingkirkan meskipun
-     realisasinya sendiri masih ada — makanya filter di bawah memakai
-     `validIds` yang HANYA berisi id tahap dari program skema-langsung. */
-  state.bku[key] = (state.bku[key]||[]).filter(row=> !row.autoRealisasiId || validIds.has(row.autoRealisasiId));
-  desired.forEach(d=>{
-    let row = state.bku[key].find(b=>b.autoRealisasiId===d.autoId);
-    if(row){
-      row.tanggal = d.tanggal; row.uraian = d.uraian; row.pengeluaran = d.pengeluaran;
-    } else {
-      row = { id:uid(), tanggal:d.tanggal, noBukti:"", uraian:d.uraian, penerimaan:0, pengeluaran:d.pengeluaran, autoRealisasiId:d.autoId };
-      state.bku[key].push(row);
-    }
-  });
+  /* Pengeluaran kas program dicatat saat Serah Terima Dana (lihat syncBkuFromSerahTerima).
+     Realisasi adalah laporan pertanggungjawaban PJ atas penggunaan uang muka tersebut, bukan pengeluaran kas tambahan.
+     Jika Serah Terima dihapus, uang kas tidak pernah keluar dari Bendahara, sehingga tidak ada pengeluaran di BKU.
+     Membersihkan baris autoRealisasiId dari BKU agar tidak terjadi desinkronisasi. */
+  state.bku[key] = (state.bku[key]||[]).filter(row=> !row.autoRealisasiId);
 }
 /* Pasangan dari syncBkuFromRealisasi, untuk program yang pakai skema Uang
    Muka: baris Pengeluaran BKU dibuat dari riwayat Serah Terima (uang keluar
@@ -1939,22 +2214,88 @@ const VIEW_TITLES = {
   spp:"SPP & Tunggakan Siswa", lain:"Uang Pangkal & Item Lainnya",
   lpjbos:"LPJ - Dana BOS", lpjkons:"LPJ Konsolidasi Sekolah", cetak:"Cetak Laporan Resmi",
 };
+function switchView(viewName){
+  if(!VIEW_TITLES[viewName]) return;
+  try {
+    localStorage.setItem(ACTIVE_VIEW_KEY, viewName);
+  } catch(e){}
+  document.querySelectorAll(".nav button[data-view]").forEach(b=>{
+    if(b.dataset.view === viewName) b.classList.add("active");
+    else b.classList.remove("active");
+  });
+  document.querySelectorAll(".mobile-nav-btn[data-view]").forEach(b=>{
+    if(b.dataset.view === viewName) b.classList.add("active");
+    else b.classList.remove("active");
+  });
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  const targetView = document.getElementById("view-"+viewName);
+  if(targetView) targetView.classList.add("active");
+  const topTitle = document.getElementById("topTitle");
+  if(topTitle) topTitle.textContent = VIEW_TITLES[viewName];
+
+  const renderers = { dashboard:renderDashboard, realisasi:renderRealisasi, spp:renderSppAll, lain:renderLainAll,
+    lpjbos:renderLpjBos, lpjkons:renderLpjKons, cetak:renderPrint, siswa:renderSiswaTable,
+    gtk:renderGtkTable, program:()=>{ renderProgramTabs(); renderProgramTable(); },
+    serahterima:renderSerahTerimaTable, kalenderprogram:renderKalenderProgramView,
+    bku:()=>renderBkuTable(currentBkuKey), kontrolkeuangan:renderKontrolKeuangan,
+    peminjaman:renderPinjamanTable, sekolah:renderSekolahForm };
+  if(renderers[viewName]) renderers[viewName]();
+
+  window.scrollTo({ top:0, behavior:"smooth" });
+}
+
+function restoreActiveView(){
+  let savedView = null;
+  try {
+    savedView = localStorage.getItem(ACTIVE_VIEW_KEY);
+  } catch(e){}
+  if(savedView && VIEW_TITLES[savedView]){
+    switchView(savedView);
+  } else {
+    switchView("dashboard");
+  }
+}
+
+function openMobileSidebar(){
+  const sb = document.querySelector(".sidebar");
+  const bd = document.getElementById("sidebarBackdrop");
+  if(sb) sb.classList.add("mobile-open");
+  if(bd) bd.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeMobileSidebar(){
+  const sb = document.querySelector(".sidebar");
+  const bd = document.getElementById("sidebarBackdrop");
+  if(sb) sb.classList.remove("mobile-open");
+  if(bd) bd.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
 document.querySelectorAll(".nav button[data-view]").forEach(btn=>{
   btn.addEventListener("click", ()=>{
-    document.querySelectorAll(".nav button[data-view]").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
-    document.getElementById("view-"+btn.dataset.view).classList.add("active");
-    document.getElementById("topTitle").textContent = VIEW_TITLES[btn.dataset.view];
-    const renderers = { dashboard:renderDashboard, realisasi:renderRealisasi, spp:renderSppAll, lain:renderLainAll,
-      lpjbos:renderLpjBos, lpjkons:renderLpjKons, cetak:renderPrint, siswa:renderSiswaTable,
-      gtk:renderGtkTable, program:()=>{ renderProgramTabs(); renderProgramTable(); },
-      serahterima:renderSerahTerimaTable, kalenderprogram:renderKalenderProgramView,
-      bku:()=>renderBkuTable(currentBkuKey), kontrolkeuangan:renderKontrolKeuangan,
-      peminjaman:renderPinjamanTable };
-    if(renderers[btn.dataset.view]) renderers[btn.dataset.view]();
+    switchView(btn.dataset.view);
+    closeMobileSidebar();
   });
 });
+
+document.querySelectorAll(".mobile-nav-btn[data-view]").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    switchView(btn.dataset.view);
+  });
+});
+
+const btnToggleSb = document.getElementById("btnToggleSidebar");
+if(btnToggleSb) btnToggleSb.addEventListener("click", openMobileSidebar);
+
+const btnCloseSb = document.getElementById("btnCloseSidebar");
+if(btnCloseSb) btnCloseSb.addEventListener("click", closeMobileSidebar);
+
+const sbBackdrop = document.getElementById("sidebarBackdrop");
+if(sbBackdrop) sbBackdrop.addEventListener("click", closeMobileSidebar);
+
+const btnMobileMore = document.getElementById("btnMobileMore");
+if(btnMobileMore) btnMobileMore.addEventListener("click", openMobileSidebar);
 function refreshHeader(){
   document.getElementById("topSchoolSub").textContent = state.sekolah.namaSekolah
     ? `${state.sekolah.namaSekolah} · NPSN ${state.sekolah.npsn||"-"} · TA ${state.sekolah.tahunAjaran||"-"}`
@@ -1979,679 +2320,236 @@ function renderSekolahForm(){
       const key = inp.dataset.key;
       state.sekolah[key] = inp.hasAttribute("data-currency") ? parseRibuan(inp.value) : inp.value;
       refreshHeader();
-      if(key.startsWith("saldoAwal")) renderBkuTable(currentBkuKey);
+      if(key.startsWith("saldoAwal") || key==="batasKasMenipis"){
+        renderBkuTable(currentBkuKey);
+        updateCashHealthAlerts();
+      }
     });
   });
-  document.getElementById("sekolahGuruNote").style.display = isAdmin ? "none" : "";
-  const gsheetInp = document.getElementById("gsheetUrl");
-  if(gsheetInp) gsheetInp.disabled = !isAdmin;
-
+  const noteEl = document.getElementById("sekolahGuruNote");
+  if(noteEl){
+    noteEl.style.display = isAdmin ? "none" : "";
+    if(!isAdmin){
+      noteEl.innerHTML = `🔒 <b>Akses Terbatas:</b> Anda masuk sebagai <b>${escapeHtml(currentUser.name)} (${escapeHtml(currentUser.role)})</b>. Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk mengubah identitas sekolah, saldo awal kas, batas kas menipis, dan kop surat. Seluruh field di bawah terkunci.`;
+    }
   const secCard = document.getElementById("cardAdminSecurity");
   if(secCard){
     secCard.style.display = isAdmin ? "" : "none";
     if(isAdmin){
-      // Pertanyaan keamanan yang sudah ada diprefill (biar tidak sengaja
-      // terhapus saat Admin cuma mau ganti kode) — kode & jawaban TIDAK
-      // pernah ditampilkan ulang, hanya bisa ditimpa dengan yang baru.
       const qInp = document.getElementById("asChangeQuestion");
       if(qInp && document.activeElement!==qInp) qInp.value = state.sekolah.securityQuestion||"";
     }
   }
 }
 
-/* =========================================================================
-   SINKRONISASI GOOGLE SHEETS (2 ARAH: KIRIM & TARIK)
-   ========================================================================= */
-const GAS_CODE = `/**
- * Apps Script sinkronisasi 2 arah untuk Aplikasi Keuangan Sekolah.
- * Tempel kode ini di Extensions > Apps Script pada Google Sheets tujuan sinkronisasi,
- * lalu Deploy sebagai Web App (Execute as: Me, Who has access: Anyone).
- * doPost = menerima kiriman data dari aplikasi. doGet = mengirim data ke aplikasi saat "Tarik".
- */
-var SUMBER_LABELS = { bos:'BOS', spp:'SPP', pangkal:'UangPangkal', lain:'DanaLainnya' };
+function renderKopSection(){
+  const chk = document.getElementById("chkUseKopGambar");
+  const previewWrap = document.getElementById("kopGambarPreviewWrap");
+  const previewImg = document.getElementById("kopGambarPreview");
+  const btnHapus = document.getElementById("btnHapusKopGambar");
+  const uploadBox = document.getElementById("kopGambarUploadBox");
+  const isAdmin = currentUser.role === "Admin";
 
-function doPost(e) {
-  try {
-    var data = JSON.parse(e.postData.contents);
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-
-    writeSheet(ss, 'Data Sekolah', objectToRows(data.sekolah));
-    writeSheet(ss, 'Data Siswa', arrayToRows(data.siswa, ['nis','nama','kelas','tarifSpp','tarifPangkal','status','waOrtu']));
-    writeSheet(ss, 'GTK', arrayToRows(data.gtk, ['nama','nip','jabatan']));
-
-    Object.keys(SUMBER_LABELS).forEach(function(key){
-      var label = SUMBER_LABELS[key];
-      var progCols = ['namaPengaju','namaProgram','deskripsi','tanggal','status','pj','budgetsJson','realisasiJson','serahTerimaJson','pengembalianJson'];
-      var progRows = ((data.program || {})[key] || []).map(function(p){
-        return {
-          namaPengaju: p.namaPengaju, namaProgram: p.namaProgram, deskripsi: p.deskripsi,
-          tanggal: (p.tanggal || []).join('; '), status: p.status, pj: p.pj,
-          budgetsJson: JSON.stringify(p.budgets || []), realisasiJson: JSON.stringify(p.realisasi || []),
-          serahTerimaJson: JSON.stringify(p.serahTerima || []), pengembalianJson: JSON.stringify(p.pengembalianUangMuka || [])
-        };
-      });
-      writeSheet(ss, 'Program_' + label, arrayToRows(progRows, progCols));
-
-      var bkuCols = ['tanggal','noBukti','uraian','kegiatan','keterangan','penerimaan','pengeluaran','autoRealisasiId','autoSerahTerimaId','autoPengembalianId','autoPiutangId'];
-      writeSheet(ss, 'BKU-' + label, arrayToRows((data.bku || {})[key], bkuCols));
-    });
-
-    writeSheet(ss, 'Transaksi SPP', arrayToRows(data.sppTx, ['tanggal','nis','bulan','jumlah','noKwitansi','keterangan']));
-    writeSheet(ss, 'Transaksi Item Lainnya', arrayToRows(data.itemTx, ['tanggal','nis','jenisItem','jumlah','noKwitansi','keterangan']));
-
-    var pinjamanCols = ['namaPeminjam','nip','jabatan','tanggalPengajuan','jumlah','sumberDana','keperluan','jangkaWaktuBulan',
-      'status','noSurat','noPersetujuan','noKwitansi','catatan','approvedBy','approvedAt','tanggalCair',
-      'createdBy','createdAt','cicilanJson'];
-    var pinjamanRows = (data.pinjaman || []).map(function(pj){
-      return {
-        namaPeminjam: pj.namaPeminjam, nip: pj.nip, jabatan: pj.jabatan, tanggalPengajuan: pj.tanggalPengajuan,
-        jumlah: pj.jumlah, sumberDana: pj.sumberDana, keperluan: pj.keperluan, jangkaWaktuBulan: pj.jangkaWaktuBulan, status: pj.status,
-        noSurat: pj.noSurat, noPersetujuan: pj.noPersetujuan, noKwitansi: pj.noKwitansi, catatan: pj.catatan,
-        approvedBy: pj.approvedBy, approvedAt: pj.approvedAt, tanggalCair: pj.tanggalCair,
-        createdBy: pj.createdBy, createdAt: pj.createdAt, cicilanJson: JSON.stringify(pj.cicilan || [])
-      };
-    });
-    writeSheet(ss, 'Peminjaman GTK', arrayToRows(pinjamanRows, pinjamanCols));
-
-    var info = ss.getSheetByName('Info Sinkronisasi') || ss.insertSheet('Info Sinkronisasi');
-    info.clear();
-    info.getRange(1, 1, 2, 2).setValues([
-      ['Terakhir Dikirim dari Aplikasi', 'Nama Sekolah'],
-      [Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss'), (data.sekolah && data.sekolah.namaSekolah) || '']
-    ]);
-
-    return ContentService.createTextOutput(JSON.stringify({ ok: true, time: new Date().toISOString() }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ ok: false, message: String(err) }))
-      .setMimeType(ContentService.MimeType.JSON);
+  if(chk){
+    chk.checked = !!state.sekolah.useKopGambar;
+    chk.disabled = !isAdmin;
   }
-}
-
-function doGet(e) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var data = {};
-    data.sekolah = readObjectSheet(ss, 'Data Sekolah');
-    data.siswa = readArraySheet(ss, 'Data Siswa');
-    data.gtk = readArraySheet(ss, 'GTK');
-    data.program = {}; data.bku = {};
-    Object.keys(SUMBER_LABELS).forEach(function(key){
-      var label = SUMBER_LABELS[key];
-      var rawProg = readArraySheet(ss, 'Program_' + label);
-      data.program[key] = rawProg.map(function(p){
-        var budgets = [], realisasi = [], serahTerima = [], pengembalian = [];
-        try { budgets = JSON.parse(p.budgetsJson || '[]'); } catch(e) { budgets = []; }
-        try { realisasi = JSON.parse(p.realisasiJson || '[]'); } catch(e) { realisasi = []; }
-        try { serahTerima = JSON.parse(p.serahTerimaJson || '[]'); } catch(e) { serahTerima = []; }
-        try { pengembalian = JSON.parse(p.pengembalianJson || '[]'); } catch(e) { pengembalian = []; }
-        return {
-          namaPengaju: p.namaPengaju, namaProgram: p.namaProgram, deskripsi: p.deskripsi,
-          tanggal: p.tanggal ? String(p.tanggal).split(';').map(function(s){ return s.trim(); }).filter(Boolean) : [],
-          status: p.status, pj: p.pj, budgets: budgets, realisasi: realisasi,
-          serahTerima: serahTerima, pengembalianUangMuka: pengembalian
-        };
-      });
-      data.bku[key] = readArraySheet(ss, 'BKU-' + label);
-    });
-    data.sppTx = readArraySheet(ss, 'Transaksi SPP');
-    data.itemTx = readArraySheet(ss, 'Transaksi Item Lainnya');
-
-    var rawPinjaman = readArraySheet(ss, 'Peminjaman GTK');
-    data.pinjaman = rawPinjaman.map(function(pj){
-      var cicilan = [];
-      try { cicilan = JSON.parse(pj.cicilanJson || '[]'); } catch(e) { cicilan = []; }
-      return {
-        namaPeminjam: pj.namaPeminjam, nip: pj.nip, jabatan: pj.jabatan, tanggalPengajuan: pj.tanggalPengajuan,
-        jumlah: pj.jumlah, keperluan: pj.keperluan, jangkaWaktuBulan: pj.jangkaWaktuBulan, status: pj.status,
-        noSurat: pj.noSurat, noPersetujuan: pj.noPersetujuan, noKwitansi: pj.noKwitansi, catatan: pj.catatan,
-        approvedBy: pj.approvedBy, approvedAt: pj.approvedAt, tanggalCair: pj.tanggalCair,
-        createdBy: pj.createdBy, createdAt: pj.createdAt, cicilan: cicilan
-      };
-    });
-
-    return ContentService.createTextOutput(JSON.stringify({ ok: true, data: data }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ ok: false, message: String(err) }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function writeSheet(ss, name, rows) {
-  var sheet = ss.getSheetByName(name) || ss.insertSheet(name);
-  sheet.clear();
-  if (rows.length) {
-    var range = sheet.getRange(1, 1, rows.length, rows[0].length);
-    range.setNumberFormat('@'); // paksa teks: cegah NIS/tanggal berubah tipe otomatis
-    range.setValues(rows);
-  }
-}
-
-function arrayToRows(arr, cols) {
-  arr = arr || [];
-  var rows = [cols.slice()];
-  arr.forEach(function(item){
-    rows.push(cols.map(function(c){ return (item[c] === undefined || item[c] === null) ? '' : String(item[c]); }));
-  });
-  return rows;
-}
-
-function objectToRows(obj) {
-  obj = obj || {};
-  var rows = [['Field', 'Nilai']];
-  Object.keys(obj).forEach(function(k){
-    if (k === 'gsheetUrl') return; // jangan simpan URL konfigurasi ke dalam data
-    rows.push([k, obj[k] === undefined || obj[k] === null ? '' : String(obj[k])]);
-  });
-  return rows;
-}
-
-function readArraySheet(ss, name) {
-  var sheet = ss.getSheetByName(name);
-  if (!sheet || sheet.getLastRow() < 2) return [];
-  var values = sheet.getDataRange().getValues();
-  var headers = values[0];
-  return values.slice(1)
-    .filter(function(row){ return row.some(function(v){ return v !== '' && v !== null; }); })
-    .map(function(row){
-      var obj = {};
-      headers.forEach(function(h, i){ obj[h] = row[i]; });
-      return obj;
-    });
-}
-
-function readObjectSheet(ss, name) {
-  var sheet = ss.getSheetByName(name);
-  if (!sheet || sheet.getLastRow() < 2) return {};
-  var values = sheet.getDataRange().getValues();
-  var obj = {};
-  values.slice(1).forEach(function(row){
-    if (row[0] !== '' && row[0] !== null) obj[row[0]] = row[1];
-  });
-  return obj;
-}`;
-
-function renderGsheetSection(){
-  /* Jika file ini adalah hasil "Bagikan Aplikasi" (lihat btnShareApp),
-     window.__LOCKED_GSHEET_URL__ sudah dipasang oleh baris <script> kecil
-     yang disisipkan ke file salinan sebelum <body> — paksa state memakai
-     URL tersebut setiap kali bagian ini digambar ulang (dipanggil di
-     hampir semua renderAll(), termasuk setelah reset/impor/tarik data),
-     supaya URL tidak bisa "lepas kunci" lewat jalur manapun. */
-  if(window.__LOCKED_GSHEET_URL__){ state.sekolah.gsheetUrl = window.__LOCKED_GSHEET_URL__; }
-  const urlInput = document.getElementById("gsheetUrl");
-  urlInput.value = state.sekolah.gsheetUrl || "";
-  urlInput.readOnly = !!window.__LOCKED_GSHEET_URL__;
-  const lockNoteEl = document.getElementById("gsheetUrlLockNote");
-  if(window.__LOCKED_GSHEET_URL__ && sekolahLooksUnconfigured()){
-    lockNoteEl.style.display = "";
-    lockNoteEl.style.color = "#b3261e";
-    lockNoteEl.innerHTML = '&#128274; URL ini terkunci &mdash; aplikasi ini sudah otomatis tersambung ke Google Sheets yang sama. <b>Klik "Tarik dari Google Sheets" dulu sebelum melakukan perubahan apa pun</b>, supaya Data Sekolah (nama sekolah, saldo awal, kode Admin, dst.) ikut terisi dan tidak tertimpa kosong.';
+  if(state.sekolah.kopGambar){
+    if(previewWrap) previewWrap.style.display = "block";
+    if(previewImg) previewImg.src = state.sekolah.kopGambar;
+    if(btnHapus) btnHapus.style.display = isAdmin ? "inline-block" : "none";
   } else {
-    lockNoteEl.style.display = window.__LOCKED_GSHEET_URL__ ? "" : "none";
-    lockNoteEl.style.color = "#a15c00";
-    lockNoteEl.innerHTML = '&#128274; URL ini terkunci pada file aplikasi hasil "Bagikan Aplikasi" &mdash; sudah otomatis tersambung ke Google Sheets yang sama dan tidak bisa diganti dari sini.';
+    if(previewWrap) previewWrap.style.display = "none";
+    if(previewImg) previewImg.src = "";
+    if(btnHapus) btnHapus.style.display = "none";
   }
-  document.getElementById("gasCode").textContent = GAS_CODE;
-}
-document.getElementById("gsheetUrl").addEventListener("input", (e)=>{
-  if(window.__LOCKED_GSHEET_URL__) return; // dikunci, abaikan perubahan
-  state.sekolah.gsheetUrl = e.target.value;
-});
-document.getElementById("btnShareApp").addEventListener("click", ()=>{
-  const url = (state.sekolah.gsheetUrl || "").trim();
-  if(!url){ alert('Atur & simpan URL Web App Google Apps Script terlebih dahulu (lihat "Cara setup" di atas) sebelum membagikan aplikasi ini.'); return; }
-  if(!confirm('File aplikasi baru akan dibuat dengan URL Google Sheets di atas sudah terpasang & TERKUNCI (penerima tidak bisa menggantinya). Data yang sedang ada di aplikasi ini TIDAK ikut disalin ke file baru tersebut — setelah dibuka, penerima cukup klik "Tarik dari Google Sheets" untuk mengambil data yang sama. Lanjutkan membuat file?')) return;
-  try{
-    const safeUrlLiteral = JSON.stringify(url).replace(/</g, "\\u003c");
-    const lockTag = `<script>window.__LOCKED_GSHEET_URL__=${safeUrlLiteral};<\/script>\n`;
-    const html = "<!DOCTYPE html>\n" + __PRISTINE_HTML__.replace("<body>", "<body>\n" + lockTag);
-    const blob = new Blob([html], {type:"text/html"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    const namaFile = (state.sekolah.namaSekolah || "aplikasi_keuangan_sekolah").trim().replace(/[^a-z0-9]+/gi, "_").replace(/^_+|_+$/g, "") || "aplikasi_keuangan_sekolah";
-    a.download = namaFile + "_dibagikan.html";
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(()=> URL.revokeObjectURL(a.href), 5000);
-  }catch(err){ alert("Gagal membuat file aplikasi untuk dibagikan: " + err.message); }
-});
-document.getElementById("btnCopyScript").addEventListener("click", async ()=>{
-  try{
-    await navigator.clipboard.writeText(GAS_CODE);
-    const btn = document.getElementById("btnCopyScript");
-    const orig = btn.textContent;
-    btn.textContent = "Tersalin!";
-    setTimeout(()=>{ btn.textContent = orig; }, 1500);
-  }catch(err){ alert("Gagal menyalin otomatis. Silakan seleksi dan salin kode secara manual."); }
-});
-
-function gsheetButtons(){
-  return [document.getElementById("btnPushSheets"), document.getElementById("btnPushSheetsQuick"),
-          document.getElementById("btnPullSheets"), document.getElementById("btnPullSheetsQuick")].filter(Boolean);
-}
-function goToSekolahView(){
-  document.querySelectorAll(".nav button[data-view]").forEach(b=>b.classList.remove("active"));
-  document.querySelector('.nav button[data-view="sekolah"]').classList.add("active");
-  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
-  document.getElementById("view-sekolah").classList.add("active");
-  document.getElementById("topTitle").textContent = VIEW_TITLES.sekolah;
-}
-/* ---------- Diffing helpers: figure out exactly which items changed ---------- */
-function stripIds(obj){
-  if(Array.isArray(obj)) return obj.map(stripIds);
-  if(obj && typeof obj === "object"){
-    const out = {};
-    Object.keys(obj).forEach(k=>{ if(k!=="id") out[k] = stripIds(obj[k]); });
-    return out;
+  const uploadBtn = uploadBox ? uploadBox.querySelector("label.btn") : null;
+  if(uploadBtn) uploadBtn.style.display = isAdmin ? "inline-flex" : "none";
+  let noteEl = document.getElementById("kopGuruNote");
+  if(!noteEl && uploadBox){
+    noteEl = document.createElement("div");
+    noteEl.id = "kopGuruNote";
+    noteEl.style.cssText = "display:none; color:var(--text-secondary); font-size:12px; margin-top:8px;";
+    noteEl.textContent = "Pengunggahan dan penggantian gambar kop surat hanya dapat diubah oleh Admin.";
+    uploadBox.appendChild(noteEl);
   }
-  return obj;
-}
-function diffArrays(oldArr, newArr, keyFn, labelFn){
-  oldArr = oldArr || []; newArr = newArr || [];
-  const oldMap = new Map(oldArr.map(o=>[keyFn(o), o]));
-  const newMap = new Map(newArr.map(o=>[keyFn(o), o]));
-  const added = [], changed = [], removed = [];
-  newMap.forEach((val,key)=>{
-    if(!oldMap.has(key)){ added.push(labelFn(val)); return; }
-    const a = JSON.stringify(stripIds(val));
-    const b = JSON.stringify(stripIds(oldMap.get(key)));
-    if(a!==b) changed.push(labelFn(val));
-  });
-  oldMap.forEach((val,key)=>{ if(!newMap.has(key)) removed.push(labelFn(val)); });
-  return { added, changed, removed, total:newArr.length };
+  if(noteEl) noteEl.style.display = isAdmin ? "none" : "block";
 }
 
-/* Kunci identitas berbasis konten (bukan `id`, yang selalu dibuat ulang setiap
-   kali data ditarik dari server) — dipakai bersama oleh diff (ringkasan
-   perubahan) dan merge (penggabungan sebelum kirim, lihat mergeByKey). */
-const SYNC_KEYS = {
-  siswa: s=> s.nis? "nis:"+s.nis : "nama:"+s.nama+"|"+s.kelas,
-  gtk: g=> "nama:"+g.nama,
-  program: p=> [p.sumberDana,p.namaPengaju,p.namaProgram].join("|"),
-  bku: r=> [r.tanggal,r.noBukti,r.uraian].join("|"),
-  sppTx: t=> [t.nis,t.bulan,t.tanggal].join("|"),
-  itemTx: t=> [t.nis,t.jenisItem,t.tanggal,t.noKwitansi].join("|"),
-  /* noSurat dibuat SEKALI saat pengajuan dan tidak pernah berubah lagi
-     (lihat catatan "data aman" di dekat newPinjamanRow) — kunci paling stabil
-     untuk mencocokkan satu pengajuan yang sama di lokal & server meskipun
-     status/riwayat cicilannya sudah berubah sejak sinkronisasi terakhir. */
-  pinjaman: pj=> pj.noSurat? "noSurat:"+pj.noSurat : [pj.namaPeminjam,pj.tanggalPengajuan,pj.jumlah].join("|"),
-};
-
-/* Gabungkan array remote (dari server) dengan array lokal berdasarkan kunci
-   konten: entri yang HANYA ada di salah satu sisi selalu dipertahankan (tidak
-   pernah hilang diam-diam); entri dengan kunci yang sama di kedua sisi, versi
-   LOKAL yang dipakai (karena itu yang sedang aktif diedit oleh pengguna saat
-   ini). Ini mencegah "Kirim" menimpa/menghapus data yang baru ditambahkan
-   pengguna lain di server sejak sinkronisasi terakhir. */
-function mergeByKey(remoteArr, localArr, keyFn){
-  const map = new Map();
-  (remoteArr||[]).forEach(r=> map.set(keyFn(r), r));
-  (localArr||[]).forEach(l=> map.set(keyFn(l), l));
-  return Array.from(map.values());
-}
-
-function buildSyncDiff(oldState, newState){
-  oldState = oldState || {}; newState = newState || {};
-
-  const oldSekolah = JSON.stringify(Object.assign({}, oldState.sekolah||{}, {gsheetUrl:undefined}));
-  const newSekolah = JSON.stringify(Object.assign({}, newState.sekolah||{}, {gsheetUrl:undefined}));
-
-  const siswaLabel = s=> `${s.nama||"(tanpa nama)"}${s.kelas? " ("+s.kelas+")" : ""}`;
-  const namaByNis = nis=> { const s=(newState.siswa||[]).find(x=>x.nis===nis); return s? s.nama : (nis||"(tanpa NIS)"); };
-
-  const program = {}, bku = {};
-  SUMBER_KEYS.forEach(k=>{
-    const progLabel = p=> p.namaProgram || "(tanpa nama program)";
-    program[k] = diffArrays((oldState.program||{})[k], (newState.program||{})[k], SYNC_KEYS.program, progLabel);
-
-    const bkuLabel = r=> `${r.uraian||"(tanpa uraian)"}${r.tanggal? " - "+r.tanggal : ""}`;
-    bku[k] = diffArrays((oldState.bku||{})[k], (newState.bku||{})[k], SYNC_KEYS.bku, bkuLabel);
-  });
-
-  const sppLabel = t=> `${namaByNis(t.nis)} - ${t.bulan}`;
-  const itemLabel = t=> `${t.jenisItem||"Lainnya"} - ${namaByNis(t.nis)}`;
-  const gtkLabel = g=> g.nama || "(tanpa nama)";
-  const pinjamanLabel = pj=> `${pj.namaPeminjam||"(tanpa nama)"} - ${rp(pj.jumlah)}`;
-
-  return {
-    sekolah: { changed: oldSekolah !== newSekolah },
-    siswa: diffArrays(oldState.siswa, newState.siswa, SYNC_KEYS.siswa, siswaLabel),
-    gtk: diffArrays(oldState.gtk, newState.gtk, SYNC_KEYS.gtk, gtkLabel),
-    program, bku,
-    sppTx: diffArrays(oldState.sppTx, newState.sppTx, SYNC_KEYS.sppTx, sppLabel),
-    itemTx: diffArrays(oldState.itemTx, newState.itemTx, SYNC_KEYS.itemTx, itemLabel),
-    pinjaman: diffArrays(oldState.pinjaman, newState.pinjaman, SYNC_KEYS.pinjaman, pinjamanLabel),
-  };
-}
-
-function fmtDeltaChip(label, total, addedN, changedN, removedN){
-  const parts = [];
-  if(addedN) parts.push(`+${addedN} baru`);
-  if(changedN) parts.push(`${changedN} diubah`);
-  if(removedN) parts.push(`-${removedN} dihapus`);
-  return `${label}: ${total} item${parts.length? ` (${parts.join(", ")})` : ""}`;
-}
-function fmtDetailLine(label, d){
-  const items = [];
-  d.added.slice(0,5).forEach(n=> items.push(`+ ${n}`));
-  d.changed.slice(0,5).forEach(n=> items.push(`~ ${n}`));
-  d.removed.slice(0,5).forEach(n=> items.push(`- ${n}`));
-  if(!items.length) return null;
-  const shown = Math.min(5,d.added.length)+Math.min(5,d.changed.length)+Math.min(5,d.removed.length);
-  const totalChanges = d.added.length+d.changed.length+d.removed.length;
-  let txt = `${label}: ${items.join(", ")}`;
-  if(totalChanges>shown) txt += `, dan ${totalChanges-shown} lainnya`;
-  return txt;
-}
-
-function renderSyncStatus(prefix, diff, waktu, isError){
-  const statusEl = document.getElementById("gsheetStatus");
-  if(!statusEl) return;
-  if(isError){
-    statusEl.innerHTML = `<div class="status-line err">${escapeHtml(prefix)}</div>`;
+function handleKopGambarUpload(file){
+  if(currentUser.role !== "Admin"){
+    alert("Akses Ditolak: Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk mengunggah atau mengganti gambar kop surat.");
     return;
   }
-  const chips = [];
-  const detailLines = [];
-
-  chips.push(diff.sekolah.changed? "Data Sekolah: diperbarui" : "Data Sekolah: tidak berubah");
-
-  chips.push(fmtDeltaChip("Data Siswa", diff.siswa.total, diff.siswa.added.length, diff.siswa.changed.length, diff.siswa.removed.length));
-  const siswaLine = fmtDetailLine("Data Siswa", diff.siswa);
-  if(siswaLine) detailLines.push(siswaLine);
-
-  let progTotal=0, progAdd=0, progChg=0, progRem=0;
-  SUMBER_KEYS.forEach(k=>{
-    const d = diff.program[k];
-    progTotal+=d.total; progAdd+=d.added.length; progChg+=d.changed.length; progRem+=d.removed.length;
-    const line = fmtDetailLine(`Program ${SUMBER_META[k].label}`, d);
-    if(line) detailLines.push(line);
-  });
-  chips.push(fmtDeltaChip("Program Kerja", progTotal, progAdd, progChg, progRem));
-
-  chips.push(fmtDeltaChip("Data GTK", diff.gtk.total, diff.gtk.added.length, diff.gtk.changed.length, diff.gtk.removed.length));
-  const gtkLine = fmtDetailLine("Data GTK", diff.gtk);
-  if(gtkLine) detailLines.push(gtkLine);
-
-  let bkuTotal=0, bkuAdd=0, bkuChg=0, bkuRem=0;
-  SUMBER_KEYS.forEach(k=>{
-    const d = diff.bku[k];
-    bkuTotal+=d.total; bkuAdd+=d.added.length; bkuChg+=d.changed.length; bkuRem+=d.removed.length;
-    const line = fmtDetailLine(`BKU ${SUMBER_META[k].label}`, d);
-    if(line) detailLines.push(line);
-  });
-  chips.push(fmtDeltaChip("Data BKU", bkuTotal, bkuAdd, bkuChg, bkuRem));
-
-  chips.push(fmtDeltaChip("Transaksi SPP", diff.sppTx.total, diff.sppTx.added.length, diff.sppTx.changed.length, diff.sppTx.removed.length));
-  const sppLine = fmtDetailLine("Transaksi SPP", diff.sppTx);
-  if(sppLine) detailLines.push(sppLine);
-
-  chips.push(fmtDeltaChip("Transaksi Item Lainnya", diff.itemTx.total, diff.itemTx.added.length, diff.itemTx.changed.length, diff.itemTx.removed.length));
-  const itemLine = fmtDetailLine("Transaksi Item Lainnya", diff.itemTx);
-  if(itemLine) detailLines.push(itemLine);
-
-  if(diff.pinjaman){
-    chips.push(fmtDeltaChip("Peminjaman GTK", diff.pinjaman.total, diff.pinjaman.added.length, diff.pinjaman.changed.length, diff.pinjaman.removed.length));
-    const pinjamanLine = fmtDetailLine("Peminjaman GTK", diff.pinjaman);
-    if(pinjamanLine) detailLines.push(pinjamanLine);
+  if(!file) return;
+  if(!file.type.startsWith("image/")){
+    alert("Mohon pilih file gambar (PNG, JPG, atau WebP).");
+    return;
   }
-
-  const detailHtml = detailLines.length
-    ? detailLines.map(l=>escapeHtml(l)).join("<br>")
-    : "Tidak ada perubahan pada item manapun sejak sinkronisasi terakhir.";
-
-  statusEl.innerHTML = `
-    <div class="status-line">${escapeHtml(prefix)} &middot; ${escapeHtml(waktu)}</div>
-    <div class="chip-row">${chips.map(c=>`<span class="chip">${escapeHtml(c)}</span>`).join("")}</div>
-    <div class="chip-detail">${detailHtml}</div>`;
-}
-
-function requireGsheetUrl(actionLabel){
-  const url = (state.sekolah.gsheetUrl || "").trim();
-  if(!url){
-    goToSekolahView();
-    alert(`Atur URL Web App Google Apps Script terlebih dahulu (lihat panduan setup di halaman ini), lalu klik "${actionLabel}".`);
-    return null;
-  }
-  return url;
-}
-
-/* Data Sekolah (nama sekolah, alamat, bendahara, saldo awal, kode Admin,
-   dst.) TIDAK ikut digabung seperti data siswa/program/BKU saat "Kirim"
-   (lihat mergeByKey vs payload.sekolah di pushToGoogleSheets) — kalau
-   Data Sekolah lokal masih kosong (mis. baru buka file hasil "Bagikan
-   Aplikasi" dan belum sempat "Tarik"), mengirim akan MENIMPA Data Sekolah
-   asli di server jadi kosong, termasuk kode Admin & saldo awal. Dipakai
-   untuk mencegah "Kirim" (manual maupun otomatis) menimpa data server
-   dengan Data Sekolah yang belum diisi. */
-function sekolahLooksUnconfigured(){
-  return !(state.sekolah.namaSekolah||"").trim();
-}
-
-async function pushToGoogleSheets(){
-  const url = requireGsheetUrl("Kirim ke Google Sheets");
-  if(!url) return;
-  if(sekolahLooksUnconfigured()){
-    const lanjut = confirm('Data Sekolah pada aplikasi ini masih KOSONG (Nama Sekolah belum diisi). Mengirim sekarang akan MENIMPA Data Sekolah asli di Google Sheets — termasuk kode Admin, saldo awal, dan info bendahara — menjadi kosong. Sangat disarankan klik "Tarik dari Google Sheets" terlebih dahulu supaya Data Sekolah ikut terisi. Tetap lanjutkan Kirim sekarang?');
-    if(!lanjut) return;
-  }
-  const statusEl = document.getElementById("gsheetStatus");
-  gsheetButtons().forEach(b=> b.disabled = true);
-  if(statusEl) statusEl.textContent = "Memeriksa data terbaru di Google Sheets sebelum mengirim...";
-  let mergedWithRemote = false;
-  try{
-    const beforeKirim = JSON.parse(JSON.stringify(state));
-
-    /* Tarik dulu data yang sedang ada di server, lalu gabungkan dengan data
-       lokal SEBELUM mengirim. Ini mencegah "Kirim" menghapus data yang baru
-       ditambahkan pengguna lain (mis. Guru mengajukan Program, lalu Admin
-       yang belum sempat Tarik meng-klik Kirim) — lihat mergeByKey di atas.
-       Entri dengan kunci yang sama di kedua sisi memakai versi lokal, karena
-       itu yang sedang aktif diedit di sesi ini. Kalau tarik gagal (mis. baru
-       pertama kali sinkron, atau sedang offline), lanjut kirim data lokal
-       apa adanya seperti sebelumnya. */
-    try{
-      const getRes = await fetch(url, { method:"GET" });
-      const getText = await getRes.text();
-      let getPayload;
-      try{ getPayload = JSON.parse(getText); }catch(e){ getPayload = { ok:false }; }
-      if(getPayload.ok){
-        const remote = normalizeRemoteData(getPayload.data || {});
-        state.siswa = mergeByKey(remote.siswa, state.siswa, SYNC_KEYS.siswa);
-        state.gtk = mergeByKey(remote.gtk, state.gtk, SYNC_KEYS.gtk);
-        SUMBER_KEYS.forEach(key=>{
-          state.program[key] = mergeByKey(remote.program[key], state.program[key], SYNC_KEYS.program);
-          state.bku[key] = mergeByKey(remote.bku[key], state.bku[key], SYNC_KEYS.bku);
-        });
-        state.sppTx = mergeByKey(remote.sppTx, state.sppTx, SYNC_KEYS.sppTx);
-        state.itemTx = mergeByKey(remote.itemTx, state.itemTx, SYNC_KEYS.itemTx);
-        state.pinjaman = mergeByKey(remote.pinjaman, state.pinjaman, SYNC_KEYS.pinjaman);
-        SUMBER_KEYS.forEach(key=> syncBkuUangMuka(key));
-        mergedWithRemote = true;
-        renderAll();
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const maxW = 1400;
+      let w = img.width;
+      let h = img.height;
+      if(w > maxW){
+        h = Math.round((h * maxW) / w);
+        w = maxW;
       }
-    }catch(getErr){ /* lanjut kirim data lokal apa adanya jika tarik-untuk-gabung gagal */ }
-
-    if(statusEl) statusEl.textContent = mergedWithRemote ? "Mengirim data gabungan ke Google Sheets..." : "Mengirim data ke Google Sheets...";
-    const payload = JSON.parse(JSON.stringify(state));
-    delete payload.sekolah.gsheetUrl;
-    const res = await fetch(url, {
-      method:"POST",
-      headers:{ "Content-Type":"text/plain;charset=utf-8" },
-      body: JSON.stringify(payload)
-    });
-    const text = await res.text();
-    let data;
-    try{ data = JSON.parse(text); }catch(e){ data = { ok:false, message:text.slice(0,200) }; }
-    if(data.ok){
-      const waktu = new Date().toLocaleString("id-ID");
-      const diff = buildSyncDiff(beforeKirim, payload);
-      const prefix = mergedWithRemote ? "Kirim & gabung data berhasil" : "Kirim data berhasil (data terbaru di server tidak sempat diperiksa)";
-      renderSyncStatus(prefix, diff, waktu, false);
-      lastSyncSnapshot = JSON.parse(JSON.stringify(payload));
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL("image/png", 0.9);
+      state.sekolah.kopGambar = dataUrl;
+      state.sekolah.useKopGambar = true;
       saveStateToLocalStorage();
-    } else {
-      renderSyncStatus("Gagal mengirim: " + (data.message || "respons tidak dikenali."), null, null, true);
-    }
-  }catch(err){
-    renderSyncStatus("Gagal terhubung ke Google Sheets. Periksa URL dan koneksi internet Anda.", null, null, true);
-  }finally{
-    gsheetButtons().forEach(b=> b.disabled = false);
-  }
+      renderKopSection();
+      renderPrint();
+      alert("Gambar kop surat berhasil disimpan dan diaktifkan untuk seluruh laporan cetak!");
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
-/* Ubah data mentah hasil GET dari Apps Script menjadi bentuk siap pakai
-   (id baru via uid(), koersi tipe) — dipakai bersama oleh Tarik (menimpa
-   seluruh state lokal) dan Kirim (digabung dengan state lokal, lihat
-   mergeByKey/pushToGoogleSheets). Fungsi ini TIDAK mengubah `state` sendiri. */
-function normalizeRemoteData(data){
-  data = data || {};
-  const siswa = (data.siswa||[]).map(s=>({
-    id:uid(), nis:String(s.nis??""), nama:String(s.nama??""), kelas:String(s.kelas??""),
-    tarifSpp:Number(s.tarifSpp)||0, tarifPangkal:Number(s.tarifPangkal)||0, status:String(s.status??"Aktif")||"Aktif",
-    waOrtu:String(s.waOrtu??"")
-  }));
+const inpKopEl = document.getElementById("inpKopGambar");
+if(inpKopEl){
+  inpKopEl.addEventListener("change", (e)=>{
+    const f = e.target.files && e.target.files[0];
+    if(f) handleKopGambarUpload(f);
+    e.target.value = "";
+  });
+}
+const chkKopEl = document.getElementById("chkUseKopGambar");
+if(chkKopEl){
+  chkKopEl.addEventListener("change", (e)=>{
+    state.sekolah.useKopGambar = e.target.checked;
+    saveStateToLocalStorage();
+    renderKopSection();
+    renderPrint();
+  });
+}
+const btnHapusKopEl = document.getElementById("btnHapusKopGambar");
+if(btnHapusKopEl){
+  btnHapusKopEl.addEventListener("click", ()=>{
+    if(confirm("Hapus gambar kop surat dan kembali menggunakan format teks standar?")){
+      state.sekolah.kopGambar = "";
+      state.sekolah.useKopGambar = false;
+      saveStateToLocalStorage();
+      renderKopSection();
+      renderPrint();
+    }
+  });
+}
 
-  const gtk = (data.gtk||[]).map(g=>({ id:uid(), nama:String(g.nama??""), nip:String(g.nip??""), jabatan:String(g.jabatan??"") }));
+function updateCashHealthAlerts(){
+  const limit = (Number(state.sekolah.batasKasMenipis) >= 0) ? Number(state.sekolah.batasKasMenipis) : 1000000;
+  const criticalFunds = [];
+  const lowFunds = [];
 
-  const program = { bos:[], spp:[], pangkal:[], lain:[] };
-  const bku = { bos:[], spp:[], pangkal:[], lain:[] };
-  SUMBER_KEYS.forEach(key=>{
-    program[key] = ((data.program && data.program[key]) || []).map(p=>{
-      const tanggal = Array.isArray(p.tanggal) ? p.tanggal.map(t=>String(t??"")) : [];
-      const budgets = (p.budgets||[]).map(b=>{
-        const row = { id:uid(), tanggal:String(b.tanggal??""),
-          uraian:String(b.uraian??""), volume:Number(b.volume)||0, satuan:String(b.satuan??""), harga:Number(b.harga)||0 };
-        return row;
-      });
-      /* realisasi: tiap tanggal boleh punya banyak tahap (lihat newProgramRow).
-         Tetap kompatibel membaca data lama dari sinkronisasi sebelumnya, yang
-         formatnya satu entri per tanggal dengan field "status" (Belum/
-         Terealisasi/Batal) alih-alih array tahap datar. */
-      const realisasi = [];
-      const realisasiBatal = [];
-      (p.realisasi||[]).forEach(r=>{
-        const tgl = String(r.tanggal??"");
-        if(!tgl) return;
-        const legacyStatus = r.status;
-        if(legacyStatus===REALISASI_STATUS.BATAL){ if(!realisasiBatal.includes(tgl)) realisasiBatal.push(tgl); return; }
-        if(legacyStatus===REALISASI_STATUS.BELUM) return; // belum direalisasikan = tidak ada tahap tercatat
-        realisasi.push({ id:uid(), tanggal:tgl, tanggalReal:String(r.tanggalReal??""), anggaranTerpakai:Number(r.anggaranTerpakai)||0, keterangan:String(r.keterangan??"") });
-      });
-      (p.realisasiBatal||[]).forEach(t=>{ const tgl=String(t??""); if(tgl && !realisasiBatal.includes(tgl)) realisasiBatal.push(tgl); });
-      const serahTerima = (p.serahTerima||[]).map(r=>({
-        id:uid(), tanggal:String(r.tanggal??""), nominal:Number(r.nominal)||0,
-        dates:Array.isArray(r.dates)? r.dates.map(t=>String(t??"")) : [], mode:String(r.mode??"total")||"total",
-        noBast:String(r.noBast??""), budgetRef: r.budgetRef!=null? Number(r.budgetRef)||0 : null,
-      }));
-      const pengembalianUangMuka = (p.pengembalianUangMuka||[]).map(r=>({
-        id:uid(), tanggal:String(r.tanggal??""), nominal:Number(r.nominal)||0, keterangan:String(r.keterangan??"")
-      }));
-      return {
-        id:uid(), sumberDana:key, namaPengaju:String(p.namaPengaju??""), namaProgram:String(p.namaProgram??""),
-        deskripsi:String(p.deskripsi??""), tanggal, status:String(p.status??PROGRAM_STATUS.MENUNGGU)||PROGRAM_STATUS.MENUNGGU,
-        pj:String(p.pj??""), budgets, realisasi, realisasiBatal, serahTerima, pengembalianUangMuka
-      };
-    });
-    bku[key] = ((data.bku && data.bku[key]) || []).map(r=>{
-      const row = { id:uid(), tanggal:String(r.tanggal??""),
-        noBukti:String(r.noBukti??""), uraian:String(r.uraian??""), kegiatan:String(r.kegiatan??""), keterangan:String(r.keterangan??""),
-        penerimaan:Number(r.penerimaan)||0, pengeluaran:Number(r.pengeluaran)||0 };
-      if(r.autoRealisasiId!==undefined && r.autoRealisasiId!==null && r.autoRealisasiId!=="") row.autoRealisasiId = Number(r.autoRealisasiId)||undefined;
-      if(r.autoSerahTerimaId!==undefined && r.autoSerahTerimaId!==null && r.autoSerahTerimaId!=="") row.autoSerahTerimaId = Number(r.autoSerahTerimaId)||undefined;
-      if(r.autoPengembalianId!==undefined && r.autoPengembalianId!==null && r.autoPengembalianId!=="") row.autoPengembalianId = Number(r.autoPengembalianId)||undefined;
-      /* autoPiutangId lama (kalau ada) akan disingkirkan otomatis oleh
-         syncBkuUangMuka setelah data ditarik, karena id program berganti
-         (uid() baru di atas) — baris catatan piutang yang benar akan dibuat
-         ulang dari nol mengikuti Sisa di PJ terbaru, sama seperti perlakuan
-         autoRealisasiId/autoSerahTerimaId/autoPengembalianId. */
-      if(r.autoPiutangId!==undefined && r.autoPiutangId!==null && r.autoPiutangId!=="") row.autoPiutangId = Number(r.autoPiutangId)||undefined;
-      return row;
-    });
+  SUMBER_KEYS.forEach(k => {
+    const s = bkuTotals(k).saldoAkhir;
+    if(s < 0) criticalFunds.push({ key: k, label: SUMBER_META[k].label, saldo: s });
+    else if(s <= limit) lowFunds.push({ key: k, label: SUMBER_META[k].label, saldo: s });
   });
 
-  const sppTx = (data.sppTx||[]).map(t=>({
-    id:uid(), tanggal:String(t.tanggal??""), nis:String(t.nis??""), bulan:String(t.bulan??"Juli")||"Juli",
-    jumlah:Number(t.jumlah)||0, noKwitansi:String(t.noKwitansi??""), keterangan:String(t.keterangan??"")
-  }));
-  const itemTx = (data.itemTx||[]).map(t=>({
-    id:uid(), tanggal:String(t.tanggal??""), nis:String(t.nis??""), jenisItem:String(t.jenisItem??"Lainnya")||"Lainnya",
-    jumlah:Number(t.jumlah)||0, noKwitansi:String(t.noKwitansi??""), keterangan:String(t.keterangan??"")
-  }));
+  const totalSaldo = lpjKonsolidasiTotal().saldoAkhir;
+  const topbarBadge = document.getElementById("cashWarningBadge");
+  const dashAlert = document.getElementById("dashboardCashAlert");
 
-  const pinjaman = (data.pinjaman||[]).map(pj=>({
-    id:uid(), namaPeminjam:String(pj.namaPeminjam??""), nip:String(pj.nip??""), jabatan:String(pj.jabatan??""),
-    tanggalPengajuan:String(pj.tanggalPengajuan??""), jumlah:Number(pj.jumlah)||0,
-    /* sumberDana: field baru — default ke SUMBER_KEYS[0] untuk data lama yang
-       ditarik dari Google Sheets sebelum field ini ada (pola sama seperti
-       waOrtu pada siswa). */
-    sumberDana: SUMBER_KEYS.includes(String(pj.sumberDana)) ? String(pj.sumberDana) : SUMBER_KEYS[0],
-    keperluan:String(pj.keperluan??""),
-    jangkaWaktuBulan:Number(pj.jangkaWaktuBulan)||1, status:String(pj.status??PINJAMAN_STATUS.MENUNGGU)||PINJAMAN_STATUS.MENUNGGU,
-    noSurat:String(pj.noSurat??""), noPersetujuan:String(pj.noPersetujuan??""), noKwitansi:String(pj.noKwitansi??""),
-    catatan:String(pj.catatan??""), approvedBy:String(pj.approvedBy??""), approvedAt:String(pj.approvedAt??""),
-    tanggalCair:String(pj.tanggalCair??""), createdBy:String(pj.createdBy??""), createdAt:String(pj.createdAt??""),
-    cicilan:(pj.cicilan||[]).map(c=>({ id:uid(), tanggal:String(c.tanggal??""), jumlah:Number(c.jumlah)||0, noBukti:String(c.noBukti??"") })),
-  }));
+  const hasIssues = criticalFunds.length > 0 || lowFunds.length > 0 || totalSaldo < 0;
 
-  return { sekolah: data.sekolah || {}, siswa, gtk, program, bku, sppTx, itemTx, pinjaman };
-}
-
-function applyPulledData(data){
-  const keepUrl = state.sekolah.gsheetUrl;
-  const n = normalizeRemoteData(data);
-  state.sekolah = Object.assign(emptySekolah(), n.sekolah);
-  state.sekolah.gsheetUrl = keepUrl;
-  ["saldoAwalBos","saldoAwalSpp","saldoAwalPangkal","saldoAwalLain"].forEach(k=>{ state.sekolah[k] = Number(state.sekolah[k])||0; });
-
-  state.siswa = n.siswa;
-  state.gtk = n.gtk;
-  state.program = n.program;
-  state.bku = n.bku;
-  state.sppTx = n.sppTx;
-  state.itemTx = n.itemTx;
-  state.pinjaman = n.pinjaman;
-  SUMBER_KEYS.forEach(k=> syncBkuUangMuka(k));
-
-  renderAll();
-  saveStateToLocalStorage();
-}
-
-async function pullFromGoogleSheets(){
-  const url = requireGsheetUrl("Tarik dari Google Sheets");
-  if(!url) return;
-  if(!confirm("Menarik data akan MENIMPA seluruh data yang sedang terbuka di aplikasi ini dengan data dari Google Sheets. Pastikan data penting sudah dikirim/disimpan terlebih dahulu. Lanjutkan?")) return;
-  const statusEl = document.getElementById("gsheetStatus");
-  gsheetButtons().forEach(b=> b.disabled = true);
-  if(statusEl) statusEl.textContent = "Menarik data dari Google Sheets...";
-  const beforeState = JSON.parse(JSON.stringify(state));
-  try{
-    const res = await fetch(url, { method:"GET" });
-    const text = await res.text();
-    let payload;
-    try{ payload = JSON.parse(text); }catch(e){ payload = { ok:false, message:text.slice(0,200) }; }
-    if(payload.ok){
-      applyPulledData(payload.data || {});
-      const waktu = new Date().toLocaleString("id-ID");
-      const diff = buildSyncDiff(beforeState, state);
-      renderSyncStatus("Data diperbarui", diff, waktu, false);
-      lastSyncSnapshot = JSON.parse(JSON.stringify(state));
+  if(topbarBadge){
+    if(hasIssues){
+      topbarBadge.style.display = "inline-flex";
+      topbarBadge.textContent = criticalFunds.length ? "🚨 Kas Defisit!" : "⚠️ Kas Menipis";
+      topbarBadge.title = `Klik untuk melihat rincian kas di Dashboard (Batas peringatan: ${rp(limit)})`;
     } else {
-      renderSyncStatus("Gagal menarik data: " + (payload.message || "respons tidak dikenali."), null, null, true);
+      topbarBadge.style.display = "none";
     }
-  }catch(err){
-    renderSyncStatus("Gagal terhubung ke Google Sheets. Periksa URL dan koneksi internet Anda.", null, null, true);
-  }finally{
-    gsheetButtons().forEach(b=> b.disabled = false);
+  }
+
+  if(dashAlert){
+    if(hasIssues){
+      dashAlert.style.display = "block";
+      let itemsHtml = "";
+      criticalFunds.forEach(f => {
+        itemsHtml += `<li style="margin-bottom:5px;"><b>${escapeHtml(f.label)}</b>: Posisi <span style="color:#dc2626; font-weight:700;">Defisit ${rp(f.saldo)}</span> &mdash; Saldo minus, pengeluaran telah melebihi kas yang tersedia!</li>`;
+      });
+      lowFunds.forEach(f => {
+        itemsHtml += `<li style="margin-bottom:5px;"><b>${escapeHtml(f.label)}</b>: Sisa kas <span style="color:#d97706; font-weight:700;">${rp(f.saldo)}</span> &mdash; Di bawah batas minimum aman (${rp(limit)}).</li>`;
+      });
+
+      dashAlert.innerHTML = `
+        <div style="background:${criticalFunds.length ? '#fef2f2' : '#fffbeb'}; border:1px solid ${criticalFunds.length ? '#fecaca' : '#fde68a'}; border-left:5px solid ${criticalFunds.length ? '#dc2626' : '#f59e0b'}; border-radius:8px; padding:14px 18px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:22px;">${criticalFunds.length ? '🚨' : '⚠️'}</span>
+              <h3 style="margin:0; font-size:14.5px; font-weight:700; color:${criticalFunds.length ? '#991b1b' : '#92400e'};">
+                ${criticalFunds.length ? 'PERINGATAN: KAS SEKOLAH MENGALAMI DEFISIT!' : 'PERINGATAN: SALDO KAS SEKOLAH MENIPIS'}
+              </h3>
+            </div>
+            <button class="btn small" id="btnAlertGotoBku" style="background:#fff; border-color:${criticalFunds.length ? '#f87171' : '#fcd34d'}; font-size:11.5px; font-weight:600; color:${criticalFunds.length ? '#991b1b' : '#92400e'};">
+              Buka Buku Kas Umum (BKU) &rarr;
+            </button>
+          </div>
+          <p style="margin:8px 0 6px 0; font-size:12.5px; color:${criticalFunds.length ? '#7f1d1d' : '#78350f'};">
+            Ditemukan saldo sumber dana yang memerlukan perhatian khusus (batas peringatan: <b>${rp(limit)}</b>):
+          </p>
+          <ul style="margin:0 0 4px 18px; padding:0; font-size:12.5px; color:${criticalFunds.length ? '#7f1d1d' : '#78350f'};">
+            ${itemsHtml}
+          </ul>
+        </div>
+      `;
+      const btnGo = document.getElementById("btnAlertGotoBku");
+      if(btnGo){
+        btnGo.onclick = () => switchView("bku");
+      }
+    } else {
+      dashAlert.style.display = "none";
+      dashAlert.innerHTML = "";
+    }
+  }
+
+  // Update BKU alert banner
+  const bkuAlertEl = document.getElementById("bkuCashAlert");
+  if(bkuAlertEl && typeof currentBkuKey !== "undefined" && SUMBER_META[currentBkuKey]){
+    const bkuSaldo = bkuTotals(currentBkuKey).saldoAkhir;
+    if(bkuSaldo < 0){
+      bkuAlertEl.style.display = "block";
+      bkuAlertEl.innerHTML = `<div style="background:#fef2f2; border:1px solid #fecaca; border-left:4px solid #dc2626; border-radius:6px; padding:10px 14px; font-size:12.5px; color:#991b1b; display:flex; align-items:center; gap:8px;">
+        <span style="font-size:18px;">🚨</span>
+        <div><b>Peringatan Defisit Kas:</b> Saldo kas <b>${escapeHtml(SUMBER_META[currentBkuKey].label)}</b> saat ini berada pada posisi minus <b>${rp(bkuSaldo)}</b>! Pengeluaran telah melampaui kas masuk.</div>
+      </div>`;
+    } else if(bkuSaldo <= limit){
+      bkuAlertEl.style.display = "block";
+      bkuAlertEl.innerHTML = `<div style="background:#fff7ed; border:1px solid #fed7aa; border-left:4px solid #ea580c; border-radius:6px; padding:10px 14px; font-size:12.5px; color:#9a3412; display:flex; align-items:center; gap:8px;">
+        <span style="font-size:18px;">⚠️</span>
+        <div><b>Peringatan Kas Menipis:</b> Saldo kas <b>${escapeHtml(SUMBER_META[currentBkuKey].label)}</b> tersisa <b>${rp(bkuSaldo)}</b> (di bawah batas minimum ${rp(limit)}). Segera lakukan pengisian kas atau tunda pengeluaran non-prioritas.</div>
+      </div>`;
+    } else {
+      bkuAlertEl.style.display = "none";
+      bkuAlertEl.innerHTML = "";
+    }
   }
 }
 
-document.getElementById("btnPushSheets").addEventListener("click", pushToGoogleSheets);
-document.getElementById("btnPushSheetsQuick").addEventListener("click", pushToGoogleSheets);
-document.getElementById("btnPullSheets").addEventListener("click", pullFromGoogleSheets);
-document.getElementById("btnPullSheetsQuick").addEventListener("click", pullFromGoogleSheets);
+const cashBadge = document.getElementById("cashWarningBadge");
+if(cashBadge){
+  cashBadge.addEventListener("click", ()=>{
+    switchView("dashboard");
+    const dAlert = document.getElementById("dashboardCashAlert");
+    if(dAlert) dAlert.scrollIntoView({ behavior:"smooth" });
+  });
+}
+
+function sekolahLooksUnconfigured(){
+  const s = state.sekolah || {};
+  return !(s.namaSekolah||"").trim() && !(s.npsn||"").trim();
+}
 
 /* =========================================================================
    DATA SISWA
@@ -2663,10 +2561,15 @@ function siswaMatchesSearch(s, q){
   return hay.includes(q);
 }
 function renderSiswaTable(){
+  const isAdmin = currentUser.role === "Admin";
   const tbody = document.querySelector("#tblSiswa tbody");
   const q = siswaSearchQuery.trim().toLowerCase();
   const filtered = state.siswa.filter(s=> siswaMatchesSearch(s, q));
-  tbody.innerHTML = filtered.map((s,i)=>`
+  tbody.innerHTML = filtered.map((s,i)=>{
+    const actionCell = isAdmin
+      ? `<div class="row-actions"><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div>`
+      : `<span style="color:var(--text-muted);font-size:11px;">Hanya Lihat</span>`;
+    return `
     <tr data-id="${s.id}">
       <td style="text-align:center">${i+1}</td>
       <td>${escapeHtml(s.nis)}</td>
@@ -2676,20 +2579,28 @@ function renderSiswaTable(){
       <td class="num">${rp(s.tarifPangkal)}</td>
       <td style="text-align:center">${escapeHtml(s.status)}</td>
       <td>${escapeHtml(s.waOrtu||"-")}</td>
-      <td><div class="row-actions"><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div></td>
-    </tr>`).join("") || `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:14px;">${q? "Tidak ada siswa yang cocok dengan pencarian." : "Belum ada data siswa"}</td></tr>`;
-  tbody.querySelectorAll("tr[data-id]").forEach(tr=>{
-    const id = Number(tr.dataset.id);
-    tr.querySelector("[data-edit]").addEventListener("click", ()=> openSiswaForm(id));
-    tr.querySelector("[data-del]").addEventListener("click", ()=>{
-      const row = state.siswa.find(s=>s.id===id);
-      if(!confirmDelete(`siswa "${row?.nama || "(tanpa nama)"}"`)) return;
-      state.siswa = state.siswa.filter(s=>s.id!==id); renderSiswaTable();
+      <td>${actionCell}</td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:14px;">${q? "Tidak ada siswa yang cocok dengan pencarian." : "Belum ada data siswa"}</td></tr>`;
+  if(isAdmin){
+    tbody.querySelectorAll("tr[data-id]").forEach(tr=>{
+      const id = Number(tr.dataset.id);
+      const btnEdit = tr.querySelector("[data-edit]");
+      if(btnEdit) btnEdit.addEventListener("click", ()=> openSiswaForm(id));
+      const btnDel = tr.querySelector("[data-del]");
+      if(btnDel) btnDel.addEventListener("click", ()=>{
+        const row = state.siswa.find(s=>s.id===id);
+        if(!confirmDelete(`siswa "${row?.nama || "(tanpa nama)"}"`)) return;
+        state.siswa = state.siswa.filter(s=>s.id!==id); renderSiswaTable();
+      });
     });
-  });
+  }
   document.getElementById("siswaCount").textContent = state.siswa.length;
+  const addSiswaBtn = document.getElementById("btnAddSiswa");
+  if(addSiswaBtn) addSiswaBtn.style.display = isAdmin ? "" : "none";
 }
 function openSiswaForm(id){
+  if(currentUser.role !== "Admin"){ alert("Hanya Admin/Kepala Sekolah yang dapat menambah atau mengedit data siswa."); return; }
   const isNew = id==null;
   const row = isNew ? newSiswaRow() : state.siswa.find(s=>s.id===id);
   if(!row) return;
@@ -2802,12 +2713,19 @@ document.getElementById("dfBtnSimpan").addEventListener("click", ()=>{
    memori selama sesi berjalan (mengikuti batasan platform: tidak boleh
    pakai localStorage/sessionStorage) — hilang begitu tab ditutup/reload. */
 let recentLogins = [];
+function restoreRecentLogins(){
+  try {
+    const raw = localStorage.getItem(RECENT_LOGINS_KEY);
+    if(raw) recentLogins = JSON.parse(raw);
+  } catch(e){}
+}
 function renderLoginGtkOptions(){
   const sel = document.getElementById("loginNama");
   sel.innerHTML = `<option value="">- pilih dari daftar -</option>` +
     state.gtk.map(g=>`<option value="${escapeHtml(g.nama)}">${escapeHtml(g.nama)} (${escapeHtml(g.jabatan)})</option>`).join("");
 }
 function renderLoginRecentChips(){
+  restoreRecentLogins();
   const wrap = document.getElementById("loginRecentWrap");
   const box = document.getElementById("loginRecentChips");
   if(!recentLogins.length){ wrap.style.display = "none"; return; }
@@ -2830,20 +2748,77 @@ function attemptLogin(name, role){
   if(role === "Admin") requestAdminAccess(name);
   else loginAs(name, role);
 }
+function updateRoleUI(){
+  const isAdmin = currentUser.role === "Admin";
+
+  // 1. Tombol Topbar: Kosongkan Semua & Muat Contoh Data (Hanya Admin)
+  const btnReset = document.getElementById("btnReset");
+  const btnLoadSample = document.getElementById("btnLoadSample");
+  if(btnReset){
+    btnReset.style.display = (isAdmin && !window.__LOCKED_GSHEET_URL__) ? "" : "none";
+  }
+  if(btnLoadSample){
+    btnLoadSample.style.display = (isAdmin && !window.__LOCKED_GSHEET_URL__) ? "" : "none";
+  }
+
+
+
+  // 3. Label Akun & Peran di Topbar
+  const lbl = document.getElementById("currentUserLabel");
+  if(lbl){
+    if(currentUser.name){
+      lbl.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;"><span class="pill ${isAdmin ? 'ok' : 'info'}" style="font-size:11px;padding:2px 8px;">${escapeHtml(currentUser.role||"Pengguna")}</span> <b style="color:var(--text-primary);">${escapeHtml(currentUser.name)}</b></span>`;
+    } else {
+      lbl.textContent = "";
+    }
+  }
+
+  // 4. Tombol Master Data & Transaksi Keuangan
+  const btnAddSiswa = document.getElementById("btnAddSiswa");
+  if(btnAddSiswa) btnAddSiswa.style.display = isAdmin ? "" : "none";
+
+  const btnAddGtk = document.getElementById("btnAddGtk");
+  if(btnAddGtk) btnAddGtk.style.display = isAdmin ? "" : "none";
+
+  const btnAddBku = document.getElementById("btnAddBku");
+  if(btnAddBku) btnAddBku.style.display = isAdmin ? "" : "none";
+
+  const btnAddSppTx = document.getElementById("btnAddSppTx");
+  if(btnAddSppTx) btnAddSppTx.style.display = isAdmin ? "" : "none";
+  const btnAddSppTxManual = document.getElementById("btnAddSppTxManual");
+  if(btnAddSppTxManual) btnAddSppTxManual.style.display = isAdmin ? "" : "none";
+
+  const btnAddItemTx = document.getElementById("btnAddItemTx");
+  if(btnAddItemTx) btnAddItemTx.style.display = isAdmin ? "" : "none";
+
+
+}
+
 function loginAs(name, role){
   currentUser = { name, role };
   rememberRecentLogin(name, role);
+  try {
+    localStorage.setItem(USER_SESSION_KEY, JSON.stringify(currentUser));
+  } catch(e){}
   hideLoginGate();
-  document.getElementById("currentUserLabel").textContent = `${name} · ${role}`;
+  updateRoleUI();
   renderAll();
+  restoreActiveView();
 }
 function rememberRecentLogin(name, role){
   recentLogins = recentLogins.filter(r=> !(r.name===name && r.role===role));
   recentLogins.unshift({ name, role });
   recentLogins = recentLogins.slice(0, 5);
+  try {
+    localStorage.setItem(RECENT_LOGINS_KEY, JSON.stringify(recentLogins));
+  } catch(e){}
 }
 function showLoginGate(){
   currentUser = { name:"", role:currentUser.role||"Admin" };
+  try {
+    localStorage.removeItem(USER_SESSION_KEY);
+  } catch(e){}
+  document.documentElement.classList.remove("user-logged-in");
   renderLoginGtkOptions();
   renderLoginRecentChips();
   document.getElementById("loginNama").value = "";
@@ -2852,8 +2827,24 @@ function showLoginGate(){
   document.getElementById("appShell").classList.add("hidden-until-login");
 }
 function hideLoginGate(){
+  document.documentElement.classList.add("user-logged-in");
   document.getElementById("loginGate").style.display = "none";
   document.getElementById("appShell").classList.remove("hidden-until-login");
+}
+function restoreUserSession(){
+  restoreRecentLogins();
+  let savedUser = null;
+  try {
+    const rawUser = localStorage.getItem(USER_SESSION_KEY);
+    if(rawUser) savedUser = JSON.parse(rawUser);
+  } catch(e){}
+  if(savedUser && savedUser.name){
+    currentUser = savedUser;
+    hideLoginGate();
+    updateRoleUI();
+  } else {
+    showLoginGate();
+  }
 }
 document.getElementById("btnLoginMasuk").addEventListener("click", ()=>{
   const selVal = document.getElementById("loginNama").value;
@@ -3018,26 +3009,39 @@ function confirmWithAdminCode(pesan){
    ========================================================================= */
 function renderGtkTable(){
   const tbody = document.querySelector("#tblGtk tbody");
-  tbody.innerHTML = state.gtk.map((g,i)=>`
+  const isAdmin = currentUser.role === "Admin";
+  tbody.innerHTML = state.gtk.map((g,i)=>{
+    const actionCell = isAdmin
+      ? `<div class="row-actions"><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div>`
+      : `<span style="color:var(--text-muted);font-size:11px;">Hanya Lihat</span>`;
+    return `
     <tr data-id="${g.id}">
       <td style="text-align:center">${i+1}</td>
       <td>${escapeHtml(g.nama)}</td>
       <td>${escapeHtml(g.nip)}</td>
       <td>${escapeHtml(g.jabatan)}</td>
-      <td><div class="row-actions"><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div></td>
-    </tr>`).join("") || `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:14px;">Belum ada data GTK</td></tr>`;
-  tbody.querySelectorAll("tr[data-id]").forEach(tr=>{
-    const id = Number(tr.dataset.id);
-    tr.querySelector("[data-edit]").addEventListener("click", ()=> openGtkForm(id));
-    tr.querySelector("[data-del]").addEventListener("click", ()=>{
-      const row = state.gtk.find(g=>g.id===id);
-      if(!confirmDelete(`data GTK "${row?.nama || "(tanpa nama)"}"`)) return;
-      state.gtk = state.gtk.filter(g=>g.id!==id); renderGtkTable();
+      <td>${actionCell}</td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:14px;">Belum ada data GTK</td></tr>`;
+  if(isAdmin){
+    tbody.querySelectorAll("tr[data-id]").forEach(tr=>{
+      const id = Number(tr.dataset.id);
+      const btnEdit = tr.querySelector("[data-edit]");
+      if(btnEdit) btnEdit.addEventListener("click", ()=> openGtkForm(id));
+      const btnDel = tr.querySelector("[data-del]");
+      if(btnDel) btnDel.addEventListener("click", ()=>{
+        const row = state.gtk.find(g=>g.id===id);
+        if(!confirmDelete(`data GTK "${row?.nama || "(tanpa nama)"}"`)) return;
+        state.gtk = state.gtk.filter(g=>g.id!==id); renderGtkTable();
+      });
     });
-  });
+  }
   document.getElementById("gtkCount").textContent = state.gtk.length;
+  const addGtkBtn = document.getElementById("btnAddGtk");
+  if(addGtkBtn) addGtkBtn.style.display = isAdmin ? "" : "none";
 }
 function openGtkForm(id){
+  if(currentUser.role !== "Admin"){ alert("Hanya Admin/Kepala Sekolah yang dapat menambah atau mengedit data GTK."); return; }
   const isNew = id==null;
   const row = isNew ? newGtkRow() : state.gtk.find(g=>g.id===id);
   if(!row) return;
@@ -3309,7 +3313,13 @@ document.getElementById("pjBtnCicilSimpan").addEventListener("click", ()=>{
 /* =========================================================================
    PROGRAM KERJA (generik per sumber dana)
    ========================================================================= */
-let currentProgramKey = "bos";
+let currentProgramKey = (function(){
+  try {
+    const k = localStorage.getItem("keuanganSekolahProgramKey");
+    if(k && SUMBER_KEYS.includes(k)) return k;
+  } catch(e){}
+  return "bos";
+})();
 function findProgramById(id){
   for(const k of SUMBER_KEYS){ const f = state.program[k].find(p=>p.id===id); if(f) return { key:k, prog:f }; }
   return null;
@@ -3322,7 +3332,12 @@ function allApprovedPrograms(){
 function renderProgramTabs(){
   const wrap = document.getElementById("programTabs");
   wrap.innerHTML = SUMBER_KEYS.map(k=>`<button data-k="${k}" class="${k===currentProgramKey?'active '+SUMBER_META[k].cls:''}">${SUMBER_META[k].label}</button>`).join("");
-  wrap.querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ currentProgramKey = b.dataset.k; renderProgramTabs(); renderProgramTable(); }));
+  wrap.querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{
+    currentProgramKey = b.dataset.k;
+    try { localStorage.setItem("keuanganSekolahProgramKey", currentProgramKey); } catch(e){}
+    renderProgramTabs();
+    renderProgramTable();
+  }));
 }
 /* Panel status/toggle kunci Anggaran Awal — hanya tampil untuk Admin.
    Guru tetap melihat efeknya lewat tombol "+ Ajukan Program" yang otomatis
@@ -3355,13 +3370,22 @@ function renderProgramTable(){
   const isAdmin = currentUser.role === "Admin";
   document.getElementById("programStatusFilterWrap").style.display = isAdmin ? "" : "none";
   renderProgramLockPanel();
+  const noticeEl = document.getElementById("programUserNotice");
+  if(noticeEl){
+    if(!isAdmin){
+      noticeEl.style.display = "";
+      noticeEl.innerHTML = `👤 <b>Akses Pengguna (${escapeHtml(currentUser.role)}):</b> Anda masuk sebagai <b>${escapeHtml(currentUser.name)}</b>. Menampilkan program kerja terkait Anda (diajukan oleh Anda atau di mana Anda ditunjuk sebagai PJ). Anda dapat mengajukan program kerja baru, mengedit draf/revisi program Anda, serta mengelola rincian anggaran.`;
+    } else {
+      noticeEl.style.display = "none";
+    }
+  }
   const addBtn = document.getElementById("btnAddProgram");
   const locked = !!state.sekolah.anggaranAwalTerkunci;
   addBtn.disabled = locked;
   addBtn.title = locked ? "Anggaran Awal sudah dikunci — tidak bisa mengajukan Program Kerja baru." : "";
-  let rows = state.program[currentProgramKey];
+  let rows = state.program[currentProgramKey] || [];
   if(!isAdmin){
-    rows = rows.filter(p=>p.namaPengaju===currentUser.name);
+    rows = rows.filter(p=> p.namaPengaju===currentUser.name || p.pj===currentUser.name);
   } else {
     const filterVal = document.getElementById("programStatusFilter").value;
     if(filterVal) rows = rows.filter(p=>p.status===filterVal);
@@ -3370,8 +3394,8 @@ function renderProgramTable(){
   tbody.innerHTML = rows.map((p,i)=>{
     const statusCls = p.status===PROGRAM_STATUS.DISETUJUI?"ok":p.status===PROGRAM_STATUS.MENUNGGU?"na":p.status===PROGRAM_STATUS.PERBAIKAN?"partial":"bad";
     const tglLabel = (p.tanggal||[]).map(t=>t?formatTgl(t):"-").join(", ");
-    const canManageAnggaran = isAdmin || p.namaPengaju===currentUser.name;
-    const canEditProgram = !isAdmin && p.namaPengaju===currentUser.name && (p.status===PROGRAM_STATUS.MENUNGGU || p.status===PROGRAM_STATUS.PERBAIKAN);
+    const canManageAnggaran = isAdmin || p.namaPengaju===currentUser.name || p.pj===currentUser.name;
+    const canEditProgram = (isAdmin || p.namaPengaju===currentUser.name) && (p.status===PROGRAM_STATUS.MENUNGGU || p.status===PROGRAM_STATUS.PERBAIKAN);
     const btns = [];
     if(canManageAnggaran) btns.push(`<button class="btn small" data-anggaran="${p.id}" type="button">Kelola Anggaran</button>`);
     if(canEditProgram) btns.push(`<button class="btn small" data-editprog="${p.id}" type="button">Edit Program</button>`);
@@ -3385,7 +3409,7 @@ function renderProgramTable(){
       <td><span class="pill ${statusCls}">${escapeHtml(p.status)}</span></td>
       <td>${btns.join(" ")}</td>
     </tr>`;
-  }).join("") || `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">Belum ada program</td></tr>`;
+  }).join("") || `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">${!isAdmin ? `Belum ada program kerja terkait Anda (${escapeHtml(currentUser.name)}) pada sumber dana ini. Klik tombol "+ Ajukan Program" di bawah untuk mengajukan program baru.` : "Belum ada program"}</td></tr>`;
   tbody.querySelectorAll("[data-anggaran]").forEach(b=> b.addEventListener("click", ()=>{
     const prog = state.program[currentProgramKey].find(p=>p.id===Number(b.dataset.anggaran));
     if(prog) openProgramAnggaranModal(prog);
@@ -3422,6 +3446,17 @@ function renderMpTanggalList(){
 }
 document.getElementById("mpAddTanggal").addEventListener("click", ()=>{ mpDatesDraft.push(""); renderMpTanggalList(); });
 function openProgramModal(prog){
+  const isAdmin = currentUser.role === "Admin";
+  if(prog){
+    if(!isAdmin && prog.namaPengaju !== currentUser.name){
+      alert("Akses Ditolak: Anda hanya dapat mengedit program kerja yang Anda ajukan sendiri.");
+      return;
+    }
+    if(prog.status === PROGRAM_STATUS.DISETUJUI || prog.status === PROGRAM_STATUS.DITOLAK){
+      alert("Program yang sudah Disetujui atau Ditolak tidak dapat diedit lagi.");
+      return;
+    }
+  }
   editingProgramId = prog ? prog.id : null;
   document.getElementById("modalProgramTitle").textContent = prog ? "Edit Program Kerja" : "Ajukan Program Kerja";
   document.getElementById("mpNamaProgram").value = prog ? prog.namaProgram : "";
@@ -3465,6 +3500,11 @@ document.getElementById("mpSimpan").addEventListener("click", ()=>{
     const found = findProgramById(editingProgramId);
     if(!found){ closeModal("modal-program"); return; }
     const prog = found.prog;
+    const isAdmin = currentUser.role === "Admin";
+    if(!isAdmin && prog.namaPengaju !== currentUser.name){
+      alert("Akses Ditolak: Anda hanya dapat mengedit program kerja yang Anda ajukan sendiri.");
+      return;
+    }
     if(prog.status===PROGRAM_STATUS.DISETUJUI || prog.status===PROGRAM_STATUS.DITOLAK){
       alert("Program yang sudah Disetujui/Ditolak tidak dapat diedit lagi.");
       return;
@@ -3496,6 +3536,12 @@ let currentAnggaranProg = null;
 let currentAnggaranTanggal = "";
 let editingBudgetId = null;
 function openProgramAnggaranModal(prog){
+  const isAdmin = currentUser.role === "Admin";
+  const canAccess = isAdmin || prog.namaPengaju === currentUser.name || prog.pj === currentUser.name;
+  if(!canAccess){
+    alert("Akses Ditolak: Anda hanya dapat mengelola anggaran untuk program kerja terkait Anda.");
+    return;
+  }
   currentAnggaranProg = prog;
   currentAnggaranTanggal = (prog.tanggal && prog.tanggal[0]) || "";
   editingBudgetId = null;
@@ -3514,7 +3560,7 @@ function renderProgramAnggaranModal(){
   tglSel.innerHTML = (prog.tanggal||[]).map(t=>`<option value="${t}" ${t===currentAnggaranTanggal?"selected":""}>${t? formatTgl(t) : "(tanggal kosong)"}</option>`).join("");
 
   const editable = (prog.status===PROGRAM_STATUS.MENUNGGU || prog.status===PROGRAM_STATUS.PERBAIKAN) &&
-    (currentUser.role==="Admin" || prog.namaPengaju===currentUser.name);
+    (currentUser.role==="Admin" || prog.namaPengaju===currentUser.name || prog.pj===currentUser.name);
 
   /* Salin Kebutuhan: hanya relevan kalau program punya lebih dari 1 jadwal
      tanggal pelaksanaan — pilihan "salin dari" mengecualikan tanggal yang
@@ -3731,8 +3777,12 @@ function openPjPickModal(prog){
    SERAH TERIMA DANA
    ========================================================================= */
 function renderSerahTerimaTable(){
+  const isAdmin = currentUser.role === "Admin";
   const tbody = document.querySelector("#tblSerahTerima tbody");
-  const rows = allApprovedPrograms();
+  let rows = allApprovedPrograms();
+  if(!isAdmin){
+    rows = rows.filter(({p})=> p.pj === currentUser.name || p.namaPengaju === currentUser.name);
+  }
   tbody.innerHTML = rows.map(({key,p})=>{
     let statusUm;
     if(!programPakaiSkemaUangMuka(p)){
@@ -3743,6 +3793,7 @@ function renderSerahTerimaTable(){
       else if(sisa > 0) statusUm = `<span style="color:#8a5b00;">Sisa di PJ: ${rp(sisa)}</span>`;
       else statusUm = `<span style="color:#0ca30c;">Lunas (sisa Rp 0)</span>`;
     }
+    const btnLabel = isAdmin ? "Serah Terima Dana" : "Lihat BAST & Dana";
     return `
     <tr>
       <td>${escapeHtml(p.namaProgram)}<br><span style="color:var(--text-secondary);font-size:11px;">PJ: ${escapeHtml(p.pj||"-")}</span></td>
@@ -3750,9 +3801,9 @@ function renderSerahTerimaTable(){
       <td>${(p.tanggal||[]).map(formatTgl).join(", ")}</td>
       <td class="computed">${rp(programBudgetTotal(p))}</td>
       <td>${statusUm}</td>
-      <td><button class="btn small" data-st="${p.id}" data-stkey="${key}" type="button">Serah Terima Dana</button></td>
+      <td><button class="btn small" data-st="${p.id}" data-stkey="${key}" type="button">${btnLabel}</button></td>
     </tr>`;
-  }).join("") || `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:14px;">Belum ada program disetujui</td></tr>`;
+  }).join("") || `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:14px;">${!isAdmin ? `Belum ada program disetujui yang ditugaskan kepada Anda (${escapeHtml(currentUser.name)})` : "Belum ada program disetujui"}</td></tr>`;
   tbody.querySelectorAll("[data-st]").forEach(btn=> btn.addEventListener("click", ()=>{
     const key = btn.dataset.stkey;
     const prog = state.program[key].find(p=>p.id===Number(btn.dataset.st));
@@ -3858,10 +3909,11 @@ function renderStRiwayat(prog){
      Kode Admin yang benar supaya data historis tidak sengaja/asal terhapus.
      Menghapus di sini otomatis menyesuaikan ulang baris BKU terkait lewat
      syncBkuUangMuka (termasuk Catatan Piutang PJ kalau relevan). */
+  const isAdmin = currentUser.role === "Admin";
   wrap.innerHTML = `<table class="datatable narrow" style="font-size:12px;"><thead><tr><th>Tanggal</th><th>Jenis</th><th>Nominal</th><th>No. Dokumen</th><th></th></tr></thead><tbody>
     ${all.map(r=> r.jenis==="st"
-      ? `<tr><td>${formatTgl(r.tanggal)}</td><td>Serah Terima</td><td class="num">${rp(r.nominal)}</td><td>${escapeHtml(r.noBast)}</td><td><button class="btn small" data-streprint="${r.id}">Cetak Ulang</button> <button class="btn small danger" data-strhapus="${r.id}" data-strhapusjenis="st">Hapus</button></td></tr>`
-      : `<tr><td>${formatTgl(r.tanggal)}</td><td>Pengembalian</td><td class="num">${rp(r.nominal)}</td><td>${escapeHtml(r.keterangan||"-")}</td><td><button class="btn small danger" data-strhapus="${r.id}" data-strhapusjenis="km">Hapus</button></td></tr>`
+      ? `<tr><td>${formatTgl(r.tanggal)}</td><td>Serah Terima</td><td class="num">${rp(r.nominal)}</td><td>${escapeHtml(r.noBast)}</td><td><button class="btn small" data-streprint="${r.id}">Cetak Ulang</button> ${isAdmin ? `<button class="btn small danger" data-strhapus="${r.id}" data-strhapusjenis="st">Hapus</button>` : ""}</td></tr>`
+      : `<tr><td>${formatTgl(r.tanggal)}</td><td>Pengembalian</td><td class="num">${rp(r.nominal)}</td><td>${escapeHtml(r.keterangan||"-")}</td><td>${isAdmin ? `<button class="btn small danger" data-strhapus="${r.id}" data-strhapusjenis="km">Hapus</button>` : ""}</td></tr>`
     ).join("")}
   </tbody></table>`;
   wrap.querySelectorAll("[data-streprint]").forEach(btn=> btn.addEventListener("click", ()=>{
@@ -3873,9 +3925,20 @@ function renderStRiwayat(prog){
     const id = Number(btn.dataset.strhapus);
     const label = jenis==="st" ? "riwayat Serah Terima" : "riwayat Pengembalian Sisa Dana";
     if(!confirmWithAdminCode(`Hapus ${label} ini? Data yang dihapus tidak dapat dikembalikan, dan BKU otomatis terkait akan ikut disesuaikan.`)) return;
-    if(jenis==="st") prog.serahTerima = (prog.serahTerima||[]).filter(r=>r.id!==id);
-    else prog.pengembalianUangMuka = (prog.pengembalianUangMuka||[]).filter(r=>r.id!==id);
-    syncBkuUangMuka(prog.sumberDana);
+    const progKey = getProgramSumberKey(prog);
+    prog.sumberDana = progKey;
+    if(jenis==="st"){
+      prog.serahTerima = (prog.serahTerima||[]).filter(r=>r.id!==id);
+      if((prog.serahTerima||[]).length === 0 && (prog.realisasi||[]).length > 0){
+        if(confirm("Seluruh riwayat Serah Terima untuk program ini telah dihapus.\n\nApakah Anda juga ingin membatalkan/menghapus catatan Realisasi program ini agar data pembukuan bersih kembali?")){
+          prog.realisasi = [];
+          prog.realisasiBatal = [];
+        }
+      }
+    } else {
+      prog.pengembalianUangMuka = (prog.pengembalianUangMuka||[]).filter(r=>r.id!==id);
+    }
+    SUMBER_KEYS.forEach(k=> syncBkuUangMuka(k));
     renderStRingkasan(prog);
     renderStRiwayat(prog);
     renderAll();
@@ -3885,6 +3948,20 @@ function renderStRiwayat(prog){
 function openSerahTerimaModal(prog){
   currentSerahTerimaProg = prog;
   document.getElementById("stSub").textContent = `Program: ${prog.namaProgram} · PJ: ${prog.pj||"-"}`;
+  const isAdmin = currentUser.role === "Admin";
+  const formDisburse = document.getElementById("stFormDisburseWrap");
+  if(formDisburse) formDisburse.style.display = isAdmin ? "block" : "none";
+  let stNotice = document.getElementById("stNonAdminNotice");
+  if(!stNotice && formDisburse && formDisburse.parentElement){
+    stNotice = document.createElement("div");
+    stNotice.id = "stNonAdminNotice";
+    stNotice.style.cssText = "display:none; color:var(--text-secondary); font-size:12.5px; background:#f8fafc; border:1px solid #e2e8f0; padding:10px 14px; border-radius:6px; margin-top:10px;";
+    formDisburse.parentElement.appendChild(stNotice);
+  }
+  if(stNotice){
+    stNotice.style.display = isAdmin ? "none" : "block";
+    stNotice.innerHTML = `ℹ️ <b>Mode PJ Kegiatan:</b> Penyerahan uang kas baru hanya dapat disahkan dan dicatat oleh Admin/Bendahara. Anda dapat melihat ringkasan status dana di atas serta mencetak ulang kwitansi/BAST di tabel riwayat.`;
+  }
   /* Kalau program ini SUDAH PERNAH Serah Terima (sebagian atau total),
      opsi "Total Keseluruhan Program" dikunci (disabled) — supaya tidak
      menyerahkan dana ganda untuk tanggal yang sudah pernah diserahkan.
@@ -3925,6 +4002,10 @@ document.querySelectorAll('input[name="stMode"]').forEach(r=> r.addEventListener
 }));
 document.getElementById("stNominal").addEventListener("input", stUpdateWarning);
 document.getElementById("stBtnCetak").addEventListener("click", ()=>{
+  if(currentUser.role !== "Admin"){
+    alert("Akses Ditolak: Hanya Admin/Bendahara yang memiliki wewenang untuk mencatat penyerahan dana kas (Serah Terima).");
+    return;
+  }
   const prog = currentSerahTerimaProg;
   if(!prog) return;
   const mode = document.querySelector('input[name="stMode"]:checked').value;
@@ -3961,12 +4042,16 @@ document.getElementById("stBtnCetak").addEventListener("click", ()=>{
    REALISASI PROGRAM (dalam view Realisasi)
    ========================================================================= */
 function renderRealisasiProgramTable(){
+  const isAdmin = currentUser.role === "Admin";
   const tbody = document.querySelector("#tblRealisasiProgram tbody");
-  const rows = allApprovedPrograms();
+  let rows = allApprovedPrograms();
+  if(!isAdmin){
+    rows = rows.filter(({p}) => p.pj === currentUser.name || p.namaPengaju === currentUser.name);
+  }
   tbody.innerHTML = rows.map(({key,p})=>{
     const label = programRealisasiLabel(p);
     const cls = label==="Realisasi Selesai"?"ok":label==="Belum Direalisasikan"?"na":label==="Batal Terealisasi (Semua Jadwal)"?"bad":"partial";
-    const canUpdate = currentUser.role==="Admin" || p.pj===currentUser.name;
+    const canUpdate = isAdmin || p.pj===currentUser.name || p.namaPengaju===currentUser.name;
     const canKwitansi = (p.realisasi||[]).length > 0;
     const btns = [];
     if(canUpdate) btns.push(`<button class="btn small" data-ur="${p.id}" data-urkey="${key}" type="button">Update Realisasi</button>`);
@@ -3991,7 +4076,7 @@ function renderRealisasiProgramTable(){
       <td>${umInfo}</td>
       <td>${btns.join(" ")}</td>
     </tr>`;
-  }).join("") || `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:14px;">Belum ada program disetujui</td></tr>`;
+  }).join("") || `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:14px;">${!isAdmin ? `Belum ada program disetujui yang ditugaskan kepada Anda (${escapeHtml(currentUser.name)})` : "Belum ada program disetujui"}</td></tr>`;
   tbody.querySelectorAll("[data-ur]").forEach(btn=> btn.addEventListener("click", ()=>{
     const prog = state.program[btn.dataset.urkey].find(p=>p.id===Number(btn.dataset.ur));
     if(prog) openUpdateRealisasiModal(prog);
@@ -4087,6 +4172,12 @@ function renderKontrolKeuangan(){
 let currentUpdateRealisasiProg = null;
 let urDraft = null;
 function openUpdateRealisasiModal(prog){
+  const isAdmin = currentUser.role === "Admin";
+  const canUpdate = isAdmin || prog.pj === currentUser.name || prog.namaPengaju === currentUser.name;
+  if(!canUpdate){
+    alert("Akses Ditolak: Anda hanya dapat memperbarui realisasi untuk program kerja yang ditugaskan kepada Anda atau diajukan oleh Anda.");
+    return;
+  }
   /* Aturan baru: Realisasi TIDAK BOLEH dicatat sebelum program punya
      riwayat Serah Terima Dana (uang muka) — kalau belum ada, arahkan
      pengguna ke modal Serah Terima Dana dulu dan batalkan pembukaan
@@ -4491,13 +4582,25 @@ document.getElementById("btnCetakRekapProgram").addEventListener("click", ()=>{ 
 /* =========================================================================
    BKU (generik per sumber dana)
    ========================================================================= */
-let currentBkuKey = "bos";
+let currentBkuKey = (function(){
+  try {
+    const k = localStorage.getItem("keuanganSekolahBkuKey");
+    if(k && SUMBER_KEYS.includes(k)) return k;
+  } catch(e){}
+  return "bos";
+})();
 function renderBkuTabs(){
   const wrap = document.getElementById("bkuTabs");
   wrap.innerHTML = SUMBER_KEYS.map(k=>`<button data-k="${k}" class="${k===currentBkuKey?'active '+SUMBER_META[k].cls:''}">${SUMBER_META[k].label}</button>`).join("");
-  wrap.querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ currentBkuKey = b.dataset.k; renderBkuTabs(); renderBkuTable(currentBkuKey); }));
+  wrap.querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{
+    currentBkuKey = b.dataset.k;
+    try { localStorage.setItem("keuanganSekolahBkuKey", currentBkuKey); } catch(e){}
+    renderBkuTabs();
+    renderBkuTable(currentBkuKey);
+  }));
 }
 function renderBkuTable(key){
+  const isAdmin = currentUser.role === "Admin";
   const table = document.getElementById("tblBku");
   const headCols = ["No","Tanggal","No Bukti","Uraian","Penerimaan","Pengeluaran","Saldo",""];
   table.querySelector("thead").innerHTML = `<tr>${headCols.map(h=>`<th>${h}</th>`).join("")}</tr>`;
@@ -4513,15 +4616,25 @@ function renderBkuTable(key){
     cells.push(`<td class="num">${row.pengeluaran? rp(row.pengeluaran) : ""}</td>`);
     cells.push(`<td class="computed" data-role="saldo">${rp(row.saldo)}</td>`);
     let autoBadge = "";
-    if(row.autoRealisasiId) autoBadge = `<span class="badge-note" title="Baris ini dibuat &amp; diperbarui otomatis dari Update Realisasi — untuk mengubahnya, edit lewat menu Realisasi Program.">Otomatis dari Realisasi</span>`;
-    else if(row.autoSerahTerimaId) autoBadge = `<span class="badge-note" title="Baris ini dibuat &amp; diperbarui otomatis dari Serah Terima Dana (uang muka kegiatan) — untuk mengubahnya, edit lewat menu Serah Terima Dana.">Otomatis dari Serah Terima</span>`;
-    else if(row.autoPengembalianId) autoBadge = `<span class="badge-note" title="Baris ini dibuat &amp; diperbarui otomatis dari Pengembalian Sisa Uang Muka — untuk mengubahnya, edit lewat menu Serah Terima Dana.">Otomatis dari Pengembalian</span>`;
-    else if(row.autoPiutangId) autoBadge = `<span class="badge-note" title="Catatan otomatis — bukan transaksi kas riil (Penerimaan/Pengeluaran = 0). Muncul karena Realisasi melebihi Serah Terima (PJ menalangi dulu); akan otomatis hilang begitu ada Serah Terima Tambahan yang menutup kekurangannya.">Catatan Piutang PJ</span>`;
-    cells.push(autoBadge
-      ? `<td>${autoBadge}</td>`
-      : `<td><div class="row-actions"><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div></td>`);
+    if(row.autoRealisasiId) autoBadge = `<span class="badge-note" title="Baris ini dibuat dari Realisasi">Otomatis dari Realisasi</span>`;
+    else if(row.autoSerahTerimaId) autoBadge = `<span class="badge-note" title="Baris ini dibuat &amp; diperbarui otomatis dari Serah Terima Dana (uang muka kegiatan).">Otomatis dari Serah Terima</span>`;
+    else if(row.autoPengembalianId) autoBadge = `<span class="badge-note" title="Baris ini dibuat &amp; diperbarui otomatis dari Pengembalian Sisa Uang Muka.">Otomatis dari Pengembalian</span>`;
+    else if(row.autoPiutangId) autoBadge = `<span class="badge-note" title="Catatan otomatis — bukan transaksi kas riil (Penerimaan/Pengeluaran = 0).">Catatan Piutang PJ</span>`;
+    
+    if(autoBadge){
+      cells.push(`<td><div class="row-actions" style="align-items:center; gap:6px;">${autoBadge}${isAdmin ? `<button class="row-del" data-del="1" title="Hapus transaksi ini dari BKU &amp; data terkait">&times;</button>` : ""}</div></td>`);
+    } else {
+      if(isAdmin){
+        cells.push(`<td><div class="row-actions"><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div></td>`);
+      } else {
+        cells.push(`<td><span style="color:var(--text-muted);font-size:11px;">Hanya Lihat</span></td>`);
+      }
+    }
     return `<tr data-id="${row.id}">${cells.join("")}</tr>`;
   }).join("") || `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">Belum ada transaksi</td></tr>`;
+
+  const addBkuBtn = document.getElementById("btnAddBku");
+  if(addBkuBtn) addBkuBtn.style.display = isAdmin ? "" : "none";
 
   tbody.querySelectorAll("tr[data-id]").forEach(tr=>{
     const id = Number(tr.dataset.id);
@@ -4530,12 +4643,33 @@ function renderBkuTable(key){
     const delBtn = tr.querySelector("[data-del]");
     if(delBtn) delBtn.addEventListener("click", ()=>{
       const row = state.bku[key].find(r=>r.id===id);
+      if(!row) return;
       if(!confirmDelete(`transaksi BKU "${row?.uraian || "(tanpa uraian)"}"`)) return;
-      state.bku[key] = state.bku[key].filter(r=>r.id!==id); renderBkuTable(key);
+
+      if(row.autoSerahTerimaId){
+        (state.program[key]||[]).forEach(p=>{
+          p.serahTerima = (p.serahTerima||[]).filter(st=> st.id !== row.autoSerahTerimaId);
+        });
+      }
+      if(row.autoRealisasiId){
+        (state.program[key]||[]).forEach(p=>{
+          p.realisasi = (p.realisasi||[]).filter(r=> r.id !== row.autoRealisasiId);
+        });
+      }
+      if(row.autoPengembalianId){
+        (state.program[key]||[]).forEach(p=>{
+          p.pengembalianUangMuka = (p.pengembalianUangMuka||[]).filter(km=> km.id !== row.autoPengembalianId);
+        });
+      }
+      state.bku[key] = state.bku[key].filter(r=>r.id!==id);
+      SUMBER_KEYS.forEach(k=> syncBkuUangMuka(k));
+      renderAll();
+      saveStateToLocalStorage();
     });
   });
 
   renderBkuFooter(key);
+  updateCashHealthAlerts();
 }
 function renderBkuFooter(key){
   const headColsLen = 8; // harus sesuai jumlah kolom headCols di renderBkuTable
@@ -4554,8 +4688,56 @@ function bkuFormUpdateJenisUi(){
   const jenis = document.querySelector('input[name="bkuFormJenis"]:checked').value;
   document.getElementById("bkuFormPengeluaranWrap").style.display = jenis==="pengeluaran" ? "" : "none";
   document.getElementById("bkuFormPenerimaanWrap").style.display = jenis==="penerimaan" ? "" : "none";
+  updateBkuFormWarning();
 }
 document.querySelectorAll('input[name="bkuFormJenis"]').forEach(r=> r.addEventListener("change", bkuFormUpdateJenisUi));
+
+function updateBkuFormWarning(){
+  const warnEl = document.getElementById("bkuFormWarning");
+  if(!warnEl) return;
+  const jenisEl = document.querySelector('input[name="bkuFormJenis"]:checked');
+  const jenis = jenisEl ? jenisEl.value : "penerimaan";
+  if(jenis !== "pengeluaran"){
+    warnEl.style.display = "none";
+    warnEl.innerHTML = "";
+    return;
+  }
+  const key = bkuFormKey;
+  if(!key){ warnEl.style.display = "none"; return; }
+
+  const currentSaldo = bkuTotals(key).saldoAkhir;
+  const editingRow = bkuFormEditingId ? (state.bku[key]||[]).find(r=>r.id===bkuFormEditingId) : null;
+  const prevExp = editingRow ? (Number(editingRow.pengeluaran)||0) : 0;
+  const newExp = parseRibuan(document.getElementById("bkuFormJumlahKeluar").value) || 0;
+  const projectedSaldo = currentSaldo + prevExp - newExp;
+  const limit = (Number(state.sekolah.batasKasMenipis) >= 0) ? Number(state.sekolah.batasKasMenipis) : 1000000;
+
+  if(newExp > 0){
+    if(projectedSaldo < 0){
+      warnEl.style.display = "block";
+      warnEl.style.background = "#fef2f2";
+      warnEl.style.border = "1px solid #fecaca";
+      warnEl.style.color = "#991b1b";
+      warnEl.innerHTML = `🚨 <b>Peringatan Defisit:</b> Saldo saat ini <b>${rp(currentSaldo)}</b>. Pengeluaran ini melebihi kas tersedia sebesar <b>${rp(Math.abs(projectedSaldo))}</b>!`;
+    } else if(projectedSaldo <= limit){
+      warnEl.style.display = "block";
+      warnEl.style.background = "#fff7ed";
+      warnEl.style.border = "1px solid #fed7aa";
+      warnEl.style.color = "#9a3412";
+      warnEl.innerHTML = `⚠️ <b>Perhatian Kas Menipis:</b> Saldo saat ini <b>${rp(currentSaldo)}</b>. Setelah transaksi ini, sisa kas menjadi <b>${rp(projectedSaldo)}</b> (di bawah batas minimum ${rp(limit)}).`;
+    } else {
+      warnEl.style.display = "block";
+      warnEl.style.background = "#f0fdf4";
+      warnEl.style.border = "1px solid #bbf7d0";
+      warnEl.style.color = "#166534";
+      warnEl.innerHTML = `✅ Estimasi sisa kas setelah transaksi: <b>${rp(projectedSaldo)}</b> (Aman)`;
+    }
+  } else {
+    warnEl.style.display = "none";
+    warnEl.innerHTML = "";
+  }
+}
+document.getElementById("bkuFormJumlahKeluar").addEventListener("input", updateBkuFormWarning);
 /* Cek "Kegiatan" yang diketik terhadap daftar Program yang SUDAH DISETUJUI
    pada sumber dana yang sama — supaya sebelum mencatat pengeluaran manual,
    bisa dicek dulu apakah pengeluaran itu sebenarnya sudah tercatat otomatis
@@ -4581,6 +4763,10 @@ document.getElementById("bkuFormKegiatan").addEventListener("input", ()=>{
   }
 });
 function openBkuForm(key, id){
+  if(currentUser.role !== "Admin"){
+    alert("Akses Ditolak: Hanya Admin/Bendahara yang memiliki wewenang untuk menambah atau mengedit transaksi Buku Kas Umum (BKU).");
+    return;
+  }
   bkuFormKey = key;
   bkuFormEditingId = id;
   const meta = SUMBER_META[key];
@@ -4610,6 +4796,7 @@ function openBkuForm(key, id){
   document.getElementById("bkuFormJumlahMasuk").value = isNew ? "" : (jenis==="penerimaan" ? formatRibuan(row.penerimaan) : "");
 
   bkuFormUpdateJenisUi();
+  updateBkuFormWarning();
   wireCurrencyInputs(document.getElementById("modal-bku-form"));
   openModal("modal-bku-form");
 }
@@ -4652,6 +4839,7 @@ document.getElementById("bkuFormBtnSimpan").addEventListener("click", ()=>{
   }
   closeModal("modal-bku-form");
   renderBkuTable(key);
+  updateCashHealthAlerts();
   saveStateToLocalStorage();
 });
 document.getElementById("btnAddBku").addEventListener("click", ()=> openBkuForm(currentBkuKey, null));
@@ -4675,6 +4863,12 @@ function renderRealisasi(){
    ========================================================================= */
 let sppTxSearchQuery = "";
 function renderSppTx(){
+  const isAdmin = currentUser.role === "Admin";
+  const addSppBtn = document.getElementById("btnAddSppTx");
+  if(addSppBtn) addSppBtn.style.display = isAdmin ? "" : "none";
+  const addSppManualBtn = document.getElementById("btnAddSppTxManual");
+  if(addSppManualBtn) addSppManualBtn.style.display = isAdmin ? "" : "none";
+
   const tbody = document.querySelector("#tblSppTx tbody");
   const q = sppTxSearchQuery.trim().toLowerCase();
   const filtered = q ? state.sppTx.filter(row=>{
@@ -4683,6 +4877,9 @@ function renderSppTx(){
   }) : state.sppTx;
   tbody.innerHTML = filtered.map((row,i)=>{
     const s = siswaByNis(row.nis);
+    const actionCell = isAdmin
+      ? `<div class="row-actions"><button class="row-print" data-print="1">Cetak</button><button class="row-wa" data-wa="1">WA</button><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div>`
+      : `<div class="row-actions"><button class="row-print" data-print="1">Cetak</button><button class="row-wa" data-wa="1">WA</button></div>`;
     return `<tr data-id="${row.id}">
       <td style="text-align:center">${i+1}</td>
       <td>${formatTgl(row.tanggal)}</td>
@@ -4692,14 +4889,16 @@ function renderSppTx(){
       <td>${escapeHtml(row.bulan)}</td>
       <td class="num">${rp(row.jumlah)}</td>
       <td>${escapeHtml(row.noKwitansi)}</td>
-      <td><div class="row-actions"><button class="row-print" data-print="1">Cetak</button><button class="row-wa" data-wa="1">WA</button><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div></td></tr>`;
+      <td>${actionCell}</td></tr>`;
   }).join("") || `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:14px;">${q? "Tidak ada transaksi yang cocok dengan pencarian." : "Belum ada transaksi"}</td></tr>`;
   tbody.querySelectorAll("tr[data-id]").forEach(tr=>{
     const id = Number(tr.dataset.id);
     tr.querySelector("[data-print]").addEventListener("click", ()=> printKwitansiSiswaTx(id, "spp"));
     tr.querySelector("[data-wa]").addEventListener("click", ()=> kirimWaKwitansiTx(id, "spp"));
-    tr.querySelector("[data-edit]").addEventListener("click", ()=> openSppTxForm(id));
-    tr.querySelector("[data-del]").addEventListener("click", ()=>{
+    const btnEdit = tr.querySelector("[data-edit]");
+    if(btnEdit) btnEdit.addEventListener("click", ()=> openSppTxForm(id));
+    const btnDel = tr.querySelector("[data-del]");
+    if(btnDel) btnDel.addEventListener("click", ()=>{
       const row = state.sppTx.find(r=>r.id===id);
       const s = row ? siswaByNis(row.nis) : null;
       if(!confirmDelete(`transaksi SPP ${s? "atas nama \""+s.nama+"\"" : ""} bulan ${row?.bulan||"-"}`)) return;
@@ -4709,6 +4908,10 @@ function renderSppTx(){
   document.getElementById("sppTxCount").textContent = state.sppTx.length;
 }
 function openSppTxForm(id){
+  if(currentUser.role !== "Admin"){
+    alert("Akses Ditolak: Hanya Admin/Bendahara yang memiliki wewenang untuk mencatat atau mengedit pembayaran SPP.");
+    return;
+  }
   const isNew = id==null;
   const row = isNew ? newSppTxRow() : state.sppTx.find(r=>r.id===id);
   if(!row) return;
@@ -4827,6 +5030,10 @@ function renderSppAll(){ renderSppTx(); renderRekapSpp(); }
    ========================================================================= */
 let itemTxSearchQuery = "";
 function renderItemTx(){
+  const isAdmin = currentUser.role === "Admin";
+  const addItemBtn = document.getElementById("btnAddItemTx");
+  if(addItemBtn) addItemBtn.style.display = isAdmin ? "" : "none";
+
   const tbody = document.querySelector("#tblItemTx tbody");
   const q = itemTxSearchQuery.trim().toLowerCase();
   const filtered = q ? state.itemTx.filter(row=>{
@@ -4835,6 +5042,9 @@ function renderItemTx(){
   }) : state.itemTx;
   tbody.innerHTML = filtered.map((row,i)=>{
     const s = siswaByNis(row.nis);
+    const actionCell = isAdmin
+      ? `<div class="row-actions"><button class="row-print" data-print="1">Cetak</button><button class="row-wa" data-wa="1">WA</button><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div>`
+      : `<div class="row-actions"><button class="row-print" data-print="1">Cetak</button><button class="row-wa" data-wa="1">WA</button></div>`;
     return `<tr data-id="${row.id}">
       <td style="text-align:center">${i+1}</td>
       <td>${formatTgl(row.tanggal)}</td>
@@ -4843,14 +5053,16 @@ function renderItemTx(){
       <td>${escapeHtml(row.jenisItem)}</td>
       <td class="num">${rp(row.jumlah)}</td>
       <td>${escapeHtml(row.noKwitansi)}</td>
-      <td><div class="row-actions"><button class="row-print" data-print="1">Cetak</button><button class="row-wa" data-wa="1">WA</button><button class="row-edit" data-edit="1">Edit</button><button class="row-del" data-del="1">&times;</button></div></td></tr>`;
+      <td>${actionCell}</td></tr>`;
   }).join("") || `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">${q? "Tidak ada transaksi yang cocok dengan pencarian." : "Belum ada transaksi"}</td></tr>`;
   tbody.querySelectorAll("tr[data-id]").forEach(tr=>{
     const id = Number(tr.dataset.id);
     tr.querySelector("[data-print]").addEventListener("click", ()=> printKwitansiSiswaTx(id, "item"));
     tr.querySelector("[data-wa]").addEventListener("click", ()=> kirimWaKwitansiTx(id, "item"));
-    tr.querySelector("[data-edit]").addEventListener("click", ()=> openItemTxForm(id));
-    tr.querySelector("[data-del]").addEventListener("click", ()=>{
+    const btnEdit = tr.querySelector("[data-edit]");
+    if(btnEdit) btnEdit.addEventListener("click", ()=> openItemTxForm(id));
+    const btnDel = tr.querySelector("[data-del]");
+    if(btnDel) btnDel.addEventListener("click", ()=>{
       const row = state.itemTx.find(r=>r.id===id);
       const s = row ? siswaByNis(row.nis) : null;
       if(!confirmDelete(`transaksi ${row?.jenisItem||"item"} ${s? "atas nama \""+s.nama+"\"" : ""}`)) return;
@@ -4860,6 +5072,10 @@ function renderItemTx(){
   document.getElementById("itemTxCount").textContent = state.itemTx.length;
 }
 function openItemTxForm(id){
+  if(currentUser.role !== "Admin"){
+    alert("Akses Ditolak: Hanya Admin/Bendahara yang memiliki wewenang untuk mencatat atau mengedit pembayaran item lainnya.");
+    return;
+  }
   const isNew = id==null;
   const row = isNew ? newItemTxRow() : state.itemTx.find(r=>r.id===id);
   if(!row) return;
@@ -4960,9 +5176,221 @@ function renderLpjKons(){
 }
 
 /* =========================================================================
-   DASHBOARD
+   DASHBOARD & TREN KEUANGAN
    ========================================================================= */
 let chartSumber = null;
+let chartTrendBulanan = null;
+let trendFilterSumber = "all";
+let trendFilterTahun = null;
+
+function renderDashboardTrend(){
+  const yearsSet = new Set();
+  const currentYear = new Date().getFullYear();
+  yearsSet.add(currentYear);
+  SUMBER_KEYS.forEach(k=>{
+    (state.bku[k]||[]).forEach(row=>{
+      if(row.tanggal && row.tanggal.length >= 4){
+        const y = parseInt(row.tanggal.substring(0, 4), 10);
+        if(!isNaN(y) && y >= 2000 && y <= 2100) yearsSet.add(y);
+      }
+    });
+  });
+  const years = Array.from(yearsSet).sort((a,b)=> b - a);
+
+  if(!trendFilterTahun || !years.includes(Number(trendFilterTahun))){
+    trendFilterTahun = years[0];
+  }
+
+  const yearSel = document.getElementById("trendFilterTahun");
+  if(yearSel){
+    yearSel.innerHTML = years.map(y=> `<option value="${y}" ${y===trendFilterTahun?'selected':''}>Tahun ${y}</option>`).join("");
+    yearSel.value = trendFilterTahun;
+  }
+  const sumberSel = document.getElementById("trendFilterSumber");
+  if(sumberSel && trendFilterSumber){
+    sumberSel.value = trendFilterSumber;
+  }
+
+  const selYear = Number(trendFilterTahun);
+  const selSumber = trendFilterSumber || "all";
+
+  const monthPenerimaan = new Array(12).fill(0);
+  const monthPengeluaran = new Array(12).fill(0);
+  const monthNet = new Array(12).fill(0);
+
+  const keys = (selSumber === "all") ? SUMBER_KEYS : [selSumber];
+  keys.forEach(k=>{
+    (state.bku[k]||[]).forEach(row=>{
+      if(!row.tanggal) return;
+      const parts = row.tanggal.split("-");
+      if(parts.length >= 2){
+        const yr = parseInt(parts[0], 10);
+        const mo = parseInt(parts[1], 10) - 1;
+        if(yr === selYear && mo >= 0 && mo < 12){
+          monthPenerimaan[mo] += Number(row.penerimaan) || 0;
+          monthPengeluaran[mo] += Number(row.pengeluaran) || 0;
+        }
+      }
+    });
+  });
+
+  let totalPenTahun = 0;
+  let totalPengTahun = 0;
+  for(let i=0; i<12; i++){
+    monthNet[i] = monthPenerimaan[i] - monthPengeluaran[i];
+    totalPenTahun += monthPenerimaan[i];
+    totalPengTahun += monthPengeluaran[i];
+  }
+  const netTahun = totalPenTahun - totalPengTahun;
+
+  const kpiGrid = document.getElementById("trendKpiGrid");
+  if(kpiGrid){
+    const isSurplus = netTahun >= 0;
+    const statusText = (totalPenTahun === 0 && totalPengTahun === 0)
+      ? "Belum ada transaksi di tahun ini"
+      : isSurplus
+        ? "🟢 Arus Kas Sehat (Surplus: penerimaan menutup pengeluaran)"
+        : "⚠️ Perlu Perhatian (Defisit: pengeluaran melampaui penerimaan)";
+    kpiGrid.innerHTML = `
+      <div class="stat-card" style="padding:10px 14px;">
+        <div class="stat-label">Total Penerimaan (${selYear})</div>
+        <div class="stat-value green" style="font-size:18px;">${rp(totalPenTahun)}</div>
+        <div class="stat-sub">Rata-rata: ${rp(Math.round(totalPenTahun/12))}/bln</div>
+      </div>
+      <div class="stat-card" style="padding:10px 14px;">
+        <div class="stat-label">Total Pengeluaran (${selYear})</div>
+        <div class="stat-value orange" style="font-size:18px;">${rp(totalPengTahun)}</div>
+        <div class="stat-sub">Rata-rata: ${rp(Math.round(totalPengTahun/12))}/bln</div>
+      </div>
+      <div class="stat-card" style="padding:10px 14px;">
+        <div class="stat-label">Arus Kas Bersih (Net Cash Flow)</div>
+        <div class="stat-value ${isSurplus ? 'green' : 'red'}" style="font-size:18px;">${isSurplus ? '+'+rp(netTahun) : '-'+rp(Math.abs(netTahun))}</div>
+        <div class="stat-sub">${isSurplus ? 'Surplus Kas Tahun Ini' : 'Defisit Kas Tahun Ini'}</div>
+      </div>
+      <div class="stat-card" style="padding:10px 14px;">
+        <div class="stat-label">Kondisi Kesehatan Kas</div>
+        <div style="font-weight:600; font-size:12px; margin-top:4px; color:${isSurplus ? 'var(--success, #059669)' : 'var(--critical, #dc2626)'};">${statusText}</div>
+        <div class="stat-sub">${selSumber==='all' ? 'Gabungan semua sumber dana' : SUMBER_META[selSumber].label}</div>
+      </div>
+    `;
+  }
+
+  const canvas = document.getElementById("chartTrendBulanan");
+  if(!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if(chartTrendBulanan) chartTrendBulanan.destroy();
+
+  chartTrendBulanan = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: BULAN_NAMA_ID,
+      datasets: [
+        {
+          label: "Penerimaan (Kas Masuk)",
+          data: monthPenerimaan,
+          borderColor: "#10b981",
+          backgroundColor: "rgba(16, 185, 129, 0.12)",
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2.5,
+          pointBackgroundColor: "#10b981",
+          pointBorderColor: "#ffffff",
+          pointBorderWidth: 1.5,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: "Pengeluaran (Kas Keluar)",
+          data: monthPengeluaran,
+          borderColor: "#ef4444",
+          backgroundColor: "rgba(239, 68, 68, 0.08)",
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2.5,
+          pointBackgroundColor: "#ef4444",
+          pointBorderColor: "#ffffff",
+          pointBorderWidth: 1.5,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: "Arus Kas Bersih (Surplus / Defisit)",
+          data: monthNet,
+          borderColor: "#3b82f6",
+          borderDash: [5, 4],
+          fill: false,
+          tension: 0.35,
+          borderWidth: 2,
+          pointBackgroundColor: "#3b82f6",
+          pointBorderColor: "#ffffff",
+          pointBorderWidth: 1.5,
+          pointRadius: 3.5,
+          pointHoverRadius: 5.5
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index",
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          position: "top",
+          align: "start",
+          labels: {
+            color: "#52514e",
+            font: { size: 12, weight: "600" },
+            boxWidth: 14,
+            boxHeight: 14,
+            usePointStyle: true
+          }
+        },
+        tooltip: {
+          backgroundColor: "rgba(24, 24, 27, 0.95)",
+          titleColor: "#ffffff",
+          bodyColor: "#ffffff",
+          padding: 12,
+          boxPadding: 6,
+          usePointStyle: true,
+          callbacks: {
+            label: (c) => ` ${c.dataset.label}: ${rp(c.parsed.y)}`,
+            afterBody: (items) => {
+              if(!items.length) return "";
+              const idx = items[0].dataIndex;
+              const pen = monthPenerimaan[idx];
+              const peng = monthPengeluaran[idx];
+              const net = pen - peng;
+              const status = net >= 0 ? `Surplus (+${rp(net)})` : `Defisit (-${rp(Math.abs(net))})`;
+              return `\nArus Kas Bersih: ${status}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: "#898781", font: { size: 11 } }
+        },
+        y: {
+          grid: { color: "#e5e7eb" },
+          ticks: {
+            color: "#898781",
+            font: { size: 11 },
+            callback: (v) => {
+              if(Math.abs(v) >= 1e6) return "Rp " + (v/1e6).toLocaleString("id-ID") + " jt";
+              if(Math.abs(v) >= 1e3) return "Rp " + (v/1e3).toLocaleString("id-ID") + " rb";
+              return "Rp " + v.toLocaleString("id-ID");
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
 function renderDashboard(){
   const rs = realisasiPerSumberDana();
   const totalAnggaran = rs.reduce((s,r)=>s+r.anggaran,0);
@@ -4979,12 +5407,26 @@ function renderDashboard(){
   document.getElementById("statPct").textContent = pct(pctReal) + " terealisasi";
   document.getElementById("statSaldo").textContent = rp(totalSaldo);
 
-  document.getElementById("statSumberGrid").innerHTML = rs.map(r=>`
-    <div class="stat-card">
-      <div class="stat-label"><span class="badge-sumber ${SUMBER_META[r.key].cls}">${r.label}</span></div>
-      <div class="stat-value" style="color:var(--series-${r.key==='bos'?'1':r.key==='spp'?'3':r.key==='pangkal'?'2':'7'})">${rp(bkuTotals(r.key).saldoAkhir)}</div>
-      <div class="stat-sub">Anggaran ${rp(r.anggaran)} · Realisasi ${pct(r.pct)}</div>
-    </div>`).join("");
+  const limitKas = (Number(state.sekolah.batasKasMenipis) >= 0) ? Number(state.sekolah.batasKasMenipis) : 1000000;
+  document.getElementById("statSumberGrid").innerHTML = rs.map(r=>{
+    const sAkhir = bkuTotals(r.key).saldoAkhir;
+    const isDefisit = sAkhir < 0;
+    const isMenipis = sAkhir >= 0 && sAkhir <= limitKas;
+    const warnBadge = isDefisit
+      ? `<span class="pill danger" style="font-size:9.5px; padding:2px 6px; margin-left:6px;">🚨 Defisit</span>`
+      : isMenipis
+        ? `<span class="pill danger" style="font-size:9.5px; padding:2px 6px; margin-left:6px; background:#fff7ed; color:#c2410c; border-color:#fdba74;">⚠️ Menipis</span>`
+        : "";
+    return `
+      <div class="stat-card">
+        <div class="stat-label"><span class="badge-sumber ${SUMBER_META[r.key].cls}">${r.label}</span>${warnBadge}</div>
+        <div class="stat-value" style="color:var(--series-${r.key==='bos'?'1':r.key==='spp'?'3':r.key==='pangkal'?'2':'7'})">${rp(sAkhir)}</div>
+        <div class="stat-sub">Anggaran ${rp(r.anggaran)} · Realisasi ${pct(r.pct)}</div>
+      </div>`;
+  }).join("");
+
+  updateCashHealthAlerts();
+  renderDashboardTrend();
 
   const ctx = document.getElementById("chartSumber").getContext("2d");
   if(chartSumber) chartSumber.destroy();
@@ -5015,11 +5457,31 @@ function renderDashboard(){
     <div class="stat-card"><div class="stat-label">Total Penerimaan Siswa</div><div class="stat-value green">${rp(state.sppTx.reduce((s,t)=>s+(Number(t.jumlah)||0),0) + state.itemTx.reduce((s,t)=>s+(Number(t.jumlah)||0),0))}</div><div class="stat-sub">SPP + Uang Pangkal + Item Lainnya</div></div>`;
 }
 
+const filterSumberEl = document.getElementById("trendFilterSumber");
+if(filterSumberEl){
+  filterSumberEl.addEventListener("change", (e)=>{
+    trendFilterSumber = e.target.value;
+    renderDashboardTrend();
+  });
+}
+const filterTahunEl = document.getElementById("trendFilterTahun");
+if(filterTahunEl){
+  filterTahunEl.addEventListener("change", (e)=>{
+    trendFilterTahun = Number(e.target.value);
+    renderDashboardTrend();
+  });
+}
+
 /* =========================================================================
    PRINT PAGES
    ========================================================================= */
 function kopSurat(){
   const s = state.sekolah;
+  if(s.useKopGambar && s.kopGambar){
+    return `<div class="kop-image-wrap">
+      <img src="${s.kopGambar}" alt="Kop Surat Resmi" />
+    </div>`;
+  }
   return `<div class="kop">
     <div class="l1">PEMERINTAH ${escapeHtml((s.kabkota||"KABUPATEN/KOTA").toUpperCase())}</div>
     <div class="l1">DINAS PENDIDIKAN</div>
@@ -5624,61 +6086,478 @@ function showPreview(which){
 document.getElementById("btnPrintNow").addEventListener("click", ()=>{ renderPrint(); window.print(); });
 
 /* =========================================================================
-   EXPORT / IMPORT
+   EKSPOR EXCEL & PDF LENGKAP
    ========================================================================= */
-document.getElementById("btnExport").addEventListener("click", ()=>{
-  const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  const namaFile = (state.sekolah.namaSekolah || "data_keuangan_sekolah").replace(/[^a-z0-9]+/gi,"_");
-  a.href = url; a.download = `keuangan_${namaFile}.json`;
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
+
+function sanitizeFileName(name){
+  return String(name||"").trim().replace(/[^a-zA-Z0-9_\-\.\s]+/g, "").replace(/\s+/g, "_");
+}
+
+function setAutoColWidths(ws, aoa){
+  const colWidths = [];
+  aoa.forEach(row=>{
+    if(!Array.isArray(row)) return;
+    row.forEach((cell, idx)=>{
+      const len = String(cell ?? "").length;
+      colWidths[idx] = Math.max(colWidths[idx] || 10, Math.min(len + 3, 48));
+    });
+  });
+  ws["!cols"] = colWidths.map(w=>({ wch: w }));
+}
+
+/* Master Multi-Sheet Excel Export */
+function exportAllToExcel(){
+  if(typeof XLSX === "undefined"){
+    alert("Pustaka Excel belum siap. Silakan periksa koneksi internet Anda atau coba sesaat lagi.");
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+  const namaSekolah = state.sekolah.namaSekolah || "Sekolah";
+  const ta = state.sekolah.tahunAjaran || "2026-2027";
+
+  // 1. Profil & Ringkasan
+  const s1 = [
+    ["PROFIL DAN RINGKASAN KEUANGAN SEKOLAH"],
+    ["Nama Sekolah", namaSekolah],
+    ["NPSN", state.sekolah.npsn || "-"],
+    ["Tahun Ajaran", ta],
+    ["Alamat", `${state.sekolah.alamat||"-"}, ${state.sekolah.desa||"-"}, ${state.sekolah.kecamatan||"-"}, ${state.sekolah.kabkota||"-"}`],
+    ["Kepala Sekolah", state.sekolah.kepsek || "-", `NIP: ${state.sekolah.nipKepsek||"-"}`],
+    ["Bendahara BOS", state.sekolah.bendaharaBos || "-", `NIP: ${state.sekolah.nipBendaharaBos||"-"}`],
+    [""],
+    ["RINGKASAN SALDO BUKU KAS UMUM (BKU)"],
+    ["Sumber Dana", "Saldo Awal (Rp)", "Penerimaan (Rp)", "Pengeluaran (Rp)", "Saldo Akhir (Rp)"]
+  ];
+  SUMBER_KEYS.forEach(k=>{
+    const tot = bkuTotals(k);
+    s1.push([SUMBER_META[k].label, tot.saldoAwal, tot.penerimaan, tot.pengeluaran, tot.saldoAkhir]);
+  });
+  const ws1 = XLSX.utils.aoa_to_sheet(s1);
+  setAutoColWidths(ws1, s1);
+  XLSX.utils.book_append_sheet(wb, ws1, "Ringkasan & Profil");
+
+  // 2. BKU BOS
+  const bkuBosAoa = [
+    [`BUKU KAS UMUM (BKU) - BOS (TA ${ta})`],
+    ["No", "Tanggal", "No Bukti", "Uraian Transaksi", "Penerimaan (Rp)", "Pengeluaran (Rp)", "Saldo (Rp)"],
+    ["-", "-", "-", "Saldo Awal Kas BOS", bkuTotals('bos').saldoAwal, 0, bkuTotals('bos').saldoAwal]
+  ];
+  bkuWithSaldo('bos').forEach((r,i)=>{
+    bkuBosAoa.push([i+1, r.tanggal, r.noBukti, r.uraian, Number(r.penerimaan)||0, Number(r.pengeluaran)||0, Number(r.saldo)||0]);
+  });
+  const totBos = bkuTotals('bos');
+  bkuBosAoa.push(["", "", "", "TOTAL", totBos.penerimaan, totBos.pengeluaran, totBos.saldoAkhir]);
+  const wsBkuBos = XLSX.utils.aoa_to_sheet(bkuBosAoa);
+  setAutoColWidths(wsBkuBos, bkuBosAoa);
+  XLSX.utils.book_append_sheet(wb, wsBkuBos, "BKU BOS");
+
+  // 3. BKU SPP
+  const bkuSppAoa = [
+    [`BUKU KAS UMUM (BKU) - SPP (TA ${ta})`],
+    ["No", "Tanggal", "No Bukti", "Uraian Transaksi", "Penerimaan (Rp)", "Pengeluaran (Rp)", "Saldo (Rp)"],
+    ["-", "-", "-", "Saldo Awal Kas SPP", bkuTotals('spp').saldoAwal, 0, bkuTotals('spp').saldoAwal]
+  ];
+  bkuWithSaldo('spp').forEach((r,i)=>{
+    bkuSppAoa.push([i+1, r.tanggal, r.noBukti, r.uraian, Number(r.penerimaan)||0, Number(r.pengeluaran)||0, Number(r.saldo)||0]);
+  });
+  const totSpp = bkuTotals('spp');
+  bkuSppAoa.push(["", "", "", "TOTAL", totSpp.penerimaan, totSpp.pengeluaran, totSpp.saldoAkhir]);
+  const wsBkuSpp = XLSX.utils.aoa_to_sheet(bkuSppAoa);
+  setAutoColWidths(wsBkuSpp, bkuSppAoa);
+  XLSX.utils.book_append_sheet(wb, wsBkuSpp, "BKU SPP");
+
+  // 4. BKU Uang Pangkal
+  const bkuPklAoa = [
+    [`BUKU KAS UMUM (BKU) - UANG PANGKAL (TA ${ta})`],
+    ["No", "Tanggal", "No Bukti", "Uraian Transaksi", "Penerimaan (Rp)", "Pengeluaran (Rp)", "Saldo (Rp)"],
+    ["-", "-", "-", "Saldo Awal Kas Pangkal", bkuTotals('pangkal').saldoAwal, 0, bkuTotals('pangkal').saldoAwal]
+  ];
+  bkuWithSaldo('pangkal').forEach((r,i)=>{
+    bkuPklAoa.push([i+1, r.tanggal, r.noBukti, r.uraian, Number(r.penerimaan)||0, Number(r.pengeluaran)||0, Number(r.saldo)||0]);
+  });
+  const totPkl = bkuTotals('pangkal');
+  bkuPklAoa.push(["", "", "", "TOTAL", totPkl.penerimaan, totPkl.pengeluaran, totPkl.saldoAkhir]);
+  const wsBkuPkl = XLSX.utils.aoa_to_sheet(bkuPklAoa);
+  setAutoColWidths(wsBkuPkl, bkuPklAoa);
+  XLSX.utils.book_append_sheet(wb, wsBkuPkl, "BKU Uang Pangkal");
+
+  // 5. BKU Dana Lainnya
+  const bkuLainAoa = [
+    [`BUKU KAS UMUM (BKU) - DANA LAINNYA (TA ${ta})`],
+    ["No", "Tanggal", "No Bukti", "Uraian Transaksi", "Penerimaan (Rp)", "Pengeluaran (Rp)", "Saldo (Rp)"],
+    ["-", "-", "-", "Saldo Awal Kas Lainnya", bkuTotals('lain').saldoAwal, 0, bkuTotals('lain').saldoAwal]
+  ];
+  bkuWithSaldo('lain').forEach((r,i)=>{
+    bkuLainAoa.push([i+1, r.tanggal, r.noBukti, r.uraian, Number(r.penerimaan)||0, Number(r.pengeluaran)||0, Number(r.saldo)||0]);
+  });
+  const totLain = bkuTotals('lain');
+  bkuLainAoa.push(["", "", "", "TOTAL", totLain.penerimaan, totLain.pengeluaran, totLain.saldoAkhir]);
+  const wsBkuLain = XLSX.utils.aoa_to_sheet(bkuLainAoa);
+  setAutoColWidths(wsBkuLain, bkuLainAoa);
+  XLSX.utils.book_append_sheet(wb, wsBkuLain, "BKU Dana Lain");
+
+  // 6. Rencana & Realisasi RKAS
+  const progAoa = [
+    [`PROGRAM KERJA & REALISASI RKAS (TA ${ta})`],
+    ["No", "Sumber Dana", "Nama Program", "Pengaju", "Penanggung Jawab (PJ)", "Status", "Jadwal Pelaksanaan", "Anggaran Rencana (Rp)", "Realisasi (Rp)", "Sisa Anggaran (Rp)"]
+  ];
+  let pIdx = 1;
+  SUMBER_KEYS.forEach(k=>{
+    (state.program[k]||[]).forEach(p=>{
+      const ang = programBudgetTotal(p);
+      const real = (p.realisasi||[]).reduce((s,r)=> s + (Number(r.anggaranTerpakai)||0), 0);
+      progAoa.push([
+        pIdx++,
+        SUMBER_META[k].label,
+        p.namaProgram || "-",
+        p.namaPengaju || "-",
+        p.pj || "-",
+        p.status || "-",
+        (p.tanggal||[]).map(formatTgl).join(", "),
+        ang,
+        real,
+        ang - real
+      ]);
+    });
+  });
+  const wsProg = XLSX.utils.aoa_to_sheet(progAoa);
+  setAutoColWidths(wsProg, progAoa);
+  XLSX.utils.book_append_sheet(wb, wsProg, "Program & RKAS");
+
+  // 7. Rekap SPP Siswa
+  const sppAoa = [
+    [`REKAPITULASI PEMBAYARAN SPP SISWA (TA ${ta})`],
+    ["No", "NIS", "Nama Siswa", "Kelas", "Tarif SPP (Rp)", ...BULAN_LIST, "Total Dibayar (Rp)", "Tunggakan (Rp)"]
+  ];
+  (state.siswa||[]).forEach((s,idx)=>{
+    const rk = sppRekapForSiswa(s);
+    const monthsStatus = rk.perBulan.map(b=> b.status==='ok'?'Lunas':b.status==='partial'?'Sebagian':b.status==='bad'?'Belum':'-');
+    sppAoa.push([idx+1, s.nis, s.nama, s.kelas, Number(s.tarifSpp)||0, ...monthsStatus, rk.totalDibayar, rk.tunggakan]);
+  });
+  const wsSpp = XLSX.utils.aoa_to_sheet(sppAoa);
+  setAutoColWidths(wsSpp, sppAoa);
+  XLSX.utils.book_append_sheet(wb, wsSpp, "Rekap SPP Siswa");
+
+  // 8. Rekap Uang Pangkal
+  const pklAoa = [
+    [`REKAPITULASI UANG PANGKAL SISWA (TA ${ta})`],
+    ["No", "NIS", "Nama Siswa", "Kelas", "Tarif Pangkal (Rp)", "Total Dibayar (Rp)", "Sisa Tagihan (Rp)", "Status"]
+  ];
+  (state.siswa||[]).forEach((s,idx)=>{
+    const rk = pangkalRekapForSiswa(s);
+    const st = rk.status==='ok'?'Lunas':rk.status==='partial'?'Sebagian':rk.status==='bad'?'Belum Bayar':'-';
+    pklAoa.push([idx+1, s.nis, s.nama, s.kelas, Number(s.tarifPangkal)||0, rk.totalDibayar, rk.sisa, st]);
+  });
+  const wsPkl = XLSX.utils.aoa_to_sheet(pklAoa);
+  setAutoColWidths(wsPkl, pklAoa);
+  XLSX.utils.book_append_sheet(wb, wsPkl, "Rekap Uang Pangkal");
+
+  // 9. Pinjaman GTK
+  const pjAoa = [
+    [`BUKU PINJAMAN & PIUTANG GTK`],
+    ["No", "No Permohonan", "Nama GTK", "Jabatan", "Tanggal Pengajuan", "Sumber Dana", "Jumlah Pinjaman (Rp)", "Keperluan", "Status", "Total Cicilan (Rp)", "Sisa Pinjaman (Rp)"]
+  ];
+  (state.pinjaman||[]).forEach((pj,idx)=>{
+    const totCicilan = (pj.cicilan||[]).reduce((s,c)=> s + (Number(c.nominal)||0), 0);
+    const sisa = Math.max(0, (Number(pj.nominal)||0) - totCicilan);
+    pjAoa.push([idx+1, pj.noPermohonan||"-", pj.nama, pj.jabatan, pj.tanggal, SUMBER_META[pj.sumberDana]?.label||pj.sumberDana, Number(pj.nominal)||0, pj.keperluan, pj.status, totCicilan, sisa]);
+  });
+  const wsPj = XLSX.utils.aoa_to_sheet(pjAoa);
+  setAutoColWidths(wsPj, pjAoa);
+  XLSX.utils.book_append_sheet(wb, wsPj, "Pinjaman GTK");
+
+  // 10. Data Siswa
+  const siswaAoa = [
+    ["DATA INDUK SISWA"],
+    ["No", "NIS", "Nama Siswa", "Kelas", "Tarif SPP (Rp)", "Tarif Pangkal (Rp)", "Status", "No WA Ortu"]
+  ];
+  (state.siswa||[]).forEach((s,idx)=>{
+    siswaAoa.push([idx+1, s.nis, s.nama, s.kelas, Number(s.tarifSpp)||0, Number(s.tarifPangkal)||0, s.status, s.waOrtu||""]);
+  });
+  const wsSiswa = XLSX.utils.aoa_to_sheet(siswaAoa);
+  setAutoColWidths(wsSiswa, siswaAoa);
+  XLSX.utils.book_append_sheet(wb, wsSiswa, "Data Siswa");
+
+  // 11. Data GTK
+  const gtkAoa = [
+    ["DATA GURU & TENAGA KEPENDIDIKAN (GTK)"],
+    ["No", "Nama Lengkap", "NIP", "Jabatan"]
+  ];
+  (state.gtk||[]).forEach((g,idx)=>{
+    gtkAoa.push([idx+1, g.nama, g.nip, g.jabatan]);
+  });
+  const wsGtk = XLSX.utils.aoa_to_sheet(gtkAoa);
+  setAutoColWidths(wsGtk, gtkAoa);
+  XLSX.utils.book_append_sheet(wb, wsGtk, "Data GTK");
+
+  const fileName = `Master_Keuangan_${sanitizeFileName(namaSekolah)}_${sanitizeFileName(ta)}.xlsx`;
+  XLSX.writeFile(wb, fileName);
+}
+
+/* Export Single BKU to Excel */
+function exportBkuKeyToExcel(key){
+  if(typeof XLSX === "undefined"){ alert("Pustaka Excel belum siap."); return; }
+  const meta = SUMBER_META[key] || { label:key };
+  const namaSekolah = state.sekolah.namaSekolah || "Sekolah";
+  const ta = state.sekolah.tahunAjaran || "TA";
+  const wb = XLSX.utils.book_new();
+
+  const aoa = [
+    [`BUKU KAS UMUM (BKU) - ${meta.label.toUpperCase()}`],
+    [`${namaSekolah} · Tahun Ajaran ${ta}`],
+    [""],
+    ["No", "Tanggal", "No Bukti", "Uraian Transaksi", "Penerimaan (Rp)", "Pengeluaran (Rp)", "Saldo (Rp)"],
+    ["-", "-", "-", `Saldo Awal Kas ${meta.label}`, bkuTotals(key).saldoAwal, 0, bkuTotals(key).saldoAwal]
+  ];
+  bkuWithSaldo(key).forEach((r,i)=>{
+    aoa.push([i+1, r.tanggal, r.noBukti, r.uraian, Number(r.penerimaan)||0, Number(r.pengeluaran)||0, Number(r.saldo)||0]);
+  });
+  const tot = bkuTotals(key);
+  aoa.push(["", "", "", "TOTAL", tot.penerimaan, tot.pengeluaran, tot.saldoAkhir]);
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  setAutoColWidths(ws, aoa);
+  XLSX.utils.book_append_sheet(wb, ws, `BKU_${meta.label}`.slice(0,31));
+  XLSX.writeFile(wb, `BKU_${sanitizeFileName(meta.label)}_${sanitizeFileName(namaSekolah)}.xlsx`);
+}
+
+/* Export Current Active Report Table to Excel */
+function exportCurrentReportToExcel(){
+  const activePage = document.querySelector("#printRoot .print-page.showpreview");
+  if(!activePage){
+    alert("Silakan pilih jenis laporan yang ingin diekspor terlebih dahulu.");
+    return;
+  }
+  const table = activePage.querySelector("table");
+  if(!table){
+    alert("Laporan ini tidak memiliki tabel tabular untuk diekspor ke Excel. Gunakan tombol 'Unduh PDF'.");
+    return;
+  }
+  if(typeof XLSX === "undefined"){
+    alert("Pustaka Excel belum siap.");
+    return;
+  }
+  const tabObj = PRINT_TABS.find(t=> t.key === currentPrintTab);
+  const tabLabel = tabObj ? tabObj.label : "Laporan";
+  const namaSekolah = state.sekolah.namaSekolah || "Sekolah";
+  const fileName = `${sanitizeFileName(tabLabel)}_${sanitizeFileName(namaSekolah)}.xlsx`;
+
+  const wb = XLSX.utils.table_to_book(table, { raw:false });
+  XLSX.writeFile(wb, fileName);
+}
+
+/* Export Current Report to PDF */
+async function exportCurrentReportToPdf(){
+  renderPrint();
+  const activePage = document.querySelector("#printRoot .print-page.showpreview");
+  if(!activePage){
+    alert("Silakan pilih laporan yang ingin diekspor terlebih dahulu.");
+    return;
+  }
+  const btn = document.getElementById("btnExportPdfCurrent");
+  const origHtml = btn ? btn.innerHTML : "";
+  if(btn){ btn.disabled = true; btn.innerHTML = "⏳ Menyiapkan PDF..."; }
+
+  try{
+    if(typeof html2pdf === "undefined"){
+      alert("Pustaka PDF sedang dimuat atau koneksi terputus. Mengalihkan ke dialog cetak browser (pilih 'Simpan sebagai PDF')...");
+      window.print();
+      return;
+    }
+    const isWide = activePage.classList.contains("wide");
+    const namaSekolah = state.sekolah.namaSekolah || "Sekolah";
+    const tabObj = PRINT_TABS.find(t=> t.key === currentPrintTab);
+    const tabLabel = tabObj ? tabObj.label : "Laporan";
+    const fileName = `${sanitizeFileName(tabLabel)}_${sanitizeFileName(namaSekolah)}.pdf`;
+
+    const opt = {
+      margin: isWide ? [6, 6, 6, 6] : [8, 8, 8, 8],
+      filename: fileName,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: isWide ? 'landscape' : 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] }
+    };
+    await html2pdf().set(opt).from(activePage).save();
+  }catch(err){
+    console.error("Gagal export PDF:", err);
+    alert("Terjadi kendala saat unduh PDF otomatis: " + (err.message||err) + ". Mengalihkan ke cetak browser...");
+    window.print();
+  }finally{
+    if(btn){ btn.disabled = false; btn.innerHTML = origHtml; }
+  }
+}
+
+/* Export Specific Report Key to PDF */
+async function exportSpecificReportToPdf(key){
+  currentPrintTab = key;
+  renderPrint();
+  const tabWrap = document.getElementById("printTabs");
+  if(tabWrap){
+    tabWrap.querySelectorAll("button").forEach(b=>{
+      if(b.dataset.p === key) b.classList.add("active");
+      else b.classList.remove("active");
+    });
+  }
+  await exportCurrentReportToPdf();
+}
+
+/* Wire Event Listeners for Export & Print */
+document.getElementById("btnExportPdfCurrent").addEventListener("click", exportCurrentReportToPdf);
+document.getElementById("btnExportExcelCurrent").addEventListener("click", exportCurrentReportToExcel);
+document.getElementById("btnExportExcelAll").addEventListener("click", exportAllToExcel);
+
+// Quick export buttons from tables
+const btnExpBku = document.getElementById("btnExportBkuExcel");
+if(btnExpBku) btnExpBku.addEventListener("click", ()=> exportBkuKeyToExcel(currentBkuKey));
+
+const btnExpSpp = document.getElementById("btnExportSppExcel");
+if(btnExpSpp) btnExpSpp.addEventListener("click", ()=>{
+  if(typeof XLSX === "undefined"){ alert("Pustaka Excel belum siap."); return; }
+  const wb = XLSX.utils.book_new();
+  const ta = state.sekolah.tahunAjaran || "TA";
+  const sppAoa = [
+    [`REKAPITULASI PEMBAYARAN SPP SISWA (TA ${ta})`],
+    ["No", "NIS", "Nama Siswa", "Kelas", "Tarif SPP (Rp)", ...BULAN_LIST, "Total Dibayar (Rp)", "Tunggakan (Rp)"]
+  ];
+  (state.siswa||[]).forEach((s,idx)=>{
+    const rk = sppRekapForSiswa(s);
+    const monthsStatus = rk.perBulan.map(b=> b.status==='ok'?'Lunas':b.status==='partial'?'Sebagian':b.status==='bad'?'Belum':'-');
+    sppAoa.push([idx+1, s.nis, s.nama, s.kelas, Number(s.tarifSpp)||0, ...monthsStatus, rk.totalDibayar, rk.tunggakan]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(sppAoa);
+  setAutoColWidths(ws, sppAoa);
+  XLSX.utils.book_append_sheet(wb, ws, "Rekap SPP");
+  XLSX.writeFile(wb, `Rekap_SPP_${sanitizeFileName(state.sekolah.namaSekolah||"Sekolah")}.xlsx`);
 });
-document.getElementById("btnImportTrigger").addEventListener("click", ()=> document.getElementById("fileImport").click());
-document.getElementById("fileImport").addEventListener("change", (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev)=>{
-    try{
-      const loaded = JSON.parse(ev.target.result);
-      state = Object.assign({ sekolah:emptySekolah(), siswa:[], gtk:[], program:{bos:[],spp:[],pangkal:[],lain:[]}, bku:{bos:[],spp:[],pangkal:[],lain:[]}, sppTx:[], itemTx:[], pinjaman:[], lpj:{periode:"Triwulan I",danaDiterima:0,penerimaanLain:0}, docCounters:{kwitansi:0,bast:0,peminjaman:0} }, loaded);
-      state.sekolah = Object.assign(emptySekolah(), loaded.sekolah || {});
-      state.docCounters = Object.assign({kwitansi:0,bast:0,peminjaman:0}, loaded.docCounters||{});
-      Object.values(state.program).flat().forEach(p=>{ p.realisasi = p.realisasi||[]; p.realisasiBatal = p.realisasiBatal||[]; p.budgets = p.budgets||[]; p.serahTerima = p.serahTerima||[]; p.pengembalianUangMuka = p.pengembalianUangMuka||[]; });
-      state.pinjaman = state.pinjaman||[];
-      state.pinjaman.forEach(pj=>{ pj.cicilan = pj.cicilan||[]; if(!SUMBER_KEYS.includes(pj.sumberDana)) pj.sumberDana = SUMBER_KEYS[0]; });
-      const programBudgetIds = Object.values(state.program).flat().flatMap(p=>(p.budgets||[]).map(b=>b.id||0));
-      const programRealisasiIds = Object.values(state.program).flat().flatMap(p=>(p.realisasi||[]).map(r=>r.id||0));
-      const programSerahTerimaIds = Object.values(state.program).flat().flatMap(p=>(p.serahTerima||[]).map(r=>r.id||0));
-      const programPengembalianIds = Object.values(state.program).flat().flatMap(p=>(p.pengembalianUangMuka||[]).map(r=>r.id||0));
-      const pinjamanCicilanIds = state.pinjaman.flatMap(pj=>(pj.cicilan||[]).map(c=>c.id||0));
-      const allIds = [...state.siswa, ...state.gtk, ...state.sppTx, ...state.itemTx, ...state.pinjaman, ...Object.values(state.program).flat(), ...Object.values(state.bku).flat()].map(r=>r.id||0).concat(programBudgetIds, programRealisasiIds, programSerahTerimaIds, programPengembalianIds, pinjamanCicilanIds);
-      uidCounter = (allIds.length? Math.max(...allIds) : 0) + 1;
-      renderAll();
-      saveStateToLocalStorage();
-      alert("Data berhasil dimuat dari file.");
-    }catch(err){ alert("Gagal membaca file. Pastikan file adalah hasil export dari aplikasi ini (.json)."); }
-  };
-  reader.readAsText(file);
-  e.target.value = "";
+
+const btnExpPj = document.getElementById("btnExportPjExcel");
+if(btnExpPj) btnExpPj.addEventListener("click", ()=>{
+  if(typeof XLSX === "undefined"){ alert("Pustaka Excel belum siap."); return; }
+  const wb = XLSX.utils.book_new();
+  const pjAoa = [
+    ["BUKU PINJAMAN & PIUTANG GTK"],
+    ["No", "No Permohonan", "Nama GTK", "Jabatan", "Tanggal Pengajuan", "Sumber Dana", "Jumlah Pinjaman (Rp)", "Keperluan", "Status", "Total Cicilan (Rp)", "Sisa Pinjaman (Rp)"]
+  ];
+  (state.pinjaman||[]).forEach((pj,idx)=>{
+    const totCicilan = (pj.cicilan||[]).reduce((s,c)=> s + (Number(c.nominal)||0), 0);
+    const sisa = Math.max(0, (Number(pj.nominal)||0) - totCicilan);
+    pjAoa.push([idx+1, pj.noPermohonan||"-", pj.nama, pj.jabatan, pj.tanggal, SUMBER_META[pj.sumberDana]?.label||pj.sumberDana, Number(pj.nominal)||0, pj.keperluan, pj.status, totCicilan, sisa]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(pjAoa);
+  setAutoColWidths(ws, pjAoa);
+  XLSX.utils.book_append_sheet(wb, ws, "Pinjaman GTK");
+  XLSX.writeFile(wb, `Pinjaman_GTK_${sanitizeFileName(state.sekolah.namaSekolah||"Sekolah")}.xlsx`);
 });
+
+// Modal Export Center triggers
+const btnOpenMec = document.getElementById("btnOpenExportCenter");
+if(btnOpenMec) btnOpenMec.addEventListener("click", ()=> openModal("modal-export-center"));
+
+const mecAll = document.getElementById("mecBtnExcelAll");
+if(mecAll) mecAll.addEventListener("click", ()=>{ exportAllToExcel(); closeModal("modal-export-center"); });
+
+const mecBos = document.getElementById("mecBtnExcelBkuBos");
+if(mecBos) mecBos.addEventListener("click", ()=>{ exportBkuKeyToExcel("bos"); closeModal("modal-export-center"); });
+
+const mecSpp = document.getElementById("mecBtnExcelBkuSpp");
+if(mecSpp) mecSpp.addEventListener("click", ()=>{ exportBkuKeyToExcel("spp"); closeModal("modal-export-center"); });
+
+const mecSppRekap = document.getElementById("mecBtnExcelSppRekap");
+if(mecSppRekap) mecSppRekap.addEventListener("click", ()=>{
+  document.getElementById("btnExportSppExcel").click();
+  closeModal("modal-export-center");
+});
+
+const mecProg = document.getElementById("mecBtnExcelProgram");
+if(mecProg) mecProg.addEventListener("click", ()=>{
+  if(typeof XLSX === "undefined"){ alert("Pustaka Excel belum siap."); return; }
+  const wb = XLSX.utils.book_new();
+  const ta = state.sekolah.tahunAjaran || "TA";
+  const progAoa = [
+    [`PROGRAM KERJA & REALISASI RKAS (TA ${ta})`],
+    ["No", "Sumber Dana", "Nama Program", "Pengaju", "Penanggung Jawab (PJ)", "Status", "Jadwal Pelaksanaan", "Anggaran Rencana (Rp)", "Realisasi (Rp)", "Sisa Anggaran (Rp)"]
+  ];
+  let pIdx = 1;
+  SUMBER_KEYS.forEach(k=>{
+    (state.program[k]||[]).forEach(p=>{
+      const ang = programBudgetTotal(p);
+      const real = (p.realisasi||[]).reduce((s,r)=> s + (Number(r.anggaranTerpakai)||0), 0);
+      progAoa.push([
+        pIdx++,
+        SUMBER_META[k].label,
+        p.namaProgram || "-",
+        p.namaPengaju || "-",
+        p.pj || "-",
+        p.status || "-",
+        (p.tanggal||[]).map(formatTgl).join(", "),
+        ang,
+        real,
+        ang - real
+      ]);
+    });
+  });
+  const ws = XLSX.utils.aoa_to_sheet(progAoa);
+  setAutoColWidths(ws, progAoa);
+  XLSX.utils.book_append_sheet(wb, ws, "Program RKAS");
+  XLSX.writeFile(wb, `Program_RKAS_${sanitizeFileName(state.sekolah.namaSekolah||"Sekolah")}.xlsx`);
+  closeModal("modal-export-center");
+});
+
+const mecPj = document.getElementById("mecBtnExcelPinjaman");
+if(mecPj) mecPj.addEventListener("click", ()=>{
+  document.getElementById("btnExportPjExcel").click();
+  closeModal("modal-export-center");
+});
+
+const mecPdfDown = document.getElementById("mecBtnPdfDownload");
+if(mecPdfDown) mecPdfDown.addEventListener("click", async ()=>{
+  const sel = document.getElementById("mecPdfReportSelect");
+  const repKey = sel ? sel.value : "realisasi";
+  closeModal("modal-export-center");
+  await exportSpecificReportToPdf(repKey);
+});
+
+const mecPdfPrev = document.getElementById("mecBtnPdfPreview");
+if(mecPdfPrev) mecPdfPrev.addEventListener("click", ()=>{
+  const sel = document.getElementById("mecPdfReportSelect");
+  const repKey = sel ? sel.value : "realisasi";
+  closeModal("modal-export-center");
+  switchView("cetak");
+  currentPrintTab = repKey;
+  renderPrint();
+  const tabWrap = document.getElementById("printTabs");
+  if(tabWrap){
+    tabWrap.querySelectorAll("button").forEach(b=>{
+      if(b.dataset.p === repKey) b.classList.add("active");
+      else b.classList.remove("active");
+    });
+  }
+});
+
+
 document.getElementById("btnReset").addEventListener("click", ()=>{
+  if(currentUser.role !== "Admin"){
+    alert("Akses Ditolak: Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk mengosongkan seluruh data.");
+    return;
+  }
   /* Lapis kedua (elemen sudah disembunyikan lebih dulu, lihat dekat
      __PRISTINE_HTML__) untuk berjaga-jaga kalau tombolnya sampai
      dimunculkan paksa lewat DevTools pada file hasil "Bagikan Aplikasi". */
   if(window.__LOCKED_GSHEET_URL__){ alert('Fitur "Kosongkan Semua" dinonaktifkan pada aplikasi hasil "Bagikan Aplikasi".'); return; }
-  if(confirm("Yakin ingin mengosongkan seluruh data? Pastikan sudah menyimpan (export) data terlebih dahulu.")){
+  if(confirm("Yakin ingin mengosongkan seluruh data? Data yang sudah tersimpan di Firestore akan dibersihkan.")){
     state = { sekolah:emptySekolah(), siswa:[], gtk:[], program:{bos:[],spp:[],pangkal:[],lain:[]}, bku:{bos:[],spp:[],pangkal:[],lain:[]}, sppTx:[], itemTx:[], pinjaman:[], lpj:{periode:"Triwulan I",danaDiterima:0,penerimaanLain:0}, docCounters:{kwitansi:0,bast:0,peminjaman:0} };
     renderAll();
     saveStateToLocalStorage();
   }
 });
 document.getElementById("btnLoadSample").addEventListener("click", ()=>{
+  if(currentUser.role !== "Admin"){
+    alert("Akses Ditolak: Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk memuat contoh data.");
+    return;
+  }
   /* Lapis kedua, sama seperti btnReset di atas. */
   if(window.__LOCKED_GSHEET_URL__){ alert('Fitur "Muat Contoh Data" dinonaktifkan pada aplikasi hasil "Bagikan Aplikasi".'); return; }
-  if(!confirm("Memuat contoh data akan MENIMPA seluruh data yang sedang terbuka saat ini. Pastikan data penting sudah disimpan (export/kirim) terlebih dahulu. Lanjutkan?")) return;
+  if(!confirm("Memuat contoh data akan menimpa seluruh data yang sedang terbuka saat ini. Lanjutkan?")) return;
   loadSampleData(); renderAll();
   saveStateToLocalStorage();
 });
@@ -5790,17 +6669,65 @@ function loadSampleData(){
       data tanpa perlu menyisipkan hook ke puluhan handler CRUD yang sudah
       ada (risiko lebih rendah, coverage tetap memadai untuk kasus reload/
       tutup tab yang wajar).
-   2) Saat status online terdeteksi/pulih DAN URL Google Sheets sudah diisi,
-      otomatis "Kirim" (yang sudah menggabungkan data server lebih dulu
-      sebelum mengirim, lihat pushToGoogleSheets) tanpa perlu klik manual,
-      lalu diulang berkala tiap 5 menit selama aplikasi tetap terbuka.
-      Tombol Tarik/Kirim manual yang sudah ada tetap berfungsi seperti biasa.
+   2) Perubahan data otomatis disinkronkan secara realtime ke cloud database
+      Firebase Firestore dan tersimpan di penyimpanan lokal.
    ========================================================================= */
 const AUTOSAVE_KEY = "keuanganSekolahAutosaveV1";
+window.currentAuthToken = window.currentAuthToken || null;
+window.currentAuthUser = window.currentAuthUser || null;
+var currentAuthToken = window.currentAuthToken;
+var currentAuthUser = window.currentAuthUser;
+let cloudSyncInFlight = false;
+
+async function syncStateToCloudDatabase() {
+  if (!currentAuthToken || cloudSyncInFlight || !navigator.onLine) return;
+  cloudSyncInFlight = true;
+  try {
+    const res = await fetch('/api/school-data', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + currentAuthToken
+      },
+      body: JSON.stringify({ state })
+    });
+    if (res.status === 401 && currentAuthUser) {
+      currentAuthToken = await currentAuthUser.getIdToken(true);
+    }
+  } catch (err) {
+    console.warn("Cloud sync error:", err);
+  } finally {
+    cloudSyncInFlight = false;
+  }
+}
+
+async function loadStateFromCloudDatabase() {
+  if (!currentAuthToken) return null;
+  try {
+    const res = await fetch('/api/school-data', {
+      headers: {
+        'Authorization': 'Bearer ' + currentAuthToken
+      }
+    });
+    if (!res.ok) return null;
+    const body = await res.json();
+    return body.data;
+  } catch (err) {
+    console.warn("Load cloud data error:", err);
+    return null;
+  }
+}
+
 function saveStateToLocalStorage(){
   try{
     localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ savedAt:new Date().toISOString(), state }));
-  }catch(err){ /* localStorage tidak tersedia (mis. mode privat/kuota penuh) — abaikan diam-diam, aplikasi tetap jalan normal di memori */ }
+  }catch(err){ /* localStorage tidak tersedia — abaikan diam-diam */ }
+  if (typeof window.syncStateToFirestore === 'function') {
+    window.syncStateToFirestore();
+  }
+  if (currentAuthToken) {
+    syncStateToCloudDatabase();
+  }
 }
 function loadStateFromLocalStorage(){
   try{
@@ -5846,37 +6773,19 @@ function updateOnlineStatusBadge(){
   badge.textContent = online ? "● Online" : "● Offline";
   badge.className = "online-badge " + (online ? "online" : "offline");
 }
-let autoSyncIntervalId = null;
-let autoSyncInFlight = false;
-async function runAutoSyncIfEligible(){
-  if(autoSyncInFlight || !navigator.onLine) return;
-  if(!(state.sekolah.gsheetUrl||"").trim()) return; // belum diatur -> tidak ada yang perlu disinkronkan otomatis
-  /* Jangan kirim otomatis (tanpa konfirmasi apa pun ke pengguna) selama
-     Data Sekolah lokal masih kosong — mis. file hasil "Bagikan Aplikasi"
-     yang baru dibuka dan belum sempat "Tarik". Kirim otomatis dalam
-     kondisi ini bisa menimpa Data Sekolah asli di server jadi kosong
-     tanpa pengguna sadar (lihat sekolahLooksUnconfigured & catatan di
-     pushToGoogleSheets). Begitu "Tarik" berhasil (Data Sekolah lokal
-     terisi), sinkronisasi otomatis berjalan normal lagi seperti biasa. */
-  if(sekolahLooksUnconfigured()) return;
-  autoSyncInFlight = true;
-  try{ await pushToGoogleSheets(); }
-  finally{ autoSyncInFlight = false; }
-}
 function startAutoSync(){
   updateOnlineStatusBadge();
-  if(!autoSyncIntervalId) autoSyncIntervalId = setInterval(runAutoSyncIfEligible, 5*60*1000);
-  window.addEventListener("online", ()=>{ updateOnlineStatusBadge(); runAutoSyncIfEligible(); });
+  window.addEventListener("online", updateOnlineStatusBadge);
   window.addEventListener("offline", updateOnlineStatusBadge);
-  if(navigator.onLine) setTimeout(runAutoSyncIfEligible, 1500);
 }
 
 /* =========================================================================
    INIT
    ========================================================================= */
 function renderAll(){
+  updateRoleUI();
   renderSekolahForm();
-  renderGsheetSection();
+  renderKopSection();
   refreshHeader();
   renderSiswaTable();
   renderGtkTable();
@@ -5893,15 +6802,294 @@ function renderAll(){
   renderLpjBos();
   renderLpjKons();
   renderDashboard();
+  updateCashHealthAlerts();
   renderPrint();
 }
 restoreAutosavedStateIfAny();
+restoreUserSession();
 renderAll();
+restoreActiveView();
 startAutoSync();
 /* Pasang format pemisah ribuan ke semua input nominal statis yang sudah ada
    di HTML sejak awal (yang dibuat dinamis lewat JS punya pemanggilan
    wireCurrencyInput/wireCurrencyInputs sendiri di titik pembuatannya). */
 wireCurrencyInputs(document);
+</script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
+import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import { getFirestore, doc, setDoc, onSnapshot, getDocFromServer } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
+
+const defaultFirebaseConfig = {
+  projectId: "robust-lore-ccb1c",
+  appId: "1:313861927330:web:4e367ee24df800fbf582fb",
+  apiKey: "AIzaSyC3OgN8WC3yMB-2fGY4EPD5V9zJYlbJH0s",
+  authDomain: "robust-lore-ccb1c.firebaseapp.com",
+  firestoreDatabaseId: "ai-studio-abhurrkas-dabc7792-4000-4801-ae43-67bf9b14c8de",
+  storageBucket: "robust-lore-ccb1c.firebasestorage.app",
+  messagingSenderId: "313861927330"
+};
+
+const OperationType = {
+  CREATE: 'create',
+  UPDATE: 'update',
+  DELETE: 'delete',
+  LIST: 'list',
+  GET: 'get',
+  WRITE: 'write',
+};
+
+let app = null;
+let db = null;
+let auth = null;
+let isApplyingCloudSnapshot = false;
+let lastPushedTimestamp = null;
+let firestorePushTimer = null;
+
+function handleFirestoreError(error, operationType, path) {
+  const errInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth && auth.currentUser ? auth.currentUser.uid : null,
+      email: auth && auth.currentUser ? auth.currentUser.email : null,
+      emailVerified: auth && auth.currentUser ? auth.currentUser.emailVerified : null,
+      isAnonymous: auth && auth.currentUser ? auth.currentUser.isAnonymous : null,
+      tenantId: auth && auth.currentUser ? auth.currentUser.tenantId : null,
+      providerInfo: (auth && auth.currentUser && auth.currentUser.providerData) ? auth.currentUser.providerData.map(p => ({
+        providerId: p.providerId,
+        email: p.email,
+      })) : []
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
+function updateOnlineBadge(isOnline, text, isSyncing = false) {
+  const badge = document.getElementById("onlineStatusBadge");
+  if (!badge) return;
+  badge.textContent = text;
+  badge.className = "online-badge " + (isSyncing ? "syncing" : (isOnline ? "online" : "offline"));
+  badge.title = isOnline 
+    ? "Firestore Realtime Aktif: Semua perubahan data tersinkronisasi otomatis antar-perangkat!" 
+    : "Koneksi terputus. Data tersimpan di penyimpanan lokal dan akan sinkron saat online.";
+}
+
+function showSyncToast(msg) {
+  let toast = document.getElementById("firestoreSyncToast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "firestoreSyncToast";
+    toast.style.cssText = "position:fixed;bottom:20px;right:20px;background:#0f172a;color:#f8fafc;padding:10px 16px;border-radius:8px;font-size:12.5px;font-weight:600;box-shadow:0 10px 25px -5px rgba(0,0,0,0.3);z-index:99999;transition:opacity 0.3s, transform 0.3s;opacity:0;transform:translateY(10px);pointer-events:none;";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = "1";
+  toast.style.transform = "translateY(0)";
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(10px)";
+  }, 2500);
+}
+
+async function testConnection() {
+  try {
+    await getDocFromServer(doc(db, 'test', 'connection'));
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('the client is offline')) {
+      console.error("Please check your Firebase configuration.");
+    }
+  }
+}
+
+async function pushStateToFirestore(immediate = false) {
+  if (isApplyingCloudSnapshot || !db) return;
+
+  clearTimeout(firestorePushTimer);
+  const doPush = async () => {
+    try {
+      updateOnlineBadge(true, "● Menyimpan...", true);
+      const timestamp = new Date().toISOString();
+      lastPushedTimestamp = timestamp;
+      const payload = {
+        sekolah: (typeof state !== 'undefined' && state.sekolah) ? state.sekolah : {},
+        siswa: (typeof state !== 'undefined' && state.siswa) ? state.siswa : [],
+        gtk: (typeof state !== 'undefined' && state.gtk) ? state.gtk : [],
+        program: (typeof state !== 'undefined' && state.program) ? state.program : {},
+        bku: (typeof state !== 'undefined' && state.bku) ? state.bku : {},
+        sppTx: (typeof state !== 'undefined' && state.sppTx) ? state.sppTx : [],
+        itemTx: (typeof state !== 'undefined' && state.itemTx) ? state.itemTx : [],
+        pinjaman: (typeof state !== 'undefined' && state.pinjaman) ? state.pinjaman : [],
+        lpj: (typeof state !== 'undefined' && state.lpj) ? state.lpj : {},
+        docCounters: (typeof state !== 'undefined' && state.docCounters) ? state.docCounters : {},
+        updatedAt: timestamp,
+        updatedBy: (window.currentUser && window.currentUser.name) || (auth && auth.currentUser ? auth.currentUser.email : "Pengguna"),
+      };
+      await setDoc(doc(db, 'schools', 'default'), payload);
+      updateOnlineBadge(true, "● Realtime Online");
+    } catch (err) {
+      console.warn("Firestore push error:", err);
+      updateOnlineBadge(navigator.onLine, navigator.onLine ? "● Gagal Sync Cloud" : "● Offline");
+      handleFirestoreError(err, OperationType.WRITE, 'schools/default');
+    }
+  };
+
+  if (immediate) {
+    await doPush();
+  } else {
+    firestorePushTimer = setTimeout(doPush, 600);
+  }
+}
+window.syncStateToFirestore = pushStateToFirestore;
+
+function setupFirestoreRealtime() {
+  const schoolDocRef = doc(db, 'schools', 'default');
+
+  onSnapshot(schoolDocRef, (snap) => {
+    updateOnlineBadge(true, "● Realtime Online");
+    if (!snap.exists()) {
+      if (typeof state !== 'undefined' && state.sekolah && !sekolahLooksUnconfigured()) {
+        pushStateToFirestore(true);
+      }
+      return;
+    }
+
+    const cloudData = snap.data();
+    if (!cloudData || !cloudData.sekolah) return;
+
+    // Ignore echo of our own recent write
+    if (cloudData.updatedAt && cloudData.updatedAt === lastPushedTimestamp) {
+      return;
+    }
+
+    isApplyingCloudSnapshot = true;
+    try {
+      state = {
+        sekolah: Object.assign(emptySekolah(), cloudData.sekolah || {}),
+        siswa: Array.isArray(cloudData.siswa) ? cloudData.siswa : [],
+        gtk: Array.isArray(cloudData.gtk) ? cloudData.gtk : [],
+        program: Object.assign({ bos: [], spp: [], pangkal: [], lain: [] }, cloudData.program || {}),
+        bku: Object.assign({ bos: [], spp: [], pangkal: [], lain: [] }, cloudData.bku || {}),
+        sppTx: Array.isArray(cloudData.sppTx) ? cloudData.sppTx : [],
+        itemTx: Array.isArray(cloudData.itemTx) ? cloudData.itemTx : [],
+        pinjaman: Array.isArray(cloudData.pinjaman) ? cloudData.pinjaman : [],
+        lpj: Object.assign({ periode: "Triwulan I", danaDiterima: 0, penerimaanLain: 0 }, cloudData.lpj || {}),
+        docCounters: Object.assign({ kwitansi: 0, bast: 0, peminjaman: 0 }, cloudData.docCounters || {})
+      };
+      restoreAutosavedStateIfAny();
+      try {
+        localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ savedAt: new Date().toISOString(), state }));
+      } catch(e) {}
+      renderAll();
+      showSyncToast("⚡ Data disinkronkan realtime dari cloud!");
+    } finally {
+      isApplyingCloudSnapshot = false;
+    }
+  }, (err) => {
+    updateOnlineBadge(false, "● Firestore Terputus");
+    handleFirestoreError(err, OperationType.GET, 'schools/default');
+  });
+}
+
+async function initClientAuth() {
+  try {
+    let config = defaultFirebaseConfig;
+    try {
+      const res = await fetch('/api/firebase-config');
+      if (res.ok) {
+        const serverConfig = await res.json();
+        config = { ...defaultFirebaseConfig, ...serverConfig };
+      }
+    } catch(e) {
+      // Direct client usage (GitHub Pages) uses defaultFirebaseConfig
+    }
+
+    app = initializeApp(config);
+    db = getFirestore(app, config.firestoreDatabaseId);
+    auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    await testConnection();
+    setupFirestoreRealtime();
+
+    const btn = document.getElementById('btnGoogleAuth');
+    const label = document.getElementById('btnGoogleAuthLabel');
+
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        if (!auth) return;
+        if (window.currentAuthUser) {
+          if (confirm("Keluar dari akun Google?")) {
+            await signOut(auth);
+            window.currentAuthToken = null;
+            window.currentAuthUser = null;
+            currentAuthToken = null;
+            currentAuthUser = null;
+            if (label) label.textContent = "Masuk Google";
+            if (btn) btn.title = "Masuk dengan akun Google untuk sinkronisasi database";
+          }
+        } else {
+          try {
+            btn.disabled = true;
+            if (label) label.textContent = "Menghubungkan...";
+            const cred = await signInWithPopup(auth, provider);
+            window.currentAuthUser = cred.user;
+            window.currentAuthToken = await cred.user.getIdToken();
+            currentAuthUser = cred.user;
+            currentAuthToken = window.currentAuthToken;
+          } catch(err) {
+            console.error("Login error:", err);
+            alert("Gagal masuk dengan Google: " + (err.message || err));
+          } finally {
+            btn.disabled = false;
+          }
+        }
+      });
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      window.currentAuthUser = user;
+      currentAuthUser = user;
+      if (user) {
+        window.currentAuthToken = await user.getIdToken();
+        currentAuthToken = window.currentAuthToken;
+        const displayName = user.displayName || user.email || "Akun Google";
+        if (label) label.textContent = displayName;
+        if (btn) btn.title = "Masuk sebagai: " + (user.email || displayName) + " (Klik untuk keluar)";
+
+        try {
+          await fetch('/api/auth/sync-user', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + window.currentAuthToken
+            }
+          });
+        } catch(e) {
+          // Ignore if running static without node server
+        }
+      } else {
+        window.currentAuthToken = null;
+        window.currentAuthUser = null;
+        currentAuthToken = null;
+        currentAuthUser = null;
+        if (label) label.textContent = "Masuk Google";
+        if (btn) btn.title = "Masuk dengan akun Google untuk sinkronisasi database";
+      }
+    });
+  } catch(err) {
+    console.warn("Client auth & firestore init error:", err);
+    updateOnlineBadge(false, "● Firestore Error");
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initClientAuth);
+} else {
+  initClientAuth();
+}
 </script>
 </body>
 </html>
