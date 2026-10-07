@@ -2375,6 +2375,10 @@ function renderSekolahForm(){
         renderBkuTable(currentBkuKey);
         updateCashHealthAlerts();
       }
+      saveStateToLocalStorage();
+    });
+    inp.addEventListener("change", ()=>{
+      saveStateToLocalStorage();
     });
   });
   const noteEl = document.getElementById("sekolahGuruNote");
@@ -3583,6 +3587,7 @@ document.getElementById("mpSimpan").addEventListener("click", ()=>{
   }
   closeModal("modal-program");
   renderProgramTabs(); renderProgramTable();
+  saveStateToLocalStorage();
 });
 
 /* ---- Modal: Kelola Anggaran Program ---- */
@@ -3666,6 +3671,7 @@ function renderProgramAnggaranModal(){
     if(!confirmDelete(`item anggaran "${b?.uraian || "(tanpa uraian)"}"`)) return;
     prog.budgets = prog.budgets.filter(x=>x.id!==Number(btn.dataset.delitem));
     renderProgramAnggaranModal();
+    saveStateToLocalStorage();
   }));
 
   renderAdminPanel();
@@ -3712,6 +3718,7 @@ document.getElementById("paBtnSimpanItem").addEventListener("click", ()=>{
   }
   resetProgramAnggaranForm();
   renderProgramAnggaranModal();
+  saveStateToLocalStorage();
 });
 document.getElementById("paBtnCetakProposal").addEventListener("click", ()=>{
   if(currentAnggaranProg) printAdHoc(buildPrintProposalProgram(currentAnggaranProg));
@@ -3739,6 +3746,7 @@ document.getElementById("paBtnSalinAnggaran").addEventListener("click", ()=>{
     prog.budgets.push(row);
   });
   renderProgramAnggaranModal();
+  saveStateToLocalStorage();
 });
 
 /* ---- Salin ke Semua Tanggal Lain: varian massal — menyalin seluruh item
@@ -6794,9 +6802,63 @@ function loadStateFromLocalStorage(){
     return (parsed && parsed.state) ? parsed.state : null;
   }catch(err){ return null; }
 }
+const SEEDED_SCHOOL_STATE = {"sekolah":{"namaSekolah":"SD IT ABU HURAIRAH SEMBALUN","npsn":"70007619","alamat":"Jl. Raya Tumpang Telu, Dusun Berugak Mujur","desa":"Sembalun Timba Gading","kecamatan":"Sembalun","kabkota":"Lombok Timur","provinsi":"Nusa Tenggara Barat","kepsek":"Ahmad Riyadi, S.Kom.","nipKepsek":"-","bendaharaBos":"Royandi Setiadi, S.Si.","nipBendaharaBos":"-","bendaharaKomite":"","nipBendaharaKomite":"","komite":"H. Bayu","tahunAjaran":"2026/2027","saldoAwalBos":"0","saldoAwalSpp":"0","saldoAwalPangkal":"0","saldoAwalLain":"0","batasKasMenipis":"1000000","kopGambar":"","useKopGambar":"false","kotaCetak":"Sembalun Timba Gading","adminPassword":"semogaberhasil","securityQuestion":"siapa orang yang seharusnya paling kamu cintai?","securityAnswer":"Rasulullah","anggaranAwalTerkunci":"false"},"siswa":[],"gtk":[{"nama":"Royandi Setiadi, S.Si.","nip":"-","jabatan":"TU"},{"nama":"Fajar Himawan, S.T.","nip":"-","jabatan":"TU"},{"nama":"Ahmad Riyadi, S.Kom.","nip":"-","jabatan":"Kepala Sekolah"},{"nama":"Jeniati, S.Pd.","nip":"AHS05","jabatan":"Koordinator Guru Umum"},{"nama":"Royandi Setiadi","nip":"AHS06","jabatan":"Tenaga Administrasi / Bendahara"}],"program":{"bos":[{"namaPengaju":"Jeniati, S.Pd.","namaProgram":"Kebutuhan KBM guru kelas","deskripsi":"Segala Alat dan Bahan yang menunjang kelancaran Kegiatan Belajar Mengajar, Bersifat segera.","tanggal":["2026-07-14"],"status":"Disetujui","pj":"Jeniati, S.Pd.","budgets":[{"id":6159,"tanggal":"2026-07-14","uraian":"Gunting","volume":4,"satuan":"lusin","harga":70000},{"id":6160,"tanggal":"2026-07-14","uraian":"Kertas HVS A4","volume":20,"satuan":"rim","harga":70000},{"id":6161,"tanggal":"2026-07-14","uraian":"Box Barang","volume":5,"satuan":"buah","harga":70000},{"id":6162,"tanggal":"2026-07-14","uraian":"Buku Calistung","volume":2,"satuan":"Exemplar","harga":90000},{"id":6163,"tanggal":"2026-07-14","uraian":"Buku Hitung Warna Warni","volume":1,"satuan":"Bungkus","harga":50000},{"id":6164,"tanggal":"2026-07-14","uraian":"Mangkok warna-warni","volume":1,"satuan":"lusin","harga":50000},{"id":6165,"tanggal":"2026-07-14","uraian":"Sedotan warna warni","volume":8,"satuan":"bungkus","harga":10000},{"id":6166,"tanggal":"2026-07-14","uraian":"LKPD online PKn","volume":1,"satuan":"orang","harga":100000},{"id":6167,"tanggal":"2026-07-14","uraian":"Peraga bangun datar","volume":2,"satuan":"box","harga":100000},{"id":6168,"tanggal":"2026-07-14","uraian":"Peraga bangun ruang","volume":1,"satuan":"box","harga":100000},{"id":6169,"tanggal":"2026-07-14","uraian":"Timbangan digital","volume":1,"satuan":"buah","harga":60000},{"id":6170,"tanggal":"2026-07-14","uraian":"Peraga jam dinding","volume":2,"satuan":"buah","harga":50000},{"id":6171,"tanggal":"2026-07-14","uraian":"Lem kertas","volume":4,"satuan":"pack","harga":100000},{"id":6172,"tanggal":"2026-07-14","uraian":"Double tape","volume":10,"satuan":"pcs","harga":10000},{"id":6173,"tanggal":"2026-07-14","uraian":"Perekat velcro","volume":2,"satuan":"pcs","harga":50000},{"id":6174,"tanggal":"2026-07-14","uraian":"Spidol warna-warni","volume":2,"satuan":"paket","harga":50000},{"id":6175,"tanggal":"2026-07-14","uraian":"spidol hitam","volume":2,"satuan":"lusin","harga":30000},{"id":6176,"tanggal":"2026-07-14","uraian":"spidol hitam permanen","volume":3,"satuan":"buah","harga":12000},{"id":6177,"tanggal":"2026-07-14","uraian":"Uang mainan","volume":2,"satuan":"set","harga":50000},{"id":6178,"tanggal":"2026-07-14","uraian":"Lakban bening","volume":15,"satuan":"buah","harga":12000},{"id":6179,"tanggal":"2026-07-14","uraian":"Karpet Plastik","volume":2,"satuan":"buah","harga":150000},{"id":6180,"tanggal":"2026-07-14","uraian":"Plastik laminating","volume":3,"satuan":"rim","harga":100000},{"id":6181,"tanggal":"2026-07-14","uraian":"Kartu angka","volume":5,"satuan":"set","harga":20000},{"id":6182,"tanggal":"2026-07-14","uraian":"Kartu Simbol","volume":2,"satuan":"set","harga":15000},{"id":6183,"tanggal":"2026-07-14","uraian":"Kartu nilai tempat","volume":2,"satuan":"set","harga":25000},{"id":6184,"tanggal":"2026-07-14","uraian":"Flash card bilangan","volume":1,"satuan":"set","harga":40000},{"id":6185,"tanggal":"2026-07-14","uraian":"Amplop plastik","volume":15,"satuan":"buah","harga":7000},{"id":6186,"tanggal":"2026-07-14","uraian":"dKertas Origami","volume":10,"satuan":"pcs","harga":10000},{"id":6187,"tanggal":"2026-07-14","uraian":"Sticky note","volume":20,"satuan":"pack","harga":15000},{"id":6188,"tanggal":"2026-07-14","uraian":"Penggaris besi 30 cm","volume":1,"satuan":"buah","harga":25000},{"id":6189,"tanggal":"2026-07-14","uraian":"Penggaris kayu 1 meter","volume":1,"satuan":"buah","harga":35000},{"id":6190,"tanggal":"2026-07-14","uraian":"Busur derajat","volume":10,"satuan":"buah","harga":10000},{"id":6191,"tanggal":"2026-07-14","uraian":"Jangka sederhana","volume":10,"satuan":"buah","harga":10000},{"id":6192,"tanggal":"2026-07-14","uraian":"Papan grafik lipat","volume":1,"satuan":"buah","harga":75000},{"id":6193,"tanggal":"2026-07-14","uraian":"Stiker bintang","volume":50,"satuan":"pack","harga":5000},{"id":6194,"tanggal":"2026-07-14","uraian":"Peta Indonesia","volume":3,"satuan":"buah","harga":100000},{"id":6195,"tanggal":"2026-07-14","uraian":"Peta NTB","volume":1,"satuan":"buah","harga":100000},{"id":6196,"tanggal":"2026-07-14","uraian":"Poster Pencernaan","volume":2,"satuan":"buah","harga":20000},{"id":6197,"tanggal":"2026-07-14","uraian":"Poster Pernafasan","volume":2,"satuan":"buah","harga":20000},{"id":6198,"tanggal":"2026-07-14","uraian":"poster rantai makanan","volume":2,"satuan":"buah","harga":20000},{"id":6199,"tanggal":"2026-07-14","uraian":"Alat peraga telinga","volume":1,"satuan":"set","harga":250000},{"id":6200,"tanggal":"2026-07-14","uraian":"Alat peraga mata","volume":1,"satuan":"set","harga":100000},{"id":6201,"tanggal":"2026-07-14","uraian":"Magnet","volume":3,"satuan":"buah","harga":30000},{"id":6202,"tanggal":"2026-07-14","uraian":"Mobil mainan","volume":6,"satuan":"buah","harga":15000},{"id":6203,"tanggal":"2026-07-14","uraian":"Kertas manila","volume":10,"satuan":"lembar","harga":5000},{"id":6204,"tanggal":"2026-07-14","uraian":"Sabuncuci tangan","volume":1,"satuan":"buah","harga":35000},{"id":6205,"tanggal":"2026-07-14","uraian":"Pasta gigi","volume":1,"satuan":"buah","harga":20000},{"id":6206,"tanggal":"2026-07-14","uraian":"Gunting kuku","volume":1,"satuan":"buah","harga":15000},{"id":6207,"tanggal":"2026-07-14","uraian":"Poster pancasila","volume":11,"satuan":"buah","harga":10000},{"id":6208,"tanggal":"2026-07-14","uraian":"Poster undang-undang","volume":5,"satuan":"buah","harga":10000},{"id":6209,"tanggal":"2026-07-14","uraian":"stick es krim warna-warni","volume":2,"satuan":"bungkus","harga":50000},{"id":6210,"tanggal":"2026-07-14","uraian":"Kertas A4 Warna-warni","volume":1,"satuan":"pack","harga":100000}],"realisasi":[{"id":6211,"tanggal":"2026-07-14","tanggalReal":"2026-08-21","anggaranTerpakai":250000,"keterangan":"kertas A4/ Tunas Mawar (Faktur Terlampir)"},{"id":6212,"tanggal":"2026-07-14","tanggalReal":"2026-08-21","anggaranTerpakai":408000,"keterangan":"Stik Es krim, Penggaris Kayu, dll/ Anak Dara (Faktur Terlampir)"},{"id":6213,"tanggal":"2026-07-14","tanggalReal":"2026-09-04","anggaranTerpakai":510000,"keterangan":"Plastik Laminasi, HVS A4/ Adi Copy Center (Faktur Terlampir)"},{"id":6214,"tanggal":"2026-07-14","tanggalReal":"2026-09-05","anggaranTerpakai":500000,"keterangan":"Kertas HVS A4 / Adi Copy Center (Faktur Terlampir)"}],"serahTerima":[{"id":6215,"tanggal":"2026-10-05","nominal":7466000,"dates":["2026-07-14"],"mode":"total","noBast":"001/BA-STD/X/2026","budgetRef":7466000}],"pengembalianUangMuka":[{"id":6216,"tanggal":"2026-10-05","nominal":1400000,"keterangan":"sisa anggaran dari bu Jeniati"}]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja biaya langganan wifi","deskripsi":"Biaya bulanan langganan wifi","tanggal":["2026-07-31","2026-08-31","2026-09-30","2026-10-31","2026-11-30","2026-12-31","2027-01-31","2027-02-28","2027-03-31","2027-04-30","2027-05-31","2027-06-30"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":7794,"tanggal":"2026-07-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7795,"tanggal":"2026-08-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7796,"tanggal":"2026-09-30","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7797,"tanggal":"2026-10-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7798,"tanggal":"2026-11-30","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7799,"tanggal":"2026-12-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7800,"tanggal":"2027-01-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7801,"tanggal":"2027-02-28","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7802,"tanggal":"2027-03-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7803,"tanggal":"2027-04-30","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7804,"tanggal":"2027-05-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7805,"tanggal":"2027-06-30","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja beban listrik","deskripsi":"Belanja kebutuhan daya listrik","tanggal":["2026-10-06","2026-11-01","2026-12-01","2027-01-01","2027-02-01","2027-03-01","2027-04-01","2027-05-01","2027-06-01","2026-07-01","2026-08-01","2026-09-01"],"status":"Menunggu Persetujuan","pj":"","budgets":[{"id":7807,"tanggal":"2026-10-06","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7808,"tanggal":"2026-11-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7809,"tanggal":"2026-12-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7810,"tanggal":"2027-01-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7811,"tanggal":"2027-02-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7812,"tanggal":"2027-03-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7813,"tanggal":"2027-04-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7814,"tanggal":"2027-05-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7815,"tanggal":"2027-06-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7816,"tanggal":"2026-07-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7817,"tanggal":"2026-08-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7818,"tanggal":"2026-09-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]}],"spp":[{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja Gaji GTK Tetap","deskripsi":"Baya Gaji Bulanan GTK Tetap","tanggal":["2026-08-02","2026-09-02","2026-11-02","2026-12-02","2027-01-02","2027-02-02","2027-03-02","2027-04-02","2027-05-02","2027-06-02","2026-10-02","2027-03-01"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":6959,"tanggal":"2026-08-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6960,"tanggal":"2026-09-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6961,"tanggal":"2026-11-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6962,"tanggal":"2026-12-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6963,"tanggal":"2027-01-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6964,"tanggal":"2027-02-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6965,"tanggal":"2027-03-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6966,"tanggal":"2027-04-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6967,"tanggal":"2027-05-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6968,"tanggal":"2027-06-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6969,"tanggal":"2026-10-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6970,"tanggal":"2027-03-01","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja Honor Kepala Unit Usaha Sekolah","deskripsi":"Honor Pengelola Unit Usaha Sekolah","tanggal":["2026-09-02","2026-10-02","2026-11-02","2026-12-02","2027-01-02","2027-02-02","2027-03-02","2027-04-02","2027-05-02","2027-06-02","2027-06-30"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":7495,"tanggal":"2026-09-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7496,"tanggal":"2026-10-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7497,"tanggal":"2026-11-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7498,"tanggal":"2026-12-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7499,"tanggal":"2027-01-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7500,"tanggal":"2027-02-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7501,"tanggal":"2027-03-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7502,"tanggal":"2027-04-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7503,"tanggal":"2027-05-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7504,"tanggal":"2027-06-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7505,"tanggal":"2027-06-30","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja Honor Absensi GTK","deskripsi":"Belanja Honor Absensi bulanan GTK","tanggal":["2026-08-02","2026-09-02","2026-10-02","2026-11-02","2026-12-02","2027-01-02","2027-02-02","2027-03-02","2027-04-02","2027-05-02","2027-06-02","2027-06-30"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":7586,"tanggal":"2026-08-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7587,"tanggal":"2026-09-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7588,"tanggal":"2026-10-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7589,"tanggal":"2026-11-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7590,"tanggal":"2026-12-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7591,"tanggal":"2027-01-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7592,"tanggal":"2027-02-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7593,"tanggal":"2027-03-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7594,"tanggal":"2027-04-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7595,"tanggal":"2027-05-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7596,"tanggal":"2027-06-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7597,"tanggal":"2027-06-30","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]}],"pangkal":[],"lain":[{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja Biaya Transport Perjalanan Dinas Kepala Sekolah","deskripsi":"Segala biaya yang dibutuhkan untuk perjalanan dinas kepala sekolah baik dari dinas pendidikan ataupun pimpinan PAH Mataram","tanggal":["2026-09-01","2026-12-01","2027-03-01","2027-06-01"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":8055,"tanggal":"2026-09-01","uraian":"Transport","volume":2,"satuan":"kali","harga":150000},{"id":8059,"tanggal":"2026-12-01","uraian":"Transport","volume":2,"satuan":"kali","harga":150000},{"id":8060,"tanggal":"2027-03-01","uraian":"Transport","volume":2,"satuan":"kali","harga":150000},{"id":8061,"tanggal":"2027-06-01","uraian":"Transport","volume":2,"satuan":"kali","harga":150000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja Honor Satpam","deskripsi":"Honor bulanan Satpam","tanggal":["2026-08-02","2026-09-02","2026-10-02","2026-11-02","2026-12-02","2027-01-02","2027-02-02","2027-03-02","2027-04-02","2027-05-02","2027-06-02","2027-06-30"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":8194,"tanggal":"2026-08-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8195,"tanggal":"2026-09-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8196,"tanggal":"2026-10-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8197,"tanggal":"2026-11-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8198,"tanggal":"2026-12-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8199,"tanggal":"2027-01-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8200,"tanggal":"2027-02-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8201,"tanggal":"2027-03-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8202,"tanggal":"2027-04-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8203,"tanggal":"2027-05-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8204,"tanggal":"2027-06-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8205,"tanggal":"2027-06-30","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Pelaksanaan Sumatif Tengah Semester (STS)","deskripsi":"Sumatif Tengah Semester","tanggal":["2026-09-10","2027-03-10"],"status":"Menunggu Persetujuan","pj":"","budgets":[{"id":8638,"tanggal":"2026-09-10","uraian":"Fotocopy","volume":4000,"satuan":"lembar","harga":300},{"id":8639,"tanggal":"2026-09-10","uraian":"Reward Mumtaz Murtafi'","volume":100,"satuan":"siswa","harga":10000},{"id":8788,"tanggal":"2026-09-10","uraian":"Honor Panitia","volume":1,"satuan":"Paket","harga":3300000},{"id":8943,"tanggal":"2027-03-10","uraian":"Fotocopy","volume":4000,"satuan":"lembar","harga":300},{"id":8944,"tanggal":"2027-03-10","uraian":"Reward Mumtaz Murtafi'","volume":100,"satuan":"siswa","harga":10000},{"id":8945,"tanggal":"2027-03-10","uraian":"Honor Panitia","volume":1,"satuan":"Paket","harga":3300000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]}]},"bku":{"bos":[{"tanggal":"2026-10-05","komponen":"","kodeRekening":"","noBukti":"","uraian":"Serah Terima Dana (Uang Muka Kegiatan): Kebutuhan KBM guru kelas — PJ: Jeniati, S.Pd.","kegiatan":"","keterangan":"","penerimaan":"0","pengeluaran":"7466000","autoRealisasiId":"","autoSerahTerimaId":"6215","autoPengembalianId":"","autoPiutangId":""},{"tanggal":"2026-10-05","komponen":"","kodeRekening":"","noBukti":"","uraian":"Pengembalian Sisa Uang Muka: Kebutuhan KBM guru kelas — PJ: Jeniati, S.Pd. — sisa anggaran dari bu Jeniati","kegiatan":"","keterangan":"","penerimaan":"1400000","pengeluaran":"0","autoRealisasiId":"","autoSerahTerimaId":"","autoPengembalianId":"6216","autoPiutangId":""}],"spp":[],"pangkal":[],"lain":[]},"sppTx":[],"itemTx":[],"pinjaman":[]};
+
+function applyStateFromCloud(cloudData){
+  if (!cloudData || !cloudData.sekolah) return;
+  state = {
+    sekolah: Object.assign(emptySekolah(), cloudData.sekolah || {}),
+    siswa: Array.isArray(cloudData.siswa) ? cloudData.siswa : [],
+    gtk: Array.isArray(cloudData.gtk) ? cloudData.gtk : [],
+    program: Object.assign({ bos: [], spp: [], pangkal: [], lain: [] }, cloudData.program || {}),
+    bku: Object.assign({ bos: [], spp: [], pangkal: [], lain: [] }, cloudData.bku || {}),
+    sppTx: Array.isArray(cloudData.sppTx) ? cloudData.sppTx : [],
+    itemTx: Array.isArray(cloudData.itemTx) ? cloudData.itemTx : [],
+    pinjaman: Array.isArray(cloudData.pinjaman) ? cloudData.pinjaman : [],
+    lpj: Object.assign({ periode: "Triwulan I", danaDiterima: 0, penerimaanLain: 0 }, cloudData.lpj || {}),
+    docCounters: Object.assign({ kwitansi: 0, bast: 0, peminjaman: 0 }, cloudData.docCounters || {})
+  };
+  window.state = state;
+
+  Object.values(state.program).flat().forEach(p=>{
+    p.realisasi = p.realisasi || [];
+    p.realisasiBatal = p.realisasiBatal || [];
+    p.budgets = p.budgets || [];
+    p.serahTerima = p.serahTerima || [];
+    p.pengembalianUangMuka = p.pengembalianUangMuka || [];
+  });
+  const programBudgetIds = Object.values(state.program).flat().flatMap(p=>(p.budgets||[]).map(b=>Number(b.id)||0));
+  const programRealisasiIds = Object.values(state.program).flat().flatMap(p=>(p.realisasi||[]).map(r=>Number(r.id)||0));
+  const programSerahTerimaIds = Object.values(state.program).flat().flatMap(p=>(p.serahTerima||[]).map(r=>Number(r.id)||0));
+  const programPengembalianIds = Object.values(state.program).flat().flatMap(p=>(p.pengembalianUangMuka||[]).map(r=>Number(r.id)||0));
+  const pinjamanCicilanIds = (state.pinjaman||[]).flatMap(pj=>(pj.cicilan||[]).map(c=>Number(c.id)||0));
+  const allIds = [...state.siswa, ...state.gtk, ...state.sppTx, ...state.itemTx, ...state.pinjaman, ...Object.values(state.program).flat(), ...Object.values(state.bku).flat()]
+    .map(r=>Number(r.id)||0).concat(programBudgetIds, programRealisasiIds, programSerahTerimaIds, programPengembalianIds, pinjamanCicilanIds);
+  uidCounter = (allIds.length ? Math.max(...allIds) : 0) + 1;
+
+  try {
+    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ savedAt: new Date().toISOString(), state }));
+  } catch(e){}
+
+  if (!currentUser.name || currentUser.name === "Admin Sekolah") {
+    currentUser = { name: (state.sekolah && state.sekolah.bendaharaBos) ? state.sekolah.bendaharaBos : "Royandi Setiadi, S.Si.", role: "Admin" };
+    try {
+      localStorage.setItem(USER_SESSION_KEY, JSON.stringify(currentUser));
+    } catch(e){}
+  }
+
+  renderAll();
+  refreshHeader();
+}
+window.applyStateFromCloud = applyStateFromCloud;
+
 function restoreAutosavedStateIfAny(){
-  const saved = loadStateFromLocalStorage();
-  if(!saved) return;
+  let saved = loadStateFromLocalStorage();
+  window.__stateFromSeed = false;
+  if(!saved || !saved.sekolah || !saved.sekolah.namaSekolah) {
+    saved = JSON.parse(JSON.stringify(SEEDED_SCHOOL_STATE));
+    window.__stateFromSeed = true;
+  }
   state = saved;
   /* Lengkapi struktur kalau data lama tersimpan sebelum ada field/bagian
      baru ditambahkan (mis. sebelum realisasiBatal ada) — pola yang sama
@@ -6964,35 +7026,66 @@ async function testConnection() {
   }
 }
 
+/* ---------------------------------------------------------------------------
+   SINKRONISASI FIRESTORE (diperbaiki)
+   Penyebab data "kembali ke awal" sebelumnya:
+   - setiap 12 detik state didorong ke cloud walau tidak ada perubahan, sehingga
+     perangkat/tab yang datanya lama (atau data awal bawaan) menimpa data cloud;
+   - data dari cloud langsung menimpa isian yang sedang diketik (snapshot lama
+     tiba setelah edit baru);
+   - data awal bawaan bisa terkirim ke cloud sebelum data cloud sempat dimuat.
+   Sekarang: hanya kirim bila isi berubah, tidak kirim sebelum data cloud
+   dimuat, gema tulisan sendiri diabaikan (clientId), dan dan saat ada perubahan
+   lokal yang belum terkirim, data cloud tidak menimpa data lokal.
+--------------------------------------------------------------------------- */
+const CLIENT_ID = 'c' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+let cloudReady = false;          // true setelah snapshot server pertama diterima
+let lastSyncedHash = null;       // isi state terakhir yang sama dengan cloud
+let pushInFlight = false;
+let pushQueued = false;
+let initialHash = null;
+
+function contentHash() {
+  const st = (typeof state !== 'undefined') ? state : {};
+  return JSON.stringify({
+    sekolah: st.sekolah || {}, siswa: st.siswa || [], gtk: st.gtk || [],
+    program: st.program || {}, bku: st.bku || {}, sppTx: st.sppTx || [],
+    itemTx: st.itemTx || [], pinjaman: st.pinjaman || [], lpj: st.lpj || {},
+    docCounters: st.docCounters || {}
+  });
+}
+
 async function pushStateToFirestore(immediate = false) {
-  if (isApplyingCloudSnapshot || !db) return;
+  if (isApplyingCloudSnapshot || !db || !cloudReady) return;
 
   clearTimeout(firestorePushTimer);
   const doPush = async () => {
+    firestorePushTimer = null;
+    if (isApplyingCloudSnapshot || !cloudReady) return;
+    if (pushInFlight) { pushQueued = true; return; }
+
+    const content = contentHash();
+    if (content === lastSyncedHash) return;   // tidak ada perubahan -> jangan kirim
+
+    pushInFlight = true;
     try {
       updateOnlineBadge(true, "● Menyimpan...", true);
       const timestamp = new Date().toISOString();
-      lastPushedTimestamp = timestamp;
-      const payload = {
-        sekolah: (typeof state !== 'undefined' && state.sekolah) ? state.sekolah : {},
-        siswa: (typeof state !== 'undefined' && state.siswa) ? state.siswa : [],
-        gtk: (typeof state !== 'undefined' && state.gtk) ? state.gtk : [],
-        program: (typeof state !== 'undefined' && state.program) ? state.program : {},
-        bku: (typeof state !== 'undefined' && state.bku) ? state.bku : {},
-        sppTx: (typeof state !== 'undefined' && state.sppTx) ? state.sppTx : [],
-        itemTx: (typeof state !== 'undefined' && state.itemTx) ? state.itemTx : [],
-        pinjaman: (typeof state !== 'undefined' && state.pinjaman) ? state.pinjaman : [],
-        lpj: (typeof state !== 'undefined' && state.lpj) ? state.lpj : {},
-        docCounters: (typeof state !== 'undefined' && state.docCounters) ? state.docCounters : {},
-        updatedAt: timestamp,
-        updatedBy: (window.currentUser && window.currentUser.name) || (auth && auth.currentUser ? auth.currentUser.email : "Pengguna"),
-      };
+      // JSON round-trip membuang nilai undefined (Firestore menolaknya)
+      const payload = JSON.parse(content);
+      payload.updatedAt = timestamp;
+      payload.updatedBy = (window.currentUser && window.currentUser.name) || (auth && auth.currentUser ? auth.currentUser.email : "Pengguna");
+      payload.clientId = CLIENT_ID;
       await setDoc(doc(db, 'schools', 'default'), payload);
+      lastSyncedHash = content;
       updateOnlineBadge(true, "● Realtime Online");
     } catch (err) {
       console.warn("Firestore push error:", err);
       updateOnlineBadge(navigator.onLine, navigator.onLine ? "● Gagal Sync Cloud" : "● Offline");
-      handleFirestoreError(err, OperationType.WRITE, 'schools/default');
+      // lastSyncedHash tidak diubah -> akan dicoba lagi pada penyimpanan berikutnya
+    } finally {
+      pushInFlight = false;
+      if (pushQueued) { pushQueued = false; firestorePushTimer = setTimeout(doPush, 300); }
     }
   };
 
@@ -7006,10 +7099,17 @@ window.syncStateToFirestore = pushStateToFirestore;
 
 function setupFirestoreRealtime() {
   const schoolDocRef = doc(db, 'schools', 'default');
+  initialHash = contentHash();
 
   onSnapshot(schoolDocRef, (snap) => {
+    // Gema tulisan lokal yang belum dikonfirmasi server: abaikan
+    if (snap.metadata && snap.metadata.hasPendingWrites) return;
+
+    const firstSnapshot = !cloudReady;
     updateOnlineBadge(true, "● Realtime Online");
+
     if (!snap.exists()) {
+      cloudReady = true;
       if (typeof state !== 'undefined' && state.sekolah && !sekolahLooksUnconfigured()) {
         pushStateToFirestore(true);
       }
@@ -7017,64 +7117,43 @@ function setupFirestoreRealtime() {
     }
 
     const cloudData = snap.data();
-    if (!cloudData || !cloudData.sekolah) return;
+    if (!cloudData || !cloudData.sekolah) { cloudReady = true; return; }
 
-    // Ignore echo of our own recent write
-    if (cloudData.updatedAt && cloudData.updatedAt === lastPushedTimestamp) {
+    // Gema tulisan sendiri: abaikan
+    if (cloudData.clientId === CLIENT_ID) { cloudReady = true; return; }
+
+    // Ada perubahan lokal yang belum terkirim: jangan ditimpa
+    const localDirty = (lastSyncedHash !== null)
+      ? (contentHash() !== lastSyncedHash)
+      : (initialHash !== null && contentHash() !== initialHash);
+    // Perangkat yang baru memakai data awal bawaan selalu mengikuti cloud
+    const keepLocal = localDirty && !window.__stateFromSeed;
+    if (keepLocal) {
+      cloudReady = true;
+      pushStateToFirestore(true);
       return;
     }
 
     isApplyingCloudSnapshot = true;
     try {
-      const getEmpty = (typeof window !== 'undefined' && typeof window.emptySekolah === 'function')
-        ? window.emptySekolah
-        : (typeof emptySekolah === 'function' ? emptySekolah : () => ({
-            namaSekolah: "", npsn: "", alamat: "", desa: "", kecamatan: "", kabkota: "", provinsi: "",
-            kepsek: "", nipKepsek: "", bendaharaBos: "", nipBendaharaBos: "", bendaharaKomite: "", nipBendaharaKomite: "",
-            komite: "", tahunAjaran: "2026/2027", saldoAwalBos: 0, saldoAwalSpp: 0, saldoAwalPangkal: 0, saldoAwalLain: 0,
-            batasKasMenipis: 1000000, kopGambar: "", useKopGambar: false, kotaCetak: "",
-            adminPassword: "", securityQuestion: "", securityAnswer: "", anggaranAwalTerkunci: false, gsheetUrl: ""
-          }));
-      const baseSekolah = getEmpty();
-      const updatedState = {
-        sekolah: Object.assign(baseSekolah, cloudData.sekolah || {}),
-        siswa: Array.isArray(cloudData.siswa) ? cloudData.siswa : [],
-        gtk: Array.isArray(cloudData.gtk) ? cloudData.gtk : [],
-        program: Object.assign({ bos: [], spp: [], pangkal: [], lain: [] }, cloudData.program || {}),
-        bku: Object.assign({ bos: [], spp: [], pangkal: [], lain: [] }, cloudData.bku || {}),
-        sppTx: Array.isArray(cloudData.sppTx) ? cloudData.sppTx : [],
-        itemTx: Array.isArray(cloudData.itemTx) ? cloudData.itemTx : [],
-        pinjaman: Array.isArray(cloudData.pinjaman) ? cloudData.pinjaman : [],
-        lpj: Object.assign({ periode: "Triwulan I", danaDiterima: 0, penerimaanLain: 0 }, cloudData.lpj || {}),
-        docCounters: Object.assign({ kwitansi: 0, bast: 0, peminjaman: 0 }, cloudData.docCounters || {})
-      };
-      if (typeof window !== 'undefined') {
-        window.state = updatedState;
+      if (typeof window.applyStateFromCloud === 'function') {
+        window.applyStateFromCloud(cloudData);
       }
-      try {
-        state = updatedState;
-      } catch(e) {}
-      if (typeof window !== 'undefined' && typeof window.restoreAutosavedStateIfAny === 'function') {
-        window.restoreAutosavedStateIfAny();
-      } else if (typeof restoreAutosavedStateIfAny === 'function') {
-        restoreAutosavedStateIfAny();
-      }
-      try {
-        const autoKey = (typeof AUTOSAVE_KEY !== 'undefined') ? AUTOSAVE_KEY : "keuanganSekolahAutosaveV1";
-        localStorage.setItem(autoKey, JSON.stringify({ savedAt: new Date().toISOString(), state: updatedState }));
-      } catch(e) {}
-      if (typeof window !== 'undefined' && typeof window.renderAll === 'function') {
-        window.renderAll();
-      } else if (typeof renderAll === 'function') {
-        renderAll();
-      }
-      showSyncToast("⚡ Data disinkronkan realtime dari cloud!");
+      lastSyncedHash = contentHash();
+      window.__stateFromSeed = false;
+      if (!firstSnapshot) showSyncToast("⚡ Data disinkronkan realtime dari cloud!");
     } finally {
       isApplyingCloudSnapshot = false;
+      cloudReady = true;
     }
   }, (err) => {
     updateOnlineBadge(false, "● Firestore Terputus");
-    handleFirestoreError(err, OperationType.GET, 'schools/default');
+    console.warn("Firestore snapshot error:", err);
+  });
+
+  // Simpan segera saat tab disembunyikan / ditutup (best-effort)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') pushStateToFirestore(true);
   });
 }
 
