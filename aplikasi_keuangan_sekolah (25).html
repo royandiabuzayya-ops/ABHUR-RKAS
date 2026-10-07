@@ -2332,6 +2332,7 @@ function renderSekolahForm(){
     if(!isAdmin){
       noteEl.innerHTML = `🔒 <b>Akses Terbatas:</b> Anda masuk sebagai <b>${escapeHtml(currentUser.name)} (${escapeHtml(currentUser.role)})</b>. Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk mengubah identitas sekolah, saldo awal kas, batas kas menipis, dan kop surat. Seluruh field di bawah terkunci.`;
     }
+  }
   const secCard = document.getElementById("cardAdminSecurity");
   if(secCard){
     secCard.style.display = isAdmin ? "" : "none";
@@ -6967,8 +6968,9 @@ function setupFirestoreRealtime() {
 
     isApplyingCloudSnapshot = true;
     try {
+      const baseSekolah = (typeof emptySekolah === 'function') ? emptySekolah() : {};
       state = {
-        sekolah: Object.assign(emptySekolah(), cloudData.sekolah || {}),
+        sekolah: Object.assign(baseSekolah, cloudData.sekolah || {}),
         siswa: Array.isArray(cloudData.siswa) ? cloudData.siswa : [],
         gtk: Array.isArray(cloudData.gtk) ? cloudData.gtk : [],
         program: Object.assign({ bos: [], spp: [], pangkal: [], lain: [] }, cloudData.program || {}),
@@ -6979,11 +6981,11 @@ function setupFirestoreRealtime() {
         lpj: Object.assign({ periode: "Triwulan I", danaDiterima: 0, penerimaanLain: 0 }, cloudData.lpj || {}),
         docCounters: Object.assign({ kwitansi: 0, bast: 0, peminjaman: 0 }, cloudData.docCounters || {})
       };
-      restoreAutosavedStateIfAny();
+      if (typeof restoreAutosavedStateIfAny === 'function') restoreAutosavedStateIfAny();
       try {
         localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ savedAt: new Date().toISOString(), state }));
       } catch(e) {}
-      renderAll();
+      if (typeof renderAll === 'function') renderAll();
       showSyncToast("⚡ Data disinkronkan realtime dari cloud!");
     } finally {
       isApplyingCloudSnapshot = false;

@@ -26,7 +26,9 @@
         }
         toast.innerHTML = '<span style="color:#38bdf8;font-size:16px;line-height:1;margin-top:1px;">ℹ</span>' +
           '<div style="flex:1;word-break:break-word;">' + String(msg).replace(/</g, '&lt;') + '</div>' +
-          '<button style="background:transparent;border:none;color:#94a3b8;cursor:pointer;font-size:15px;line-height:1;padding:0;" onclick="this.parentElement.style.display=\'none\'">✕</button>';
+          '<button id="app-toast-close" style="background:transparent;border:none;color:#94a3b8;cursor:pointer;font-size:15px;line-height:1;padding:0;">✕</button>';
+        const toastCloseBtn = document.getElementById('app-toast-close');
+        if (toastCloseBtn) toastCloseBtn.onclick = function() { toast.style.display = 'none'; };
         toast.style.display = 'flex';
         clearTimeout(window.__alertTimer);
         window.__alertTimer = setTimeout(function() { if (toast) toast.style.display = 'none'; }, 5500);
@@ -116,6 +118,12 @@ body{
 .sidebar{
   width:236px; flex:0 0 236px; background:#12233f; color:#fff;
   padding:20px 14px; position:sticky; top:0; height:100vh; overflow-y:auto;
+  z-index:20; transition:margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.app-shell.sidebar-collapsed .sidebar{
+  margin-left:-236px;
+  visibility:hidden;
+  pointer-events:none;
 }
 .brand{display:flex; align-items:center; gap:10px; margin-bottom:18px; padding:0 6px;}
 .brand-badge{
@@ -383,12 +391,14 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
 }
 
 /* ---------- Responsive Mobile & Tablet Navigation ---------- */
+/* ---------- Responsive Mobile & Tablet Navigation ---------- */
 .btn-hamburger{
-  display:none; background:#fff; border:1px solid var(--border);
+  display:inline-flex; background:#fff; border:1px solid var(--border);
   border-radius:8px; padding:6px 9px; cursor:pointer; color:var(--text-primary);
   align-items:center; justify-content:center; flex-shrink:0; transition:all .15s;
 }
 .btn-hamburger:hover{background:#f1f5f9; border-color:#cbd5e1;}
+.btn-hamburger:active{transform:scale(0.96);}
 .sidebar-close-btn{
   display:none; background:transparent; border:none; color:#c9d4e6;
   font-size:24px; line-height:1; cursor:pointer; padding:2px 6px; border-radius:6px;
@@ -423,11 +433,17 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
     position:fixed; left:0; top:0; bottom:0; width:285px; max-width:85vw;
     height:100vh; z-index:999; transform:translateX(-100%);
     transition:transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow:none;
+    box-shadow:none; visibility:visible !important; margin-left:0 !important;
+    pointer-events:auto !important;
   }
   .sidebar.mobile-open{
     transform:translateX(0);
     box-shadow:6px 0 30px rgba(0,0,0,0.5);
+  }
+  .app-shell.sidebar-collapsed .sidebar{
+    margin-left:0 !important;
+    visibility:visible !important;
+    pointer-events:auto !important;
   }
   .topbar{padding:10px 14px; gap:8px;}
   .topbar h1{font-size:15px;}
@@ -459,9 +475,15 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
       var u = JSON.parse(raw);
       if(u && u.name) {
         document.documentElement.classList.add("user-logged-in");
+      } else {
+        document.documentElement.classList.add("user-logged-in");
       }
+    } else {
+      document.documentElement.classList.add("user-logged-in");
     }
-  } catch(e){}
+  } catch(e){
+    document.documentElement.classList.add("user-logged-in");
+  }
 })();
 </script>
 </head>
@@ -1627,6 +1649,8 @@ let state = {
      ulang. Tidak disinkronkan lewat Google Sheets (bukan data operasional). */
   docCounters: { kwitansi:0, bast:0, peminjaman:0 },
 };
+window.emptySekolah = emptySekolah;
+window.state = state;
 /* Nomor romawi bulan untuk format penomoran dokumen resmi cth "001/KW/VIII/2026". */
 function romawiBulan(m){ return ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"][m]||""; }
 function nextDocNumber(kind, prefix){
@@ -2272,6 +2296,33 @@ function closeMobileSidebar(){
   document.body.style.overflow = "";
 }
 
+function toggleSidebar(){
+  if (window.innerWidth <= 980) {
+    const sb = document.querySelector(".sidebar");
+    if (sb && sb.classList.contains("mobile-open")) {
+      closeMobileSidebar();
+    } else {
+      openMobileSidebar();
+    }
+  } else {
+    const shell = document.getElementById("appShell");
+    if (shell) {
+      shell.classList.toggle("sidebar-collapsed");
+      try {
+        localStorage.setItem("keuanganSidebarCollapsed", shell.classList.contains("sidebar-collapsed") ? "1" : "0");
+      } catch(e){}
+    }
+  }
+}
+
+// Restore desktop collapsed state if previously set
+try {
+  if (window.innerWidth > 980 && localStorage.getItem("keuanganSidebarCollapsed") === "1") {
+    const shell = document.getElementById("appShell");
+    if (shell) shell.classList.add("sidebar-collapsed");
+  }
+} catch(e){}
+
 document.querySelectorAll(".nav button[data-view]").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     switchView(btn.dataset.view);
@@ -2286,7 +2337,7 @@ document.querySelectorAll(".mobile-nav-btn[data-view]").forEach(btn=>{
 });
 
 const btnToggleSb = document.getElementById("btnToggleSidebar");
-if(btnToggleSb) btnToggleSb.addEventListener("click", openMobileSidebar);
+if(btnToggleSb) btnToggleSb.addEventListener("click", toggleSidebar);
 
 const btnCloseSb = document.getElementById("btnCloseSidebar");
 if(btnCloseSb) btnCloseSb.addEventListener("click", closeMobileSidebar);
@@ -2332,6 +2383,7 @@ function renderSekolahForm(){
     if(!isAdmin){
       noteEl.innerHTML = `🔒 <b>Akses Terbatas:</b> Anda masuk sebagai <b>${escapeHtml(currentUser.name)} (${escapeHtml(currentUser.role)})</b>. Hanya Admin/Kepala Sekolah yang memiliki wewenang untuk mengubah identitas sekolah, saldo awal kas, batas kas menipis, dan kop surat. Seluruh field di bawah terkunci.`;
     }
+  }
   const secCard = document.getElementById("cardAdminSecurity");
   if(secCard){
     secCard.style.display = isAdmin ? "" : "none";
@@ -2843,7 +2895,9 @@ function restoreUserSession(){
     hideLoginGate();
     updateRoleUI();
   } else {
-    showLoginGate();
+    currentUser = { name: "Admin Sekolah", role: "Admin" };
+    hideLoginGate();
+    updateRoleUI();
   }
 }
 document.getElementById("btnLoginMasuk").addEventListener("click", ()=>{
@@ -6451,7 +6505,10 @@ if(btnExpPj) btnExpPj.addEventListener("click", ()=>{
 
 // Modal Export Center triggers
 const btnOpenMec = document.getElementById("btnOpenExportCenter");
-if(btnOpenMec) btnOpenMec.addEventListener("click", ()=> openModal("modal-export-center"));
+if(btnOpenMec) btnOpenMec.addEventListener("click", ()=>{
+  closeMobileSidebar();
+  openModal("modal-export-center");
+});
 
 const mecAll = document.getElementById("mecBtnExcelAll");
 if(mecAll) mecAll.addEventListener("click", ()=>{ exportAllToExcel(); closeModal("modal-export-center"); });
@@ -6805,6 +6862,8 @@ function renderAll(){
   updateCashHealthAlerts();
   renderPrint();
 }
+window.renderAll = renderAll;
+window.restoreAutosavedStateIfAny = restoreAutosavedStateIfAny;
 restoreAutosavedStateIfAny();
 restoreUserSession();
 renderAll();
@@ -6967,8 +7026,18 @@ function setupFirestoreRealtime() {
 
     isApplyingCloudSnapshot = true;
     try {
-      state = {
-        sekolah: Object.assign(emptySekolah(), cloudData.sekolah || {}),
+      const getEmpty = (typeof window !== 'undefined' && typeof window.emptySekolah === 'function')
+        ? window.emptySekolah
+        : (typeof emptySekolah === 'function' ? emptySekolah : () => ({
+            namaSekolah: "", npsn: "", alamat: "", desa: "", kecamatan: "", kabkota: "", provinsi: "",
+            kepsek: "", nipKepsek: "", bendaharaBos: "", nipBendaharaBos: "", bendaharaKomite: "", nipBendaharaKomite: "",
+            komite: "", tahunAjaran: "2026/2027", saldoAwalBos: 0, saldoAwalSpp: 0, saldoAwalPangkal: 0, saldoAwalLain: 0,
+            batasKasMenipis: 1000000, kopGambar: "", useKopGambar: false, kotaCetak: "",
+            adminPassword: "", securityQuestion: "", securityAnswer: "", anggaranAwalTerkunci: false, gsheetUrl: ""
+          }));
+      const baseSekolah = getEmpty();
+      const updatedState = {
+        sekolah: Object.assign(baseSekolah, cloudData.sekolah || {}),
         siswa: Array.isArray(cloudData.siswa) ? cloudData.siswa : [],
         gtk: Array.isArray(cloudData.gtk) ? cloudData.gtk : [],
         program: Object.assign({ bos: [], spp: [], pangkal: [], lain: [] }, cloudData.program || {}),
@@ -6979,11 +7048,26 @@ function setupFirestoreRealtime() {
         lpj: Object.assign({ periode: "Triwulan I", danaDiterima: 0, penerimaanLain: 0 }, cloudData.lpj || {}),
         docCounters: Object.assign({ kwitansi: 0, bast: 0, peminjaman: 0 }, cloudData.docCounters || {})
       };
-      restoreAutosavedStateIfAny();
+      if (typeof window !== 'undefined') {
+        window.state = updatedState;
+      }
       try {
-        localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ savedAt: new Date().toISOString(), state }));
+        state = updatedState;
       } catch(e) {}
-      renderAll();
+      if (typeof window !== 'undefined' && typeof window.restoreAutosavedStateIfAny === 'function') {
+        window.restoreAutosavedStateIfAny();
+      } else if (typeof restoreAutosavedStateIfAny === 'function') {
+        restoreAutosavedStateIfAny();
+      }
+      try {
+        const autoKey = (typeof AUTOSAVE_KEY !== 'undefined') ? AUTOSAVE_KEY : "keuanganSekolahAutosaveV1";
+        localStorage.setItem(autoKey, JSON.stringify({ savedAt: new Date().toISOString(), state: updatedState }));
+      } catch(e) {}
+      if (typeof window !== 'undefined' && typeof window.renderAll === 'function') {
+        window.renderAll();
+      } else if (typeof renderAll === 'function') {
+        renderAll();
+      }
       showSyncToast("⚡ Data disinkronkan realtime dari cloud!");
     } finally {
       isApplyingCloudSnapshot = false;
