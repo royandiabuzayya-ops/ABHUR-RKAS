@@ -328,8 +328,90 @@ table.print-cal td.othermonth{background:#f7f7f7;}
 .tanggal-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
 .tanggal-row input{flex:1;}
 .anggaran-cols{display:grid;grid-template-columns:1fr 1.3fr;gap:18px;align-items:start;}
+.anggaran-cols.grid-mode{grid-template-columns:1fr;}
+.anggaran-cols.grid-mode > div:first-child{display:none;}
+#tblProgramAnggaran{min-width:680px;}
+#tblProgramAnggaran td{border:1px solid var(--grid);}
+#tblProgramAnggaran th:nth-child(1){width:44px;text-align:center;}
+#tblProgramAnggaran th:nth-child(3){width:84px;}
+#tblProgramAnggaran th:nth-child(4){width:104px;}
+#tblProgramAnggaran th:nth-child(5){width:132px;}
+#tblProgramAnggaran th:nth-child(6){width:132px;}
+#tblProgramAnggaran th:nth-child(7){width:44px;}
+#tblProgramAnggaran td:has(input){padding:0;}
+#tblProgramAnggaran td input{border-radius:0;padding:8px 7px;}
+#tblProgramAnggaran td input:focus{box-shadow:inset 0 0 0 2px var(--series-1);}
+#tblProgramAnggaran tr.bg-new td{background:#fafcff;}
+#tblProgramAnggaran tr.bg-new input::placeholder{color:var(--text-muted);font-style:italic;}
+#tblProgramAnggaran input.bg-bad{background:#fff4f4;box-shadow:inset 0 0 0 1px #e08a8a;}
 @media (max-width:760px){ .anggaran-cols{grid-template-columns:1fr;} }
 .admin-panel{background:#f7f9fc;border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:16px;}
+
+/* ---------- Draft Pengeluaran (per kegiatan) ---------- */
+.dd-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
+.dd-bar .sp{flex:1;}
+.dd-bar input[type=search]{padding:7px 10px;border:1px solid var(--border);border-radius:8px;font:inherit;min-width:190px;}
+.dd-summary{display:flex;gap:18px;flex-wrap:wrap;align-items:center;background:#f3f6fb;border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;}
+.dd-summary .dd-sum{font-weight:800;font-size:16px;font-variant-numeric:tabular-nums;}
+.dd-card{border:1px solid var(--border);border-radius:12px;background:#fff;margin-bottom:14px;overflow:hidden;box-shadow:0 1px 2px rgba(20,30,60,.04);}
+.dd-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 12px;background:#f3f6fb;border-bottom:1px solid var(--border);}
+.dd-card.collapsed .dd-head{border-bottom:0;}
+.dd-card.collapsed .dd-body{display:none;}
+.dd-toggle{border:0;background:transparent;font-size:15px;cursor:pointer;padding:4px 6px;border-radius:6px;color:var(--text-muted);transition:transform .15s;}
+.dd-card.collapsed .dd-toggle{transform:rotate(-90deg);}
+.dd-head input{padding:7px 9px;border:1px solid var(--border);border-radius:7px;font:inherit;background:#fff;}
+.dd-head input:focus{outline:none;box-shadow:0 0 0 2px var(--series-1);}
+.dd-head .dd-date{width:116px;}
+.dd-head .dd-name{flex:1;min-width:170px;font-weight:700;}
+.dd-head input.dd-bad{background:#fff4f4;border-color:#e08a8a;}
+.dd-head .dd-sub{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.dd-head .dd-cnt{font-size:11.5px;color:var(--text-muted);white-space:nowrap;}
+.dd-head .dd-acts{display:flex;gap:6px;}
+.dd-body{padding:0;}
+table.datatable.dd-items{min-width:520px;width:100%;}
+.dd-body .table-scroll{border:0;border-radius:0;}
+.dd-items td{border:1px solid var(--grid);}
+.dd-items th:nth-child(1){width:44px;text-align:center;}
+.dd-items th:nth-child(3){width:90px;}
+.dd-items th:nth-child(4){width:136px;}
+.dd-items th:nth-child(5){width:136px;}
+.dd-items th:nth-child(6){width:44px;}
+.dd-items td:has(input){padding:0;}
+.dd-items td input{border-radius:0;padding:8px 7px;}
+.dd-items td input:focus{box-shadow:inset 0 0 0 2px var(--series-1);}
+.dd-items tr.dd-new td{background:#fafcff;}
+.dd-items tr.dd-new input::placeholder{color:var(--text-muted);font-style:italic;}
+.dd-empty{border:1px dashed var(--border);border-radius:12px;padding:28px;text-align:center;color:var(--text-muted);}
+@media (max-width:760px){ .dd-head .dd-name{flex-basis:100%;order:3;} }
+
+/* ---------- Sumber Dana & Pagu ---------- */
+.pagu-box{border:1px solid var(--border);border-radius:10px;padding:12px 14px;background:#fff;margin-bottom:12px;}
+.pagu-box.over{border-color:#e08a8a;background:#fff7f7;}
+.pagu-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
+.pagu-title{font-weight:700;font-size:13px;}
+.pagu-val{font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;}
+.pagu-head .sp{flex:1;}
+.pagu-bar{height:10px;border-radius:6px;background:#eef2f8;overflow:hidden;display:flex;}
+.pagu-bar i{display:block;height:100%;}
+.pagu-bar i.b{opacity:.4;}
+.pill.info{background:#e4edfb;color:#1d4f9c;}
+#tblSumber input[data-sdpagu]{width:150px;text-align:right;border:1px solid var(--border);border-radius:6px;padding:5px 8px;background:#fff;font:inherit;}
+.pagu-meta{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--text-secondary);}
+.pagu-meta b{color:var(--text-primary);font-variant-numeric:tabular-nums;}
+.pagu-warn{margin-top:8px;font-size:12px;font-weight:700;color:#b91c1c;}
+.pagu-none{font-size:12.5px;color:var(--text-muted);}
+.pagu-mini{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin:0 0 12px;background:#f7f9fc;}
+.pagu-mini.ok{background:#f0fdf4;border-color:#bbf7d0;color:#166534;}
+.pagu-mini.warn{background:#fffbeb;border-color:#fde68a;color:#92400e;}
+.pagu-mini.over{background:#fef2f2;border-color:#fecaca;color:#b91c1c;font-weight:600;}
+.pagu-mini.none{color:var(--text-muted);}
+.sd-bar{display:inline-block;width:110px;height:8px;border-radius:5px;background:#eef2f8;overflow:hidden;vertical-align:middle;}
+.sd-bar i{display:block;height:100%;}
+table.datatable td.neg{color:#b91c1c;font-weight:700;}
+.sd-pick{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.sd-pick button{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:17px;line-height:1;padding:0;}
+.sd-pick button.sel{outline:2px solid #0f172a;outline-offset:1px;}
+.sd-pick.colors button{border:none;border-radius:50%;width:26px;height:26px;}
 .admin-panel h3{font-size:12.5px;margin:0 0 10px;font-weight:700;}
 .jadwal-block{border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;}
 .jadwal-block .jb-title{font-weight:700;font-size:12.5px;margin-bottom:8px;}
@@ -488,6 +570,8 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
 </script>
 </head>
 <body>
+<script>window.APP_CONFIG = window.APP_CONFIG || { apiUrl: "" /* tempel URL Web App Apps Script (berakhiran /exec) di sini */ };</script>
+<div id="syncOverlay" style="position:fixed;inset:0;z-index:100000;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;"><div style="background:#fff;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.15);padding:26px;max-width:460px;width:92%;font-size:15px;font-weight:700;color:#0f172a;">Memuat data dari Google Sheets…</div></div>
 
 <div id="loginGate">
   <div class="card">
@@ -536,6 +620,7 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
     </ul>
     <div class="nav-section-label">Program Kerja</div>
     <ul class="nav">
+      <li><button data-view="sumberdana"><span class="ic">&#9878;</span> Sumber Dana &amp; Pagu</button></li>
       <li><button data-view="program"><span class="ic">&#128203;</span> Program Kerja</button></li>
       <li><button data-view="serahterima"><span class="ic">&#128179;</span> Serah Terima Dana</button></li>
       <li><button data-view="realisasi"><span class="ic">&#128200;</span> Realisasi Program</button></li>
@@ -545,6 +630,7 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
     <ul class="nav">
       <li><button data-view="bku"><span class="ic">&#128176;</span> Buku Kas Umum</button></li>
       <li><button data-view="kontrolkeuangan"><span class="ic">&#128272;</span> Kontrol Keuangan</button></li>
+      <li><button data-view="draftpengeluaran"><span class="ic">&#128221;</span> Draft Pengeluaran</button></li>
     </ul>
     <div class="nav-section-label">Pembayaran Siswa</div>
     <ul class="nav">
@@ -561,7 +647,7 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
     <ul class="nav">
       <li><button id="btnOpenExportCenter" style="color:var(--text-primary);font-weight:600;"><span class="ic">&#128202;</span> Ekspor Excel &amp; PDF</button></li>
     </ul>
-    <div class="sidebar-foot">BOS mengacu format RKAS Kemendikbudristek. SPP/Uang Pangkal/Dana Lainnya dikelola terpisah. Seluruh data tersimpan dan tersinkronisasi otomatis secara realtime antar-perangkat melalui basis data cloud Firebase Firestore.</div>
+    <div class="sidebar-foot">BOS mengacu format RKAS Kemendikbudristek. SPP/Uang Pangkal/Dana Lainnya dikelola terpisah. Seluruh data tersimpan dan tersinkronisasi otomatis secara realtime antar-perangkat melalui Google Sheets (cloud).</div>
   </nav>
 
   <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
@@ -581,10 +667,9 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
       <div class="topbar-actions">
         <span id="cashWarningBadge" class="cash-warning-badge" style="display:none;" title="Klik untuk melihat rincian kas di Dashboard">⚠️ Kas Menipis</span>
         <span id="onlineStatusBadge" class="online-badge" title="Status koneksi internet"></span>
-        <button class="btn" id="btnGoogleAuth" style="display:inline-flex;align-items:center;gap:6px;" title="Masuk dengan akun Google untuk sinkronisasi database">
-          <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
-          <span id="btnGoogleAuthLabel">Masuk Google</span>
-        </button>
+        <button class="btn" id="btnBackupDownload" title="Unduh cadangan seluruh data (.json). Berkas ini memuat Kode Admin, simpan di tempat aman.">&#11015; Cadangan</button>
+        <button class="btn" id="btnBackupRestore" title="Pulihkan data dari berkas cadangan (.json) — mengganti seluruh data">&#11014; Pulihkan</button>
+        <input type="file" id="backupFileInput" accept=".json,application/json" style="display:none">
         <span id="currentUserLabel" style="font-size:12px;color:var(--text-secondary);align-self:center;margin-right:2px;"></span>
         <button class="btn" id="btnSwitchUser">Ganti Pengguna</button>
         <button class="btn" id="btnLoadSample">Muat Contoh Data</button>
@@ -713,13 +798,13 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
         </div>
 
         <div class="card">
-          <h2>Basis Data Cloud Realtime (Firebase Firestore)</h2>
-          <p class="desc">Aplikasi ini terhubung langsung ke basis data cloud Firebase Firestore. Semua data keuangan sekolah (identitas sekolah, siswa, GTK, program kerja, BKU, SPP, dan peminjaman) otomatis disinkronkan secara realtime ke seluruh perangkat tanpa perlu Google Spreadsheet atau cadangan manual.</p>
+          <h2>Basis Data: Google Sheets</h2>
+          <p class="desc">Semua data keuangan sekolah (identitas sekolah, siswa, GTK, program kerja, BKU, SPP, dan peminjaman) disimpan di Google Sheets milik sekolah dan tidak disimpan di perangkat. Perubahan dikirim otomatis dan perangkat lain memperbarui diri tiap beberapa detik. Sheet bernama Siswa, GTK, SPP, BKU, Program, dan lainnya adalah tampilan baca-saja yang dibuat otomatis. Gunakan tombol Cadangan di bagian atas untuk mengunduh salinan data (.json).</p>
           <div style="display:flex; align-items:center; gap:12px; margin-top:14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px 16px;">
             <span style="font-size:22px;">🟢</span>
             <div>
-              <div style="font-weight:700; color:#166534; font-size:13.5px;">Cloud Database Realtime Terhubung &amp; Aktif</div>
-              <div style="font-size:12px; color:#15803d; margin-top:2px;">Setiap penambahan, perubahan, atau penghapusan data otomatis tersimpan dan diperbarui langsung ke semua perangkat secara instan.</div>
+              <div style="font-weight:700; color:#166534; font-size:13.5px;">Terhubung ke Google Sheets</div>
+              <div style="font-size:12px; color:#15803d; margin-top:2px;">Lihat lencana status di bagian atas: hijau berarti semua perubahan sudah tersimpan, kuning/merah berarti masih menunggu atau sedang offline.</div>
             </div>
           </div>
         </div>
@@ -800,6 +885,7 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
           </div>
           <div id="programUserNotice" style="display:none; margin-bottom:12px; background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; padding:10px 14px; border-radius:6px; font-size:12.5px;"></div>
           <div class="subtabs" id="programTabs"></div>
+          <div id="paguPanel"></div>
           <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:12px;">
             <div class="field" style="max-width:260px;" id="programStatusFilterWrap">
               <label>Filter Status</label>
@@ -820,6 +906,46 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
             </table>
           </div>
           <div class="table-actions"><span class="badge-note"><span id="programCount">0</span> program</span></div>
+        </div>
+      </section>
+
+      <!-- ============ SUMBER DANA & PAGU ============ -->
+      <section class="view" id="view-sumberdana">
+        <div class="card">
+          <h2>Sumber Dana &amp; Pagu</h2>
+          <p class="desc"><b>Pagu</b> adalah batas total anggaran program kerja untuk satu sumber dana dalam satu tahun anggaran. Anggaran program yang <i>diajukan</i> maupun yang <i>disetujui</i> dihitung terhadap pagu, dan Admin diberi peringatan bila melebihinya. Isi 0 (atau kosongkan) bila sumber dana tidak dibatasi. Admin dapat menambah sumber dana baru (mis. Dana Komite) atau menghapus sumber dana yang belum memiliki data.</p>
+          <div class="table-actions" style="margin-bottom:10px;">
+            <button class="btn primary small" id="btnAddSumber" type="button">+ Tambah Sumber Dana</button>
+          </div>
+          <div class="table-scroll">
+            <table class="datatable" id="tblSumber">
+              <thead><tr><th>No</th><th>Sumber Dana</th><th>Pagu (Rp)</th><th>Diajukan (Rp)</th><th>Disetujui (Rp)</th><th>Sisa Pagu (Rp)</th><th>Pemakaian Pagu</th><th>Saldo Awal Kas (Rp)</th><th>Aksi</th></tr></thead>
+              <tbody></tbody><tfoot></tfoot>
+            </table>
+          </div>
+          <div class="badge-note" style="margin-top:10px;"><b>Diajukan</b> = program berstatus Menunggu Persetujuan / Anggaran Perlu Perbaikan. <b>Disetujui</b> = program berstatus Disetujui. Program yang Ditolak tidak dihitung. <b>Sisa Pagu</b> = Pagu &minus; (Diajukan + Disetujui).</div>
+        </div>
+      </section>
+
+      <!-- ============ DRAFT PENGELUARAN ============ -->
+      <section class="view" id="view-draftpengeluaran">
+        <div class="card">
+          <h2>Draft Pencatatan Pengeluaran</h2>
+          <p class="desc">Catatan awal kebutuhan pengeluaran, dikelompokkan <b>per kegiatan</b>: satu kegiatan dapat memiliki banyak item kebutuhan. Menu ini <b>berdiri sendiri</b> &mdash; tidak mempengaruhi Program Kerja, BKU, pagu, maupun laporan.</p>
+          <div class="dd-bar">
+            <button class="btn primary small" id="ddAdd" type="button">+ Tambah Kegiatan</button>
+            <input type="search" id="ddSearch" placeholder="Cari kegiatan / uraian…" autocomplete="off">
+            <button class="btn small" id="ddSort" type="button">&#8645; Urutkan Tanggal</button>
+            <button class="btn small" id="ddToggleAll" type="button">Ciutkan Semua</button>
+            <span class="sp"></span>
+            <button class="btn small" id="ddExcel" type="button" style="background:#107c41;color:#fff;border-color:#107c41;">&#11015; Unduh Excel</button>
+            <button class="btn small danger" id="ddClear" type="button">Hapus Semua</button>
+          </div>
+          <div class="dd-summary" id="ddSummary"></div>
+          <div id="ddList"></div>
+          <div class="badge-note" style="margin-top:6px;">
+            <b>Cara cepat:</b> klik <b>+ Tambah Kegiatan</b> &rarr; isi tanggal &amp; nama kegiatan &rarr; <b>Enter</b> untuk lanjut ke tabel item. Di tabel, ketik di baris kosong paling bawah (baris baru muncul otomatis); <b>Tab</b> pindah kolom, <b>Enter</b> di kolom Harga lanjut ke baris berikutnya. Beberapa baris dari Excel (Uraian, Jumlah, Harga) bisa langsung ditempel dengan <b>Ctrl+V</b>. Tanggal boleh ditulis <b>25/01/2026</b>, <b>25-1-2026</b>, atau <b>2026-01-25</b>. Data tersimpan otomatis ke Google Sheets dan dapat dilihat semua pengguna.
+          </div>
         </div>
       </section>
 
@@ -1176,6 +1302,27 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
 </div>
 
 <!-- ===================== MODALS ===================== -->
+<div class="modal-overlay" id="modal-sumber">
+  <div class="modal-box">
+    <button class="modal-close" data-close="modal-sumber">&times;</button>
+    <h2 id="sdModalTitle">Tambah Sumber Dana</h2>
+    <p class="desc">Sumber dana baru langsung tersedia di Program Kerja, Buku Kas Umum, Dashboard, Peminjaman, Laporan, dan Ekspor.</p>
+    <div class="form-grid" style="grid-template-columns:1fr;">
+      <div class="field"><label>Nama Sumber Dana</label><input id="sdNama" maxlength="40" placeholder="cth: Dana Komite" autocomplete="off"></div>
+      <div class="field"><label>Ikon</label><div class="sd-pick" id="sdIconPick"></div><input id="sdIkon" maxlength="4" autocomplete="off" style="max-width:90px;margin-top:6px;" placeholder="ikon"></div>
+      <div class="field"><label>Warna</label><div class="sd-pick colors" id="sdColorPick"></div></div>
+      <div class="field"><label>Pagu (Rp)</label><input id="sdPagu" type="text" data-currency placeholder="Kosong / 0 = tidak dibatasi"></div>
+      <div class="field"><label>Keterangan Pagu (opsional)</label><input id="sdKet" maxlength="120" autocomplete="off" placeholder="cth: SK Penetapan Pagu No. 12/2026"></div>
+      <div class="field"><label>Saldo Awal Kas (Rp)</label><input id="sdSaldo" type="text" data-currency placeholder="0"></div>
+    </div>
+    <div id="sdError" style="display:none;color:#b91c1c;font-weight:600;font-size:12.5px;margin-top:8px;"></div>
+    <div class="modal-actions">
+      <button class="btn" type="button" data-close="modal-sumber">Batal</button>
+      <button class="btn primary" type="button" id="sdSimpan">Simpan</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-program">
   <div class="modal-box">
     <button class="modal-close" data-close="modal-program">&times;</button>
@@ -1184,7 +1331,7 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
     <div class="form-grid" style="grid-template-columns:1fr;">
       <div class="field"><label>Nama Program</label><input id="mpNamaProgram" placeholder="cth: Peringatan Hari Kemerdekaan"></div>
       <div class="field"><label>Deskripsi</label><textarea id="mpDeskripsi" rows="3" placeholder="Deskripsi singkat program"></textarea></div>
-      <div class="field"><label>Sumber Dana</label><select id="mpSumberDana"></select></div>
+      <div class="field"><label>Sumber Dana</label><select id="mpSumberDana"></select><small id="mpSumberHint" style="display:none;margin-top:4px;color:var(--text-muted);font-size:12px;"></small></div>
       <div class="field">
         <label>Tanggal Pelaksanaan</label>
         <div id="mpTanggalList"></div>
@@ -1203,6 +1350,7 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
     <button class="modal-close" data-close="modal-program-anggaran">&times;</button>
     <h2 id="paTitle">Kelola Anggaran Program</h2>
     <div class="desc" id="paSub"></div>
+    <div id="paPaguInfo"></div>
     <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
       <button class="btn small" id="paBtnCetakProposal">&#128424; Cetak Proposal</button>
     </div>
@@ -1235,8 +1383,9 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
         </div>
       </div>
       <div>
+        <div class="badge-note" id="paGridHint" style="display:none;margin-bottom:8px;">&#128161; Ketik langsung di tabel: <b>Enter</b> = baris berikutnya, <b>Tab</b> = kolom berikutnya, <b>&uarr;&darr;</b> di kolom angka. Bisa <b>tempel (Ctrl+V) banyak baris sekaligus dari Excel/Google Sheets</b> dengan urutan kolom Uraian, Volume, Satuan, Harga.</div>
         <div class="table-scroll">
-          <table class="datatable narrow" id="tblProgramAnggaran">
+          <table class="datatable narrow budget-grid" id="tblProgramAnggaran">
             <thead><tr><th>No</th><th>Uraian</th><th>Vol</th><th>Satuan</th><th>Harga</th><th>Total</th><th></th></tr></thead>
             <tbody></tbody><tfoot></tfoot>
           </table>
@@ -1494,10 +1643,9 @@ html.user-logged-in .app-shell.hidden-until-login{display:flex !important;}
           </p>
           <div style="display:flex; flex-direction:column; gap:6px;">
             <button class="btn small" id="mecBtnExcelAll" style="background:#107c41; color:#fff; border-color:#107c41; justify-content:center; font-weight:600;">
-              📥 Master Excel (11 Sheet Lengkap)
+              📥 Master Excel (Semua Sheet Lengkap)
             </button>
-            <button class="btn small" id="mecBtnExcelBkuBos" style="justify-content:center;">BKU Dana BOS (.xlsx)</button>
-            <button class="btn small" id="mecBtnExcelBkuSpp" style="justify-content:center;">BKU SPP (.xlsx)</button>
+            <div id="mecBkuButtons" style="display:flex; flex-direction:column; gap:6px;"></div>
             <button class="btn small" id="mecBtnExcelSppRekap" style="justify-content:center;">Rekap SPP &amp; Tunggakan (.xlsx)</button>
             <button class="btn small" id="mecBtnExcelProgram" style="justify-content:center;">RKAS &amp; Program Kerja (.xlsx)</button>
             <button class="btn small" id="mecBtnExcelPinjaman" style="justify-content:center;">Buku Pinjaman GTK (.xlsx)</button>
@@ -1594,6 +1742,93 @@ const SUMBER_META = {
   pangkal: { label:"Uang Pangkal",cls:"pangkal", icon:"🎓", saldoKey:"saldoAwalPangkal", bendaharaNameKey:"bendaharaBos", bendaharaNipKey:"nipBendaharaBos", bendaharaLabel:"Bendahara Sekolah" },
   lain:    { label:"Dana Lainnya",cls:"lain", icon:"📦", saldoKey:"saldoAwalLain",    bendaharaNameKey:"bendaharaBos",     bendaharaNipKey:"nipBendaharaBos",     bendaharaLabel:"Bendahara Sekolah" },
 };
+/* =========================================================================
+   SUMBER DANA DINAMIS
+   Daftar sumber dana disimpan di state.sekolah.sumberDana (ikut tersinkron ke
+   Google Sheets). Kosong = memakai 4 sumber dana bawaan. SUMBER_KEYS dan
+   SUMBER_META diisi ulang di tempat oleh rebuildSumberRegistry(), sehingga
+   semua kode yang sudah ada (tab, BKU, dashboard, laporan) otomatis mengikuti.
+   ========================================================================= */
+const SUMBER_BAWAAN = {
+  bos:     { nama:"BOS Reguler",  ikon:"🏫", warna:"var(--series-1)", saldoKey:"saldoAwalBos" },
+  spp:     { nama:"SPP",          ikon:"💳", warna:"var(--series-3)", saldoKey:"saldoAwalSpp" },
+  pangkal: { nama:"Uang Pangkal", ikon:"🎓", warna:"var(--series-2)", saldoKey:"saldoAwalPangkal" },
+  lain:    { nama:"Dana Lainnya", ikon:"📦", warna:"var(--series-7)", saldoKey:"saldoAwalLain" },
+};
+const SUMBER_WAJIB = "bos";   // dipakai LPJ BOS: tidak boleh dihapus
+const SUMBER_COLOR_RE = /^(#[0-9a-fA-F]{3,8}|var\(--series-[0-9]\))$/;
+const SUMBER_ID_RE = /^x_[a-z0-9_]{1,38}$/;
+const SUMBER_COLORS = ["var(--series-1)","var(--series-3)","var(--series-2)","var(--series-7)","#0f766e","#be123c","#b45309","#0369a1","#4d7c0f","#475569"];
+const SUMBER_ICONS = ["🏫","💳","🎓","📦","💰","🏦","🤝","🎁","🏛️","📚","🕌","🍽️"];
+function cleanSumberName(s){ return String(s==null?"":s).replace(/[<>"`\u0000-\u001f]/g,"").replace(/\s+/g," ").trim().slice(0,40); }
+function cleanSumberIcon(s){ const t = String(s==null?"":s).replace(/[<>&"'`\u0000-\u001f\s]/g,""); return Array.from(t).slice(0,2).join(""); }
+function sumberDefaultList(){
+  return Object.keys(SUMBER_BAWAAN).map(id=>({ id, nama:SUMBER_BAWAAN[id].nama, ikon:SUMBER_BAWAAN[id].ikon, warna:SUMBER_BAWAAN[id].warna, pagu:0, paguKet:"" }));
+}
+/* Daftar sumber dana yang berlaku sekarang (sudah dibersihkan/divalidasi). */
+function sumberListNow(){
+  const raw = (typeof state !== "undefined" && state && state.sekolah && Array.isArray(state.sekolah.sumberDana)) ? state.sekolah.sumberDana : null;
+  if(!raw || !raw.length) return sumberDefaultList();
+  const seen = {}, out = [];
+  raw.forEach(s=>{
+    if(!s || typeof s !== "object") return;
+    const id = String(s.id == null ? "" : s.id);
+    const b = Object.prototype.hasOwnProperty.call(SUMBER_BAWAAN, id) ? SUMBER_BAWAAN[id] : null;
+    if(!b && !SUMBER_ID_RE.test(id)) return;
+    if(seen[id]) return;
+    seen[id] = 1;
+    out.push({
+      id,
+      nama: cleanSumberName(s.nama) || (b ? b.nama : id),
+      ikon: cleanSumberIcon(s.ikon) || (b ? b.ikon : "💰"),
+      warna: SUMBER_COLOR_RE.test(String(s.warna||"")) ? String(s.warna) : (b ? b.warna : "#475569"),
+      pagu: Math.max(0, Math.round(Number(s.pagu)||0)),
+      paguKet: String(s.paguKet||"").replace(/[<>"`\u0000-\u001f]/g,"").slice(0,120),
+    });
+  });
+  if(!seen[SUMBER_WAJIB]) out.unshift(sumberDefaultList()[0]);
+  return out;
+}
+function rebuildSumberRegistry(){
+  const list = sumberListNow();
+  SUMBER_KEYS.length = 0;
+  Object.keys(SUMBER_META).forEach(k=> { delete SUMBER_META[k]; });
+  list.forEach(s=>{
+    const b = Object.prototype.hasOwnProperty.call(SUMBER_BAWAAN, s.id) ? SUMBER_BAWAAN[s.id] : null;
+    SUMBER_KEYS.push(s.id);
+    SUMBER_META[s.id] = { label:s.nama, cls:s.id, icon:s.ikon, color:s.warna, pagu:s.pagu, paguKet:s.paguKet, bawaan:!!b,
+      saldoKey: b ? b.saldoKey : "saldoAwal_"+s.id,
+      bendaharaNameKey:"bendaharaBos", bendaharaNipKey:"nipBendaharaBos", bendaharaLabel:"Bendahara Sekolah" };
+    if(state && state.program && !Array.isArray(state.program[s.id])) state.program[s.id] = [];
+    if(state && state.bku && !Array.isArray(state.bku[s.id])) state.bku[s.id] = [];
+  });
+  applySumberStyles();
+  if(!SUMBER_META[currentProgramKey]) currentProgramKey = SUMBER_KEYS[0];
+  if(!SUMBER_META[currentBkuKey]) currentBkuKey = SUMBER_KEYS[0];
+}
+function applySumberStyles(){
+  let st = document.getElementById("sumberStyles");
+  if(!st){ st = document.createElement("style"); st.id = "sumberStyles"; document.head.appendChild(st); }
+  st.textContent = SUMBER_KEYS.map(k=>{
+    const c = SUMBER_META[k].color;
+    return `.badge-sumber.${k}{background:${c};}\n.subtabs button.active.${k}{background:${c};color:#fff;border-color:${c};}`;
+  }).join("\n");
+}
+/* Kolom Saldo Awal di Data Sekolah mengikuti daftar sumber dana. */
+function sekolahFieldsNow(){
+  const out = []; let done = false;
+  SEKOLAH_FIELDS.forEach(f=>{
+    if(f[0].indexOf("saldoAwal") === 0){
+      if(!done){
+        done = true;
+        SUMBER_KEYS.forEach(k=> out.push([SUMBER_META[k].saldoKey, `Saldo Awal Kas ${SUMBER_META[k].label} (Rp)`, "currency"]));
+      }
+      return;
+    }
+    out.push(f);
+  });
+  return out;
+}
 const BULAN_LIST = ["Juli","Agustus","September","Oktober","November","Desember","Januari","Februari","Maret","April","Mei","Juni"];
 const ITEM_LAINNYA_LIST = ["Uang Pangkal","Buku Paket","Seragam","Kegiatan/Study Tour","Lainnya"];
 const SEKOLAH_FIELDS = [
@@ -1612,7 +1847,9 @@ const REALISASI_STATUS = { BELUM:"Belum", TEREALISASI:"Terealisasi", BATAL:"Bata
 const PJ_COLORS = ["#2a78d6","#eb6834","#1baf7a","#eda100","#e87ba4","#008300","#4a3aa7","#e34948"];
 
 let uidCounter = 1;
-function uid(){ return uidCounter++; }
+/* ID unik lintas pengguna/perangkat (waktu + urutan), supaya dua orang yang menambah data bersamaan tidak bentrok. */
+let uidSeq = 0;
+function uid(){ return Date.now() * 1000 + (uidSeq++ % 1000); }
 
 function emptySekolah(){
   return { namaSekolah:"", npsn:"", alamat:"", desa:"", kecamatan:"", kabkota:"", provinsi:"",
@@ -2233,7 +2470,7 @@ function pillHtml(status){
    ========================================================================= */
 const VIEW_TITLES = {
   dashboard:"Dashboard Keuangan Sekolah", sekolah:"Data Identitas Sekolah", siswa:"Data Siswa",
-  gtk:"Guru & Staff (GTK)", peminjaman:"Peminjaman GTK", program:"Program Kerja", serahterima:"Serah Terima Dana Program",
+  gtk:"Guru & Staff (GTK)", peminjaman:"Peminjaman GTK", program:"Program Kerja", serahterima:"Serah Terima Dana Program", sumberdana:"Sumber Dana & Pagu", draftpengeluaran:"Draft Pencatatan Pengeluaran",
   bku:"Buku Kas Umum", kontrolkeuangan:"Kontrol Keuangan (Bendahara & PJ)", realisasi:"Realisasi Program", kalenderprogram:"Kalender & Rekap Program",
   spp:"SPP & Tunggakan Siswa", lain:"Uang Pangkal & Item Lainnya",
   lpjbos:"LPJ - Dana BOS", lpjkons:"LPJ Konsolidasi Sekolah", cetak:"Cetak Laporan Resmi",
@@ -2262,7 +2499,7 @@ function switchView(viewName){
     gtk:renderGtkTable, program:()=>{ renderProgramTabs(); renderProgramTable(); },
     serahterima:renderSerahTerimaTable, kalenderprogram:renderKalenderProgramView,
     bku:()=>renderBkuTable(currentBkuKey), kontrolkeuangan:renderKontrolKeuangan,
-    peminjaman:renderPinjamanTable, sekolah:renderSekolahForm };
+    peminjaman:renderPinjamanTable, sekolah:renderSekolahForm, sumberdana:renderSumberDanaView, draftpengeluaran:renderDraftPengeluaran };
   if(renderers[viewName]) renderers[viewName]();
 
   window.scrollTo({ top:0, behavior:"smooth" });
@@ -2359,7 +2596,7 @@ function refreshHeader(){
 function renderSekolahForm(){
   const wrap = document.getElementById("formSekolah");
   const isAdmin = currentUser.role === "Admin";
-  wrap.innerHTML = SEKOLAH_FIELDS.map(([key,label,type])=>{
+  wrap.innerHTML = sekolahFieldsNow().map(([key,label,type])=>{
     const isCurrency = type==="currency";
     const inputType = isCurrency ? "text" : type;
     const val = isCurrency ? formatRibuan(state.sekolah[key]) : escapeHtml(state.sekolah[key]);
@@ -2689,7 +2926,10 @@ document.getElementById("siswaSearch").addEventListener("input", (e)=>{ siswaSea
    MODAL HELPERS (generic)
    ========================================================================= */
 function openModal(id){ document.getElementById(id).classList.add("open"); }
-function closeModal(id){ document.getElementById(id).classList.remove("open"); }
+function closeModal(id){
+  document.getElementById(id).classList.remove("open");
+  if(id === "modal-program-anggaran"){ try{ renderProgramTable(); }catch(e){} }
+}
 document.querySelectorAll("[data-close]").forEach(el=>{
   el.addEventListener("click", ()=> closeModal(el.dataset.close));
 });
@@ -3425,6 +3665,7 @@ document.getElementById("btnToggleAnggaranAwalLock").addEventListener("click", (
   renderProgramTable();
 });
 function renderProgramTable(){
+  renderPaguPanel();
   const isAdmin = currentUser.role === "Admin";
   document.getElementById("programStatusFilterWrap").style.display = isAdmin ? "" : "none";
   renderProgramLockPanel();
@@ -3503,6 +3744,34 @@ function renderMpTanggalList(){
   }));
 }
 document.getElementById("mpAddTanggal").addEventListener("click", ()=>{ mpDatesDraft.push(""); renderMpTanggalList(); });
+/* Pindahkan program ke sumber dana lain. HANYA Admin, HANYA selama program belum
+   Disetujui/Ditolak, dan HANYA bila belum ada realisasi / serah terima / pengembalian
+   dana (supaya BKU dan saldo per sumber dana tidak ikut kacau). Mengembalikan true
+   bila program sudah berada di sumber dana tujuan. */
+function moveProgramSumber(prog, newKey){
+  if(currentUser.role !== "Admin"){ alert("Hanya Admin yang dapat mengubah sumber dana program."); return false; }
+  if(!SUMBER_KEYS.includes(newKey)) return false;
+  const found = findProgramById(prog.id);
+  if(!found) return false;
+  const oldKey = found.key;
+  if(oldKey === newKey){ prog.sumberDana = newKey; return true; }
+  if(prog.status !== PROGRAM_STATUS.MENUNGGU && prog.status !== PROGRAM_STATUS.PERBAIKAN){
+    alert("Sumber dana hanya dapat diubah selama program belum Disetujui atau Ditolak.");
+    return false;
+  }
+  if((prog.realisasi||[]).length || (prog.serahTerima||[]).length || (prog.pengembalianUangMuka||[]).length){
+    alert("Sumber dana tidak dapat diubah karena program ini sudah memiliki catatan realisasi/serah terima/pengembalian dana.");
+    return false;
+  }
+  if(!confirm(`Pindahkan program "${prog.namaProgram||"(tanpa nama)"}" dari ${SUMBER_META[oldKey].label} ke ${SUMBER_META[newKey].label}?\n\nSeluruh item anggaran program ini ikut berpindah ke sumber dana baru.${movePaguWarning(prog, newKey)}`)) return false;
+  const idx = state.program[oldKey].findIndex(p=>p.id===prog.id);
+  if(idx >= 0) state.program[oldKey].splice(idx, 1);
+  prog.sumberDana = newKey;
+  state.program[newKey].push(prog);
+  currentProgramKey = newKey;
+  try { localStorage.setItem("keuanganSekolahProgramKey", currentProgramKey); } catch(e){}
+  return true;
+}
 function openProgramModal(prog){
   const isAdmin = currentUser.role === "Admin";
   if(prog){
@@ -3521,8 +3790,14 @@ function openProgramModal(prog){
   document.getElementById("mpDeskripsi").value = prog ? prog.deskripsi : "";
   const selSumber = document.getElementById("mpSumberDana");
   selSumber.innerHTML = SUMBER_KEYS.map(k=>`<option value="${k}">${SUMBER_META[k].label}</option>`).join("");
-  selSumber.value = prog ? prog.sumberDana : currentProgramKey;
-  selSumber.disabled = !!prog;
+  selSumber.value = prog ? getProgramSumberKey(prog) : currentProgramKey;
+  selSumber.disabled = !!prog && !isAdmin;
+  const hint = document.getElementById("mpSumberHint");
+  if(hint){
+    hint.style.display = prog ? "" : "none";
+    hint.textContent = isAdmin ? "Admin dapat mengubah sumber dana selama program belum disetujui."
+                               : "Sumber dana hanya dapat diubah oleh Admin.";
+  }
   mpDatesDraft = (prog && prog.tanggal && prog.tanggal.length) ? [...prog.tanggal] : [""];
   renderMpTanggalList();
   openModal("modal-program");
@@ -3582,6 +3857,9 @@ document.getElementById("mpSimpan").addEventListener("click", ()=>{
         prog.budgets = (prog.budgets||[]).filter(b=> !removedDates.includes(b.tanggal));
       }
     }
+    if(isAdmin && sumberDana !== found.key){
+      if(!moveProgramSumber(prog, sumberDana)) return;
+    }
     prog.namaProgram = namaProgram; prog.deskripsi = deskripsi; prog.tanggal = tanggal;
     syncProgramRealisasi(prog);
   }
@@ -3611,7 +3889,8 @@ function renderProgramAnggaranModal(){
   const prog = currentAnggaranProg;
   if(!prog) return;
   document.getElementById("paTitle").textContent = `Kelola Anggaran — ${prog.namaProgram||"(tanpa nama)"}`;
-  document.getElementById("paSub").textContent = `Pengaju: ${prog.namaPengaju||"-"} · Status: ${prog.status}`;
+  document.getElementById("paSub").textContent = `Pengaju: ${prog.namaPengaju||"-"} · Sumber dana: ${SUMBER_META[getProgramSumberKey(prog)].label} · Status: ${prog.status}`;
+  renderPaguInfo(prog);
   document.getElementById("paBtnCetakProposal").disabled = !(prog.budgets && prog.budgets.length>0);
 
   const tglSel = document.getElementById("paTanggalFilter");
@@ -3638,6 +3917,10 @@ function renderProgramAnggaranModal(){
   document.querySelectorAll("#modal-program-anggaran .anggaran-cols input, #modal-program-anggaran .anggaran-cols select").forEach(el=> el.disabled = !editable);
   document.getElementById("paBtnSimpanItem").style.display = editable? "" : "none";
 
+  document.querySelector("#modal-program-anggaran .anggaran-cols").classList.add("grid-mode");
+  const gridHint = document.getElementById("paGridHint");
+  if(gridHint) gridHint.style.display = editable ? "" : "none";
+  if(editable){ renderBudgetGrid(prog); renderAdminPanel(); return; }
   const budgets = (prog.budgets||[]).filter(b=>b.tanggal===currentAnggaranTanggal);
   const tbody = document.querySelector("#tblProgramAnggaran tbody");
   tbody.innerHTML = budgets.map((b,i)=>`
@@ -3675,6 +3958,205 @@ function renderProgramAnggaranModal(){
   }));
 
   renderAdminPanel();
+}
+/* =========================================================================
+   TABEL KEBUTUHAN ANGGARAN (gaya Excel)
+   Setiap sel langsung bisa diketik; baris kosong di paling bawah otomatis
+   menjadi item baru begitu diisi. Enter/Tab/panah untuk berpindah sel, dan
+   beberapa baris dari Excel/Google Sheets bisa ditempel sekaligus.
+   ========================================================================= */
+const BG_FIELDS = ["uraian","volume","satuan","harga"];
+
+/* Angka dari teks bebas: "2,5" "1.500" "Rp 1.500.000,00" "1,500,000". Negatif -> 0. */
+function parseAngka(s){
+  s = String(s??"").replace(/rp\.?/ig,"").replace(/\s/g,"");
+  if(!s) return 0;
+  if(s.includes(",") && s.includes(".")){
+    s = s.lastIndexOf(",") > s.lastIndexOf(".") ? s.replace(/\./g,"").replace(",",".") : s.replace(/,/g,"");
+  } else if(s.includes(",")){
+    s = /^\d{1,3}(,\d{3}){2,}$/.test(s) ? s.replace(/,/g,"") : s.replace(",",".");
+  } else if(s.includes(".")){
+    if(/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g,"");
+  }
+  const n = Number(s.replace(/[^\d.]/g,""));
+  return isFinite(n) && n > 0 ? n : 0;
+}
+function bgRowsForDate(prog){ return (prog.budgets||[]).filter(b=>b.tanggal===currentAnggaranTanggal); }
+function bgRowOf(tr, prog){
+  const id = tr && tr.dataset ? tr.dataset.id : "";
+  return id ? (prog.budgets||[]).find(b=>String(b.id)===id) || null : null;
+}
+function bgRowHtml(b, no){
+  const tot = b ? (Number(b.volume)||0)*(Number(b.harga)||0) : 0;
+  const bad = b && !String(b.uraian||"").trim();
+  return `<tr class="bg-row${b?"":" bg-new"}" data-id="${b?b.id:""}">
+    <td class="bg-no" style="text-align:center;color:var(--text-muted);">${b?no:"+"}</td>
+    <td><input data-f="uraian" class="${bad?"bg-bad":""}" value="${escapeHtml(b?b.uraian:"")}" placeholder="${b?"":"Ketik kebutuhan baru di sini…"}" autocomplete="off"></td>
+    <td class="num"><input data-f="volume" inputmode="decimal" value="${b&&b.volume?escapeHtml(String(b.volume).replace(".",",")):""}" autocomplete="off"></td>
+    <td><input data-f="satuan" value="${escapeHtml(b?b.satuan:"")}" autocomplete="off"></td>
+    <td class="num"><input data-f="harga" value="${b?formatRibuan(b.harga):""}" autocomplete="off"></td>
+    <td class="computed bg-total">${b?rp(tot):""}</td>
+    <td style="text-align:center;">${b?`<button class="row-del" type="button" data-bgdel tabindex="-1" title="Hapus baris">&times;</button>`:""}</td>
+  </tr>`;
+}
+/* Riwayat uraian dari semua program: dipakai mengisi otomatis satuan & harga. */
+function bgHistoryMap(){
+  const m = new Map();
+  SUMBER_KEYS.forEach(k=> (state.program[k]||[]).forEach(p=> (p.budgets||[]).forEach(b=>{
+    const u = String(b.uraian||"").trim();
+    if(u && (String(b.satuan||"").trim() || Number(b.harga))) m.set(u.toLowerCase(), { satuan:b.satuan||"", harga:Number(b.harga)||0 });
+  })));
+  return m;
+}
+function bgApply(row, f, val, fromPaste){
+  if(f==="uraian") row.uraian = String(val);
+  else if(f==="volume") row.volume = parseAngka(val);
+  else if(f==="satuan") row.satuan = String(val);
+  else if(f==="harga") row.harga = fromPaste ? Math.round(parseAngka(val)) : parseRibuan(val);
+}
+function bgUpdateTotals(prog){
+  document.querySelector("#tblProgramAnggaran tfoot").innerHTML =
+    `<tr><td colspan="5" style="text-align:right">TOTAL TANGGAL INI</td><td class="computed">${rp(programBudgetTotalForDate(prog, currentAnggaranTanggal))}</td><td></td></tr>`;
+  document.getElementById("paGrandTotal").textContent = rp(programBudgetTotal(prog));
+  renderPaguInfo(prog);
+  renderPaguPanel();
+}
+function bgRenumber(tbody){
+  let n = 0;
+  tbody.querySelectorAll("tr.bg-row:not(.bg-new)").forEach(tr=>{ tr.querySelector(".bg-no").textContent = ++n; });
+}
+function bgFocus(tbody, rowIdx, field){
+  const trs = tbody.querySelectorAll("tr.bg-row");
+  const tr = trs[Math.max(0, Math.min(rowIdx, trs.length-1))];
+  const inp = tr && tr.querySelector(`input[data-f="${field}"]`);
+  if(inp) inp.focus();
+}
+function renderBudgetGrid(prog, focusSpec){
+  const before = (prog.budgets||[]).length;
+  prog.budgets = (prog.budgets||[]).filter(b=> String(b.uraian||"").trim() || String(b.satuan||"").trim() || Number(b.volume) || Number(b.harga));
+  if(prog.budgets.length !== before) saveStateToLocalStorage();
+  const tbody = document.querySelector("#tblProgramAnggaran tbody");
+  const rows = bgRowsForDate(prog);
+  tbody.innerHTML = rows.map((b,i)=>bgRowHtml(b,i+1)).join("") + bgRowHtml(null,0);
+  tbody.querySelectorAll('input[data-f="harga"]').forEach(wireCurrencyInput);
+  bgBind(tbody);
+  bgUpdateTotals(prog);
+  if(focusSpec) bgFocus(tbody, focusSpec.row, focusSpec.field);
+}
+function bgBind(tbody){
+  tbody.oninput = (e)=>{
+    const inp = e.target;
+    if(!inp.dataset || !inp.dataset.f) return;
+    const prog = currentAnggaranProg; if(!prog) return;
+    const tr = inp.closest("tr");
+    let row = bgRowOf(tr, prog);
+    if(!row){
+      if(!String(inp.value).trim()) return;
+      row = newProgramBudgetRow(prog, currentAnggaranTanggal);
+      prog.budgets.push(row);
+      tr.dataset.id = row.id; tr.classList.remove("bg-new");
+      tr.lastElementChild.innerHTML = `<button class="row-del" type="button" data-bgdel tabindex="-1" title="Hapus baris">&times;</button>`;
+      const tmp = document.createElement("tbody");
+      tmp.innerHTML = bgRowHtml(null,0);
+      const newTr = tmp.firstElementChild;
+      tbody.appendChild(newTr);
+      wireCurrencyInput(newTr.querySelector('input[data-f="harga"]'));
+      bgRenumber(tbody);
+    }
+    bgApply(row, inp.dataset.f, inp.value);
+    tr.querySelector('input[data-f="uraian"]').classList.toggle("bg-bad", !String(row.uraian||"").trim());
+    tr.querySelector(".bg-total").textContent = rp((Number(row.volume)||0)*(Number(row.harga)||0));
+    bgUpdateTotals(prog);
+    saveStateToLocalStorage();
+  };
+  tbody.onchange = (e)=>{
+    const inp = e.target;
+    if(!inp.dataset || !inp.dataset.f) return;
+    const prog = currentAnggaranProg; if(!prog) return;
+    const tr = inp.closest("tr");
+    const row = bgRowOf(tr, prog); if(!row) return;
+    const f = inp.dataset.f;
+    if(f==="uraian"){
+      row.uraian = inp.value.trim(); inp.value = row.uraian;
+      inp.classList.toggle("bg-bad", !row.uraian);
+      if(row.uraian && !String(row.satuan||"").trim() && !Number(row.harga)){
+        const h = bgHistoryMap().get(row.uraian.toLowerCase());
+        if(h){
+          row.satuan = h.satuan; row.harga = h.harga;
+          tr.querySelector('input[data-f="satuan"]').value = h.satuan;
+          tr.querySelector('input[data-f="harga"]').value = formatRibuan(h.harga);
+          tr.querySelector(".bg-total").textContent = rp((Number(row.volume)||0)*(Number(row.harga)||0));
+        }
+      }
+    } else if(f==="satuan"){
+      row.satuan = inp.value.trim(); inp.value = row.satuan;
+    } else if(f==="volume"){
+      inp.value = row.volume ? String(row.volume).replace(".",",") : "";
+    }
+    bgUpdateTotals(prog);
+    saveStateToLocalStorage();
+  };
+  tbody.onkeydown = (e)=>{
+    const inp = e.target;
+    if(!inp.dataset || !inp.dataset.f) return;
+    const tr = inp.closest("tr"), f = inp.dataset.f;
+    const move = (dir)=>{
+      const sib = dir>0 ? tr.nextElementSibling : tr.previousElementSibling;
+      const t = sib && sib.querySelector(`input[data-f="${f}"]`);
+      if(t) t.focus();
+    };
+    if(e.key==="Enter"){ e.preventDefault(); move(e.shiftKey ? -1 : 1); }
+    else if((e.key==="ArrowDown" || e.key==="ArrowUp") && (f==="volume" || f==="harga")){ e.preventDefault(); move(e.key==="ArrowDown" ? 1 : -1); }
+    else if(e.key==="Escape"){ inp.blur(); }
+  };
+  tbody.onfocusin = (e)=>{
+    const inp = e.target;
+    if(inp.dataset && inp.dataset.f) setTimeout(()=>{ try{ inp.select(); }catch(_){} }, 0);
+  };
+  tbody.onclick = (e)=>{
+    const btn = e.target.closest ? e.target.closest("[data-bgdel]") : null;
+    if(!btn) return;
+    const prog = currentAnggaranProg; if(!prog) return;
+    const tr = btn.closest("tr");
+    const row = bgRowOf(tr, prog); if(!row) return;
+    const kosong = !String(row.uraian||"").trim() && !Number(row.volume) && !Number(row.harga);
+    if(!kosong && !confirmDelete(`item anggaran "${row.uraian || "(tanpa uraian)"}"`)) return;
+    const idx = [...tbody.querySelectorAll("tr.bg-row")].indexOf(tr);
+    prog.budgets = prog.budgets.filter(b=>b.id!==row.id);
+    renderBudgetGrid(prog, { row:idx, field:"uraian" });
+    saveStateToLocalStorage();
+  };
+  tbody.onpaste = (e)=>{
+    const inp = e.target;
+    if(!inp.dataset || !inp.dataset.f) return;
+    const text = (e.clipboardData || window.clipboardData).getData("text") || "";
+    if(!/[\t\n]/.test(text.replace(/[\r\n]+$/,""))) return;      // satu nilai saja: tempel biasa
+    e.preventDefault();
+    const prog = currentAnggaranProg; if(!prog) return;
+    let grid = text.replace(/\r/g,"").split("\n");
+    while(grid.length && !grid[grid.length-1].trim()) grid.pop();
+    grid = grid.map(l=> l.split("\t").map(c=>c.trim()));
+    // baris judul kolom dari Excel dilewati
+    if(grid.length > 1 && grid[0].some(c=>/^(no\.?|uraian|nama|kebutuhan|volume|vol\.?|qty|jumlah|satuan|harga|total)/i.test(c)) && !grid[0].some(c=>/\d/.test(c))) grid.shift();
+    const startCol = BG_FIELDS.indexOf(inp.dataset.f);
+    // kolom "No" di paling kiri (1,2,3,…) dibuang bila dimulai dari kolom Uraian
+    if(startCol===0 && grid.length && grid.every(r=> r.length>=5 && /^\d+\.?$/.test(r[0]))) grid = grid.map(r=>r.slice(1));
+    const tbody2 = document.querySelector("#tblProgramAnggaran tbody");
+    const trs = [...tbody2.querySelectorAll("tr.bg-row")];
+    const startIdx = trs.indexOf(inp.closest("tr"));
+    const rows = bgRowsForDate(prog);
+    let last = startIdx;
+    grid.forEach((cells,i)=>{
+      if(cells.every(c=>!c)) return;
+      const p = startIdx + i;
+      let row = rows[p];
+      if(!row){ row = newProgramBudgetRow(prog, currentAnggaranTanggal); prog.budgets.push(row); rows.push(row); }
+      cells.forEach((c,j)=>{ const f = BG_FIELDS[startCol+j]; if(f) bgApply(row, f, c, true); });
+      last = p;
+    });
+    renderBudgetGrid(prog, { row:last, field:inp.dataset.f });
+    saveStateToLocalStorage();
+  };
 }
 function resetProgramAnggaranForm(){
   editingBudgetId = null;
@@ -3797,12 +4279,27 @@ function renderAdminPanel(){
       renderProgramTable();
     });
   } else {
-    body.innerHTML = `
+    const bisaPindah = (prog.status === PROGRAM_STATUS.MENUNGGU || prog.status === PROGRAM_STATUS.PERBAIKAN);
+    const sumberRow = bisaPindah ? `<div class="kv-row" style="align-items:center;"><span>Sumber dana program</span><span>
+        <select id="paSumberSel">${SUMBER_KEYS.map(k=>`<option value="${k}" ${k===getProgramSumberKey(prog)?"selected":""}>${SUMBER_META[k].label}</option>`).join("")}</select>
+        <button class="btn small" id="paBtnPindahSumber" type="button">Pindahkan</button></span></div>` : "";
+    body.innerHTML = sumberRow + `
       <div class="modal-actions" style="justify-content:flex-start;">
         <button class="btn primary small" id="paBtnSetujuiPj" type="button">Setujui &amp; Tunjuk PJ</button>
         <button class="btn small" id="paBtnPerbaikan" type="button">Setujui, Perlu Perbaikan</button>
         <button class="btn danger small" id="paBtnTolak" type="button">Tolak</button>
       </div>`;
+    const btnPindah = document.getElementById("paBtnPindahSumber");
+    if(btnPindah) btnPindah.addEventListener("click", ()=>{
+      const baru = document.getElementById("paSumberSel").value;
+      if(baru === getProgramSumberKey(prog)) return;
+      if(moveProgramSumber(prog, baru)){
+        renderProgramTabs(); renderProgramTable(); renderProgramAnggaranModal();
+        saveStateToLocalStorage();
+      } else {
+        document.getElementById("paSumberSel").value = getProgramSumberKey(prog);
+      }
+    });
     document.getElementById("paBtnSetujuiPj").addEventListener("click", ()=> openPjPickModal(prog));
     document.getElementById("paBtnPerbaikan").addEventListener("click", ()=>{
       if(!confirm("Tandai anggaran program ini perlu perbaikan? Guru pengaju akan dapat mengedit kembali.")) return;
@@ -3825,6 +4322,11 @@ function openPjPickModal(prog){
   openModal("modal-pj-pick");
   document.getElementById("pjPickConfirm").onclick = ()=>{
     const pj = sel.value || prog.namaPengaju;
+    const _pi = paguInfo(getProgramSumberKey(prog));
+    if(_pi.pagu > 0){
+      const _after = _pi.disetujui + programBudgetTotal(prog);
+      if(_after > _pi.pagu && !confirm(`⚠ MELEBIHI PAGU\n\nPagu ${SUMBER_META[getProgramSumberKey(prog)].label}: ${rp(_pi.pagu)}\nTotal anggaran disetujui setelah ini: ${rp(_after)}\nMelebihi pagu sebesar: ${rp(_after - _pi.pagu)}\n\nTetap setujui program ini? (Pagu dapat diubah di menu Sumber Dana & Pagu.)`)) return;
+    }
     if(!confirm(`Setujui program ini dan tunjuk "${pj}" sebagai Penanggung Jawab?`)) return;
     prog.status = PROGRAM_STATUS.DISETUJUI;
     prog.pj = pj;
@@ -4471,7 +4973,7 @@ document.querySelectorAll("#kalenderRekapTabs button").forEach(b=> b.addEventLis
    (SUMBER_META[key].icon) supaya sekilas pandang langsung kelihatan jenis
    dananya tanpa harus baca teks. */
 function sumberCalColor(key){
-  return { bos:"var(--series-1)", spp:"var(--series-3)", pangkal:"var(--series-2)", lain:"var(--series-7)" }[key] || "#888";
+  return (SUMBER_META[key] && SUMBER_META[key].color) || "#888";
 }
 /* Daftar program yang sudah disetujui, dipakai sebagai sumber data bersama
    oleh grid kalender, filter dropdown, dan cetak kalender — sudah kena
@@ -5269,8 +5771,10 @@ function renderDashboardTrend(){
     yearSel.value = trendFilterTahun;
   }
   const sumberSel = document.getElementById("trendFilterSumber");
-  if(sumberSel && trendFilterSumber){
-    sumberSel.value = trendFilterSumber;
+  if(sumberSel){
+    if(trendFilterSumber !== "all" && !SUMBER_META[trendFilterSumber]) trendFilterSumber = "all";
+    sumberSel.innerHTML = `<option value="all">Semua Sumber Dana</option>` + SUMBER_KEYS.map(k=>`<option value="${k}">${SUMBER_META[k].label}</option>`).join("");
+    sumberSel.value = trendFilterSumber || "all";
   }
 
   const selYear = Number(trendFilterTahun);
@@ -5482,8 +5986,8 @@ function renderDashboard(){
     return `
       <div class="stat-card">
         <div class="stat-label"><span class="badge-sumber ${SUMBER_META[r.key].cls}">${r.label}</span>${warnBadge}</div>
-        <div class="stat-value" style="color:var(--series-${r.key==='bos'?'1':r.key==='spp'?'3':r.key==='pangkal'?'2':'7'})">${rp(sAkhir)}</div>
-        <div class="stat-sub">Anggaran ${rp(r.anggaran)} · Realisasi ${pct(r.pct)}</div>
+        <div class="stat-value" style="color:${SUMBER_META[r.key].color}">${rp(sAkhir)}</div>
+        <div class="stat-sub">Anggaran ${rp(r.anggaran)} · Realisasi ${pct(r.pct)}</div>${paguStatHtml(r.key)}
       </div>`;
   }).join("");
 
@@ -6110,25 +6614,24 @@ function buildPrintRekap(){
   </div>`;
 }
 
-const PRINT_TABS = [
+function buildPrintTabs(){
+  return [
   { key:"rekap", label:"Rekap Sekolah", build: buildPrintRekap },
   { key:"rekapprogram", label:"Rekap Program", build: ()=>buildPrintRekapProgram() },
-  { key:"rab-bos", label:"RAB BOS", build: ()=>buildPrintRab("bos") },
-  { key:"rab-spp", label:"RAB SPP", build: ()=>buildPrintRab("spp") },
-  { key:"rab-pangkal", label:"RAB Uang Pangkal", build: ()=>buildPrintRab("pangkal") },
-  { key:"rab-lain", label:"RAB Dana Lainnya", build: ()=>buildPrintRab("lain") },
-  { key:"bku-bos", label:"BKU BOS", build: ()=>buildPrintBku("bos") },
-  { key:"bku-spp", label:"BKU SPP", build: ()=>buildPrintBku("spp") },
-  { key:"bku-pangkal", label:"BKU Uang Pangkal", build: ()=>buildPrintBku("pangkal") },
-  { key:"bku-lain", label:"BKU Dana Lainnya", build: ()=>buildPrintBku("lain") },
+    ...SUMBER_KEYS.map(k=>({ key:"rab-"+k, label:"RAB "+SUMBER_META[k].label, build: ()=>buildPrintRab(k) })),
+    ...SUMBER_KEYS.map(k=>({ key:"bku-"+k, label:"BKU "+SUMBER_META[k].label, build: ()=>buildPrintBku(k) })),
   { key:"realisasi", label:"Realisasi", build: buildPrintRealisasi },
   { key:"lpjbos", label:"LPJ BOS", build: buildPrintLpjBos },
   { key:"lpjkons", label:"LPJ Konsolidasi", build: buildPrintLpjKons },
   { key:"rekapspp", label:"Rekap SPP", build: buildPrintRekapSpp },
   { key:"rekappangkal", label:"Rekap Uang Pangkal", build: buildPrintRekapPangkal },
-];
+  ];
+}
+let PRINT_TABS = buildPrintTabs();
 let currentPrintTab = "rekap";
 function renderPrint(){
+  PRINT_TABS = buildPrintTabs();
+  if(!PRINT_TABS.some(t=>t.key===currentPrintTab)) currentPrintTab = "rekap";
   document.getElementById("printRoot").innerHTML = PRINT_TABS.map(t=>t.build()).join("");
   const wrap = document.getElementById("printTabs");
   wrap.innerHTML = PRINT_TABS.map(t=>`<button data-p="${t.key}" class="${t.key===currentPrintTab?'active':''}">${t.label}</button>`).join("");
@@ -6198,65 +6701,37 @@ function exportAllToExcel(){
   setAutoColWidths(ws1, s1);
   XLSX.utils.book_append_sheet(wb, ws1, "Ringkasan & Profil");
 
-  // 2. BKU BOS
-  const bkuBosAoa = [
-    [`BUKU KAS UMUM (BKU) - BOS (TA ${ta})`],
-    ["No", "Tanggal", "No Bukti", "Uraian Transaksi", "Penerimaan (Rp)", "Pengeluaran (Rp)", "Saldo (Rp)"],
-    ["-", "-", "-", "Saldo Awal Kas BOS", bkuTotals('bos').saldoAwal, 0, bkuTotals('bos').saldoAwal]
-  ];
-  bkuWithSaldo('bos').forEach((r,i)=>{
-    bkuBosAoa.push([i+1, r.tanggal, r.noBukti, r.uraian, Number(r.penerimaan)||0, Number(r.pengeluaran)||0, Number(r.saldo)||0]);
+  // 2. BKU per sumber dana (mengikuti daftar sumber dana yang ada)
+  const bkuSheetNames = new Set();
+  SUMBER_KEYS.forEach(k=>{
+    const meta = SUMBER_META[k];
+    const tot0 = bkuTotals(k);
+    const aoa = [
+      [`BUKU KAS UMUM (BKU) - ${meta.label.toUpperCase()} (TA ${ta})`],
+      ["No", "Tanggal", "No Bukti", "Uraian Transaksi", "Penerimaan (Rp)", "Pengeluaran (Rp)", "Saldo (Rp)"],
+      ["-", "-", "-", `Saldo Awal Kas ${meta.label}`, tot0.saldoAwal, 0, tot0.saldoAwal]
+    ];
+    bkuWithSaldo(k).forEach((r,idx)=>{
+      aoa.push([idx+1, r.tanggal, r.noBukti, r.uraian, Number(r.penerimaan)||0, Number(r.pengeluaran)||0, Number(r.saldo)||0]);
+    });
+    aoa.push(["", "", "", "TOTAL", tot0.penerimaan, tot0.pengeluaran, tot0.saldoAkhir]);
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    setAutoColWidths(ws, aoa);
+    XLSX.utils.book_append_sheet(wb, ws, uniqueSheetName("BKU " + meta.label, bkuSheetNames));
   });
-  const totBos = bkuTotals('bos');
-  bkuBosAoa.push(["", "", "", "TOTAL", totBos.penerimaan, totBos.pengeluaran, totBos.saldoAkhir]);
-  const wsBkuBos = XLSX.utils.aoa_to_sheet(bkuBosAoa);
-  setAutoColWidths(wsBkuBos, bkuBosAoa);
-  XLSX.utils.book_append_sheet(wb, wsBkuBos, "BKU BOS");
 
-  // 3. BKU SPP
-  const bkuSppAoa = [
-    [`BUKU KAS UMUM (BKU) - SPP (TA ${ta})`],
-    ["No", "Tanggal", "No Bukti", "Uraian Transaksi", "Penerimaan (Rp)", "Pengeluaran (Rp)", "Saldo (Rp)"],
-    ["-", "-", "-", "Saldo Awal Kas SPP", bkuTotals('spp').saldoAwal, 0, bkuTotals('spp').saldoAwal]
+  // 2b. Sumber Dana & Pagu
+  const paguAoa = [
+    [`SUMBER DANA & PAGU (TA ${ta})`],
+    ["No", "Sumber Dana", "Pagu (Rp)", "Diajukan (Rp)", "Disetujui (Rp)", "Sisa Pagu (Rp)", "Saldo Awal Kas (Rp)", "Keterangan Pagu"]
   ];
-  bkuWithSaldo('spp').forEach((r,i)=>{
-    bkuSppAoa.push([i+1, r.tanggal, r.noBukti, r.uraian, Number(r.penerimaan)||0, Number(r.pengeluaran)||0, Number(r.saldo)||0]);
+  SUMBER_KEYS.forEach((k,idx)=>{
+    const inf = paguInfo(k);
+    paguAoa.push([idx+1, SUMBER_META[k].label, inf.pagu, inf.diajukan, inf.disetujui, inf.pagu ? inf.sisa : "", Number(state.sekolah[SUMBER_META[k].saldoKey])||0, SUMBER_META[k].paguKet || ""]);
   });
-  const totSpp = bkuTotals('spp');
-  bkuSppAoa.push(["", "", "", "TOTAL", totSpp.penerimaan, totSpp.pengeluaran, totSpp.saldoAkhir]);
-  const wsBkuSpp = XLSX.utils.aoa_to_sheet(bkuSppAoa);
-  setAutoColWidths(wsBkuSpp, bkuSppAoa);
-  XLSX.utils.book_append_sheet(wb, wsBkuSpp, "BKU SPP");
-
-  // 4. BKU Uang Pangkal
-  const bkuPklAoa = [
-    [`BUKU KAS UMUM (BKU) - UANG PANGKAL (TA ${ta})`],
-    ["No", "Tanggal", "No Bukti", "Uraian Transaksi", "Penerimaan (Rp)", "Pengeluaran (Rp)", "Saldo (Rp)"],
-    ["-", "-", "-", "Saldo Awal Kas Pangkal", bkuTotals('pangkal').saldoAwal, 0, bkuTotals('pangkal').saldoAwal]
-  ];
-  bkuWithSaldo('pangkal').forEach((r,i)=>{
-    bkuPklAoa.push([i+1, r.tanggal, r.noBukti, r.uraian, Number(r.penerimaan)||0, Number(r.pengeluaran)||0, Number(r.saldo)||0]);
-  });
-  const totPkl = bkuTotals('pangkal');
-  bkuPklAoa.push(["", "", "", "TOTAL", totPkl.penerimaan, totPkl.pengeluaran, totPkl.saldoAkhir]);
-  const wsBkuPkl = XLSX.utils.aoa_to_sheet(bkuPklAoa);
-  setAutoColWidths(wsBkuPkl, bkuPklAoa);
-  XLSX.utils.book_append_sheet(wb, wsBkuPkl, "BKU Uang Pangkal");
-
-  // 5. BKU Dana Lainnya
-  const bkuLainAoa = [
-    [`BUKU KAS UMUM (BKU) - DANA LAINNYA (TA ${ta})`],
-    ["No", "Tanggal", "No Bukti", "Uraian Transaksi", "Penerimaan (Rp)", "Pengeluaran (Rp)", "Saldo (Rp)"],
-    ["-", "-", "-", "Saldo Awal Kas Lainnya", bkuTotals('lain').saldoAwal, 0, bkuTotals('lain').saldoAwal]
-  ];
-  bkuWithSaldo('lain').forEach((r,i)=>{
-    bkuLainAoa.push([i+1, r.tanggal, r.noBukti, r.uraian, Number(r.penerimaan)||0, Number(r.pengeluaran)||0, Number(r.saldo)||0]);
-  });
-  const totLain = bkuTotals('lain');
-  bkuLainAoa.push(["", "", "", "TOTAL", totLain.penerimaan, totLain.pengeluaran, totLain.saldoAkhir]);
-  const wsBkuLain = XLSX.utils.aoa_to_sheet(bkuLainAoa);
-  setAutoColWidths(wsBkuLain, bkuLainAoa);
-  XLSX.utils.book_append_sheet(wb, wsBkuLain, "BKU Dana Lain");
+  const wsPagu = XLSX.utils.aoa_to_sheet(paguAoa);
+  setAutoColWidths(wsPagu, paguAoa);
+  XLSX.utils.book_append_sheet(wb, wsPagu, "Sumber Dana & Pagu");
 
   // 6. Rencana & Realisasi RKAS
   const progAoa = [
@@ -6609,7 +7084,7 @@ document.getElementById("btnReset").addEventListener("click", ()=>{
      __PRISTINE_HTML__) untuk berjaga-jaga kalau tombolnya sampai
      dimunculkan paksa lewat DevTools pada file hasil "Bagikan Aplikasi". */
   if(window.__LOCKED_GSHEET_URL__){ alert('Fitur "Kosongkan Semua" dinonaktifkan pada aplikasi hasil "Bagikan Aplikasi".'); return; }
-  if(confirm("Yakin ingin mengosongkan seluruh data? Data yang sudah tersimpan di Firestore akan dibersihkan.")){
+  if(confirm("Yakin ingin mengosongkan seluruh data? Data di Google Sheets juga akan dikosongkan.")){
     state = { sekolah:emptySekolah(), siswa:[], gtk:[], program:{bos:[],spp:[],pangkal:[],lain:[]}, bku:{bos:[],spp:[],pangkal:[],lain:[]}, sppTx:[], itemTx:[], pinjaman:[], lpj:{periode:"Triwulan I",danaDiterima:0,penerimaanLain:0}, docCounters:{kwitansi:0,bast:0,peminjaman:0} };
     renderAll();
     saveStateToLocalStorage();
@@ -6723,185 +7198,700 @@ function loadSampleData(){
 }
 
 /* =========================================================================
-   PENYIMPANAN LOKAL OTOMATIS (offline) & SINKRON OTOMATIS (online)
-   Aplikasi ini berjalan sepenuhnya di sisi klien: SEMUA fitur input/edit/
-   hapus/cetak bekerja tanpa internet sama sekali. Yang ditambahkan di sini
-   hanyalah dua hal supaya "online & offline" terasa mulus:
-   1) Autosave ke localStorage perangkat, supaya data tidak hilang kalau tab
-      ditutup/reload saat offline (sebelumnya data hanya ada di memori
-      selama sesi berjalan). Disimpan berkala + saat tab disembunyikan/
-      ditutup, BUKAN pada tiap keystroke — cukup untuk mencegah kehilangan
-      data tanpa perlu menyisipkan hook ke puluhan handler CRUD yang sudah
-      ada (risiko lebih rendah, coverage tetap memadai untuk kasus reload/
-      tutup tab yang wajar).
-   2) Perubahan data otomatis disinkronkan secara realtime ke cloud database
-      Firebase Firestore dan tersimpan di penyimpanan lokal.
+   PENYIMPANAN: CLOUD-ONLY (Google Sheets)
+   Tidak ada data keuangan yang disimpan di perangkat. Semua logika muat/
+   simpan/sinkron ada di skrip "SINKRONISASI GOOGLE SHEETS" di akhir file.
+   Fungsi di bawah dipertahankan karena dipanggil dari banyak handler CRUD:
+   tugasnya hanya menandai bahwa ada perubahan yang perlu dikirim.
    ========================================================================= */
-const AUTOSAVE_KEY = "keuanganSekolahAutosaveV1";
-window.currentAuthToken = window.currentAuthToken || null;
-window.currentAuthUser = window.currentAuthUser || null;
-var currentAuthToken = window.currentAuthToken;
-var currentAuthUser = window.currentAuthUser;
-let cloudSyncInFlight = false;
-
-async function syncStateToCloudDatabase() {
-  if (!currentAuthToken || cloudSyncInFlight || !navigator.onLine) return;
-  cloudSyncInFlight = true;
-  try {
-    const res = await fetch('/api/school-data', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + currentAuthToken
-      },
-      body: JSON.stringify({ state })
-    });
-    if (res.status === 401 && currentAuthUser) {
-      currentAuthToken = await currentAuthUser.getIdToken(true);
-    }
-  } catch (err) {
-    console.warn("Cloud sync error:", err);
-  } finally {
-    cloudSyncInFlight = false;
-  }
-}
-
-async function loadStateFromCloudDatabase() {
-  if (!currentAuthToken) return null;
-  try {
-    const res = await fetch('/api/school-data', {
-      headers: {
-        'Authorization': 'Bearer ' + currentAuthToken
-      }
-    });
-    if (!res.ok) return null;
-    const body = await res.json();
-    return body.data;
-  } catch (err) {
-    console.warn("Load cloud data error:", err);
-    return null;
-  }
-}
-
 function saveStateToLocalStorage(){
-  try{
-    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ savedAt:new Date().toISOString(), state }));
-  }catch(err){ /* localStorage tidak tersedia — abaikan diam-diam */ }
-  if (typeof window.syncStateToFirestore === 'function') {
-    window.syncStateToFirestore();
-  }
-  if (currentAuthToken) {
-    syncStateToCloudDatabase();
-  }
+  if (window.__rkasSync) window.__rkasSync.schedulePush();
 }
-function loadStateFromLocalStorage(){
-  try{
-    const raw = localStorage.getItem(AUTOSAVE_KEY);
-    if(!raw) return null;
-    const parsed = JSON.parse(raw);
-    return (parsed && parsed.state) ? parsed.state : null;
-  }catch(err){ return null; }
-}
-const SEEDED_SCHOOL_STATE = {"sekolah":{"namaSekolah":"SD IT ABU HURAIRAH SEMBALUN","npsn":"70007619","alamat":"Jl. Raya Tumpang Telu, Dusun Berugak Mujur","desa":"Sembalun Timba Gading","kecamatan":"Sembalun","kabkota":"Lombok Timur","provinsi":"Nusa Tenggara Barat","kepsek":"Ahmad Riyadi, S.Kom.","nipKepsek":"-","bendaharaBos":"Royandi Setiadi, S.Si.","nipBendaharaBos":"-","bendaharaKomite":"","nipBendaharaKomite":"","komite":"H. Bayu","tahunAjaran":"2026/2027","saldoAwalBos":"0","saldoAwalSpp":"0","saldoAwalPangkal":"0","saldoAwalLain":"0","batasKasMenipis":"1000000","kopGambar":"","useKopGambar":"false","kotaCetak":"Sembalun Timba Gading","adminPassword":"semogaberhasil","securityQuestion":"siapa orang yang seharusnya paling kamu cintai?","securityAnswer":"Rasulullah","anggaranAwalTerkunci":"false"},"siswa":[],"gtk":[{"nama":"Royandi Setiadi, S.Si.","nip":"-","jabatan":"TU"},{"nama":"Fajar Himawan, S.T.","nip":"-","jabatan":"TU"},{"nama":"Ahmad Riyadi, S.Kom.","nip":"-","jabatan":"Kepala Sekolah"},{"nama":"Jeniati, S.Pd.","nip":"AHS05","jabatan":"Koordinator Guru Umum"},{"nama":"Royandi Setiadi","nip":"AHS06","jabatan":"Tenaga Administrasi / Bendahara"}],"program":{"bos":[{"namaPengaju":"Jeniati, S.Pd.","namaProgram":"Kebutuhan KBM guru kelas","deskripsi":"Segala Alat dan Bahan yang menunjang kelancaran Kegiatan Belajar Mengajar, Bersifat segera.","tanggal":["2026-07-14"],"status":"Disetujui","pj":"Jeniati, S.Pd.","budgets":[{"id":6159,"tanggal":"2026-07-14","uraian":"Gunting","volume":4,"satuan":"lusin","harga":70000},{"id":6160,"tanggal":"2026-07-14","uraian":"Kertas HVS A4","volume":20,"satuan":"rim","harga":70000},{"id":6161,"tanggal":"2026-07-14","uraian":"Box Barang","volume":5,"satuan":"buah","harga":70000},{"id":6162,"tanggal":"2026-07-14","uraian":"Buku Calistung","volume":2,"satuan":"Exemplar","harga":90000},{"id":6163,"tanggal":"2026-07-14","uraian":"Buku Hitung Warna Warni","volume":1,"satuan":"Bungkus","harga":50000},{"id":6164,"tanggal":"2026-07-14","uraian":"Mangkok warna-warni","volume":1,"satuan":"lusin","harga":50000},{"id":6165,"tanggal":"2026-07-14","uraian":"Sedotan warna warni","volume":8,"satuan":"bungkus","harga":10000},{"id":6166,"tanggal":"2026-07-14","uraian":"LKPD online PKn","volume":1,"satuan":"orang","harga":100000},{"id":6167,"tanggal":"2026-07-14","uraian":"Peraga bangun datar","volume":2,"satuan":"box","harga":100000},{"id":6168,"tanggal":"2026-07-14","uraian":"Peraga bangun ruang","volume":1,"satuan":"box","harga":100000},{"id":6169,"tanggal":"2026-07-14","uraian":"Timbangan digital","volume":1,"satuan":"buah","harga":60000},{"id":6170,"tanggal":"2026-07-14","uraian":"Peraga jam dinding","volume":2,"satuan":"buah","harga":50000},{"id":6171,"tanggal":"2026-07-14","uraian":"Lem kertas","volume":4,"satuan":"pack","harga":100000},{"id":6172,"tanggal":"2026-07-14","uraian":"Double tape","volume":10,"satuan":"pcs","harga":10000},{"id":6173,"tanggal":"2026-07-14","uraian":"Perekat velcro","volume":2,"satuan":"pcs","harga":50000},{"id":6174,"tanggal":"2026-07-14","uraian":"Spidol warna-warni","volume":2,"satuan":"paket","harga":50000},{"id":6175,"tanggal":"2026-07-14","uraian":"spidol hitam","volume":2,"satuan":"lusin","harga":30000},{"id":6176,"tanggal":"2026-07-14","uraian":"spidol hitam permanen","volume":3,"satuan":"buah","harga":12000},{"id":6177,"tanggal":"2026-07-14","uraian":"Uang mainan","volume":2,"satuan":"set","harga":50000},{"id":6178,"tanggal":"2026-07-14","uraian":"Lakban bening","volume":15,"satuan":"buah","harga":12000},{"id":6179,"tanggal":"2026-07-14","uraian":"Karpet Plastik","volume":2,"satuan":"buah","harga":150000},{"id":6180,"tanggal":"2026-07-14","uraian":"Plastik laminating","volume":3,"satuan":"rim","harga":100000},{"id":6181,"tanggal":"2026-07-14","uraian":"Kartu angka","volume":5,"satuan":"set","harga":20000},{"id":6182,"tanggal":"2026-07-14","uraian":"Kartu Simbol","volume":2,"satuan":"set","harga":15000},{"id":6183,"tanggal":"2026-07-14","uraian":"Kartu nilai tempat","volume":2,"satuan":"set","harga":25000},{"id":6184,"tanggal":"2026-07-14","uraian":"Flash card bilangan","volume":1,"satuan":"set","harga":40000},{"id":6185,"tanggal":"2026-07-14","uraian":"Amplop plastik","volume":15,"satuan":"buah","harga":7000},{"id":6186,"tanggal":"2026-07-14","uraian":"dKertas Origami","volume":10,"satuan":"pcs","harga":10000},{"id":6187,"tanggal":"2026-07-14","uraian":"Sticky note","volume":20,"satuan":"pack","harga":15000},{"id":6188,"tanggal":"2026-07-14","uraian":"Penggaris besi 30 cm","volume":1,"satuan":"buah","harga":25000},{"id":6189,"tanggal":"2026-07-14","uraian":"Penggaris kayu 1 meter","volume":1,"satuan":"buah","harga":35000},{"id":6190,"tanggal":"2026-07-14","uraian":"Busur derajat","volume":10,"satuan":"buah","harga":10000},{"id":6191,"tanggal":"2026-07-14","uraian":"Jangka sederhana","volume":10,"satuan":"buah","harga":10000},{"id":6192,"tanggal":"2026-07-14","uraian":"Papan grafik lipat","volume":1,"satuan":"buah","harga":75000},{"id":6193,"tanggal":"2026-07-14","uraian":"Stiker bintang","volume":50,"satuan":"pack","harga":5000},{"id":6194,"tanggal":"2026-07-14","uraian":"Peta Indonesia","volume":3,"satuan":"buah","harga":100000},{"id":6195,"tanggal":"2026-07-14","uraian":"Peta NTB","volume":1,"satuan":"buah","harga":100000},{"id":6196,"tanggal":"2026-07-14","uraian":"Poster Pencernaan","volume":2,"satuan":"buah","harga":20000},{"id":6197,"tanggal":"2026-07-14","uraian":"Poster Pernafasan","volume":2,"satuan":"buah","harga":20000},{"id":6198,"tanggal":"2026-07-14","uraian":"poster rantai makanan","volume":2,"satuan":"buah","harga":20000},{"id":6199,"tanggal":"2026-07-14","uraian":"Alat peraga telinga","volume":1,"satuan":"set","harga":250000},{"id":6200,"tanggal":"2026-07-14","uraian":"Alat peraga mata","volume":1,"satuan":"set","harga":100000},{"id":6201,"tanggal":"2026-07-14","uraian":"Magnet","volume":3,"satuan":"buah","harga":30000},{"id":6202,"tanggal":"2026-07-14","uraian":"Mobil mainan","volume":6,"satuan":"buah","harga":15000},{"id":6203,"tanggal":"2026-07-14","uraian":"Kertas manila","volume":10,"satuan":"lembar","harga":5000},{"id":6204,"tanggal":"2026-07-14","uraian":"Sabuncuci tangan","volume":1,"satuan":"buah","harga":35000},{"id":6205,"tanggal":"2026-07-14","uraian":"Pasta gigi","volume":1,"satuan":"buah","harga":20000},{"id":6206,"tanggal":"2026-07-14","uraian":"Gunting kuku","volume":1,"satuan":"buah","harga":15000},{"id":6207,"tanggal":"2026-07-14","uraian":"Poster pancasila","volume":11,"satuan":"buah","harga":10000},{"id":6208,"tanggal":"2026-07-14","uraian":"Poster undang-undang","volume":5,"satuan":"buah","harga":10000},{"id":6209,"tanggal":"2026-07-14","uraian":"stick es krim warna-warni","volume":2,"satuan":"bungkus","harga":50000},{"id":6210,"tanggal":"2026-07-14","uraian":"Kertas A4 Warna-warni","volume":1,"satuan":"pack","harga":100000}],"realisasi":[{"id":6211,"tanggal":"2026-07-14","tanggalReal":"2026-08-21","anggaranTerpakai":250000,"keterangan":"kertas A4/ Tunas Mawar (Faktur Terlampir)"},{"id":6212,"tanggal":"2026-07-14","tanggalReal":"2026-08-21","anggaranTerpakai":408000,"keterangan":"Stik Es krim, Penggaris Kayu, dll/ Anak Dara (Faktur Terlampir)"},{"id":6213,"tanggal":"2026-07-14","tanggalReal":"2026-09-04","anggaranTerpakai":510000,"keterangan":"Plastik Laminasi, HVS A4/ Adi Copy Center (Faktur Terlampir)"},{"id":6214,"tanggal":"2026-07-14","tanggalReal":"2026-09-05","anggaranTerpakai":500000,"keterangan":"Kertas HVS A4 / Adi Copy Center (Faktur Terlampir)"}],"serahTerima":[{"id":6215,"tanggal":"2026-10-05","nominal":7466000,"dates":["2026-07-14"],"mode":"total","noBast":"001/BA-STD/X/2026","budgetRef":7466000}],"pengembalianUangMuka":[{"id":6216,"tanggal":"2026-10-05","nominal":1400000,"keterangan":"sisa anggaran dari bu Jeniati"}]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja biaya langganan wifi","deskripsi":"Biaya bulanan langganan wifi","tanggal":["2026-07-31","2026-08-31","2026-09-30","2026-10-31","2026-11-30","2026-12-31","2027-01-31","2027-02-28","2027-03-31","2027-04-30","2027-05-31","2027-06-30"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":7794,"tanggal":"2026-07-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7795,"tanggal":"2026-08-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7796,"tanggal":"2026-09-30","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7797,"tanggal":"2026-10-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7798,"tanggal":"2026-11-30","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7799,"tanggal":"2026-12-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7800,"tanggal":"2027-01-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7801,"tanggal":"2027-02-28","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7802,"tanggal":"2027-03-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7803,"tanggal":"2027-04-30","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7804,"tanggal":"2027-05-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7805,"tanggal":"2027-06-30","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja beban listrik","deskripsi":"Belanja kebutuhan daya listrik","tanggal":["2026-10-06","2026-11-01","2026-12-01","2027-01-01","2027-02-01","2027-03-01","2027-04-01","2027-05-01","2027-06-01","2026-07-01","2026-08-01","2026-09-01"],"status":"Menunggu Persetujuan","pj":"","budgets":[{"id":7807,"tanggal":"2026-10-06","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7808,"tanggal":"2026-11-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7809,"tanggal":"2026-12-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7810,"tanggal":"2027-01-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7811,"tanggal":"2027-02-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7812,"tanggal":"2027-03-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7813,"tanggal":"2027-04-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7814,"tanggal":"2027-05-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7815,"tanggal":"2027-06-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7816,"tanggal":"2026-07-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7817,"tanggal":"2026-08-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7818,"tanggal":"2026-09-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]}],"spp":[{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja Gaji GTK Tetap","deskripsi":"Baya Gaji Bulanan GTK Tetap","tanggal":["2026-08-02","2026-09-02","2026-11-02","2026-12-02","2027-01-02","2027-02-02","2027-03-02","2027-04-02","2027-05-02","2027-06-02","2026-10-02","2027-03-01"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":6959,"tanggal":"2026-08-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6960,"tanggal":"2026-09-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6961,"tanggal":"2026-11-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6962,"tanggal":"2026-12-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6963,"tanggal":"2027-01-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6964,"tanggal":"2027-02-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6965,"tanggal":"2027-03-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6966,"tanggal":"2027-04-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6967,"tanggal":"2027-05-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6968,"tanggal":"2027-06-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6969,"tanggal":"2026-10-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6970,"tanggal":"2027-03-01","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja Honor Kepala Unit Usaha Sekolah","deskripsi":"Honor Pengelola Unit Usaha Sekolah","tanggal":["2026-09-02","2026-10-02","2026-11-02","2026-12-02","2027-01-02","2027-02-02","2027-03-02","2027-04-02","2027-05-02","2027-06-02","2027-06-30"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":7495,"tanggal":"2026-09-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7496,"tanggal":"2026-10-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7497,"tanggal":"2026-11-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7498,"tanggal":"2026-12-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7499,"tanggal":"2027-01-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7500,"tanggal":"2027-02-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7501,"tanggal":"2027-03-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7502,"tanggal":"2027-04-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7503,"tanggal":"2027-05-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7504,"tanggal":"2027-06-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7505,"tanggal":"2027-06-30","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja Honor Absensi GTK","deskripsi":"Belanja Honor Absensi bulanan GTK","tanggal":["2026-08-02","2026-09-02","2026-10-02","2026-11-02","2026-12-02","2027-01-02","2027-02-02","2027-03-02","2027-04-02","2027-05-02","2027-06-02","2027-06-30"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":7586,"tanggal":"2026-08-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7587,"tanggal":"2026-09-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7588,"tanggal":"2026-10-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7589,"tanggal":"2026-11-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7590,"tanggal":"2026-12-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7591,"tanggal":"2027-01-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7592,"tanggal":"2027-02-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7593,"tanggal":"2027-03-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7594,"tanggal":"2027-04-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7595,"tanggal":"2027-05-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7596,"tanggal":"2027-06-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7597,"tanggal":"2027-06-30","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]}],"pangkal":[],"lain":[{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja Biaya Transport Perjalanan Dinas Kepala Sekolah","deskripsi":"Segala biaya yang dibutuhkan untuk perjalanan dinas kepala sekolah baik dari dinas pendidikan ataupun pimpinan PAH Mataram","tanggal":["2026-09-01","2026-12-01","2027-03-01","2027-06-01"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":8055,"tanggal":"2026-09-01","uraian":"Transport","volume":2,"satuan":"kali","harga":150000},{"id":8059,"tanggal":"2026-12-01","uraian":"Transport","volume":2,"satuan":"kali","harga":150000},{"id":8060,"tanggal":"2027-03-01","uraian":"Transport","volume":2,"satuan":"kali","harga":150000},{"id":8061,"tanggal":"2027-06-01","uraian":"Transport","volume":2,"satuan":"kali","harga":150000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja Honor Satpam","deskripsi":"Honor bulanan Satpam","tanggal":["2026-08-02","2026-09-02","2026-10-02","2026-11-02","2026-12-02","2027-01-02","2027-02-02","2027-03-02","2027-04-02","2027-05-02","2027-06-02","2027-06-30"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":8194,"tanggal":"2026-08-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8195,"tanggal":"2026-09-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8196,"tanggal":"2026-10-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8197,"tanggal":"2026-11-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8198,"tanggal":"2026-12-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8199,"tanggal":"2027-01-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8200,"tanggal":"2027-02-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8201,"tanggal":"2027-03-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8202,"tanggal":"2027-04-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8203,"tanggal":"2027-05-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8204,"tanggal":"2027-06-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8205,"tanggal":"2027-06-30","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Pelaksanaan Sumatif Tengah Semester (STS)","deskripsi":"Sumatif Tengah Semester","tanggal":["2026-09-10","2027-03-10"],"status":"Menunggu Persetujuan","pj":"","budgets":[{"id":8638,"tanggal":"2026-09-10","uraian":"Fotocopy","volume":4000,"satuan":"lembar","harga":300},{"id":8639,"tanggal":"2026-09-10","uraian":"Reward Mumtaz Murtafi'","volume":100,"satuan":"siswa","harga":10000},{"id":8788,"tanggal":"2026-09-10","uraian":"Honor Panitia","volume":1,"satuan":"Paket","harga":3300000},{"id":8943,"tanggal":"2027-03-10","uraian":"Fotocopy","volume":4000,"satuan":"lembar","harga":300},{"id":8944,"tanggal":"2027-03-10","uraian":"Reward Mumtaz Murtafi'","volume":100,"satuan":"siswa","harga":10000},{"id":8945,"tanggal":"2027-03-10","uraian":"Honor Panitia","volume":1,"satuan":"Paket","harga":3300000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]}]},"bku":{"bos":[{"tanggal":"2026-10-05","komponen":"","kodeRekening":"","noBukti":"","uraian":"Serah Terima Dana (Uang Muka Kegiatan): Kebutuhan KBM guru kelas — PJ: Jeniati, S.Pd.","kegiatan":"","keterangan":"","penerimaan":"0","pengeluaran":"7466000","autoRealisasiId":"","autoSerahTerimaId":"6215","autoPengembalianId":"","autoPiutangId":""},{"tanggal":"2026-10-05","komponen":"","kodeRekening":"","noBukti":"","uraian":"Pengembalian Sisa Uang Muka: Kebutuhan KBM guru kelas — PJ: Jeniati, S.Pd. — sisa anggaran dari bu Jeniati","kegiatan":"","keterangan":"","penerimaan":"1400000","pengeluaran":"0","autoRealisasiId":"","autoSerahTerimaId":"","autoPengembalianId":"6216","autoPiutangId":""}],"spp":[],"pangkal":[],"lain":[]},"sppTx":[],"itemTx":[],"pinjaman":[]};
 
-function applyStateFromCloud(cloudData){
-  if (!cloudData || !cloudData.sekolah) return;
-  state = {
-    sekolah: Object.assign(emptySekolah(), cloudData.sekolah || {}),
-    siswa: Array.isArray(cloudData.siswa) ? cloudData.siswa : [],
-    gtk: Array.isArray(cloudData.gtk) ? cloudData.gtk : [],
-    program: Object.assign({ bos: [], spp: [], pangkal: [], lain: [] }, cloudData.program || {}),
-    bku: Object.assign({ bos: [], spp: [], pangkal: [], lain: [] }, cloudData.bku || {}),
-    sppTx: Array.isArray(cloudData.sppTx) ? cloudData.sppTx : [],
-    itemTx: Array.isArray(cloudData.itemTx) ? cloudData.itemTx : [],
-    pinjaman: Array.isArray(cloudData.pinjaman) ? cloudData.pinjaman : [],
-    lpj: Object.assign({ periode: "Triwulan I", danaDiterima: 0, penerimaanLain: 0 }, cloudData.lpj || {}),
-    docCounters: Object.assign({ kwitansi: 0, bast: 0, peminjaman: 0 }, cloudData.docCounters || {})
-  };
-  window.state = state;
+const SEEDED_SCHOOL_STATE = {"sekolah":{"namaSekolah":"SD IT ABU HURAIRAH SEMBALUN","npsn":"70007619","alamat":"Jl. Raya Tumpang Telu, Dusun Berugak Mujur","desa":"Sembalun Timba Gading","kecamatan":"Sembalun","kabkota":"Lombok Timur","provinsi":"Nusa Tenggara Barat","kepsek":"Ahmad Riyadi, S.Kom.","nipKepsek":"-","bendaharaBos":"Royandi Setiadi, S.Si.","nipBendaharaBos":"-","bendaharaKomite":"","nipBendaharaKomite":"","komite":"H. Bayu","tahunAjaran":"2026/2027","saldoAwalBos":"0","saldoAwalSpp":"0","saldoAwalPangkal":"0","saldoAwalLain":"0","batasKasMenipis":"1000000","kopGambar":"","useKopGambar":"false","kotaCetak":"Sembalun Timba Gading","adminPassword":"","securityQuestion":"","securityAnswer":"","anggaranAwalTerkunci":"false"},"siswa":[],"gtk":[{"nama":"Royandi Setiadi, S.Si.","nip":"-","jabatan":"TU"},{"nama":"Fajar Himawan, S.T.","nip":"-","jabatan":"TU"},{"nama":"Ahmad Riyadi, S.Kom.","nip":"-","jabatan":"Kepala Sekolah"},{"nama":"Jeniati, S.Pd.","nip":"AHS05","jabatan":"Koordinator Guru Umum"},{"nama":"Royandi Setiadi","nip":"AHS06","jabatan":"Tenaga Administrasi / Bendahara"}],"program":{"bos":[{"namaPengaju":"Jeniati, S.Pd.","namaProgram":"Kebutuhan KBM guru kelas","deskripsi":"Segala Alat dan Bahan yang menunjang kelancaran Kegiatan Belajar Mengajar, Bersifat segera.","tanggal":["2026-07-14"],"status":"Disetujui","pj":"Jeniati, S.Pd.","budgets":[{"id":6159,"tanggal":"2026-07-14","uraian":"Gunting","volume":4,"satuan":"lusin","harga":70000},{"id":6160,"tanggal":"2026-07-14","uraian":"Kertas HVS A4","volume":20,"satuan":"rim","harga":70000},{"id":6161,"tanggal":"2026-07-14","uraian":"Box Barang","volume":5,"satuan":"buah","harga":70000},{"id":6162,"tanggal":"2026-07-14","uraian":"Buku Calistung","volume":2,"satuan":"Exemplar","harga":90000},{"id":6163,"tanggal":"2026-07-14","uraian":"Buku Hitung Warna Warni","volume":1,"satuan":"Bungkus","harga":50000},{"id":6164,"tanggal":"2026-07-14","uraian":"Mangkok warna-warni","volume":1,"satuan":"lusin","harga":50000},{"id":6165,"tanggal":"2026-07-14","uraian":"Sedotan warna warni","volume":8,"satuan":"bungkus","harga":10000},{"id":6166,"tanggal":"2026-07-14","uraian":"LKPD online PKn","volume":1,"satuan":"orang","harga":100000},{"id":6167,"tanggal":"2026-07-14","uraian":"Peraga bangun datar","volume":2,"satuan":"box","harga":100000},{"id":6168,"tanggal":"2026-07-14","uraian":"Peraga bangun ruang","volume":1,"satuan":"box","harga":100000},{"id":6169,"tanggal":"2026-07-14","uraian":"Timbangan digital","volume":1,"satuan":"buah","harga":60000},{"id":6170,"tanggal":"2026-07-14","uraian":"Peraga jam dinding","volume":2,"satuan":"buah","harga":50000},{"id":6171,"tanggal":"2026-07-14","uraian":"Lem kertas","volume":4,"satuan":"pack","harga":100000},{"id":6172,"tanggal":"2026-07-14","uraian":"Double tape","volume":10,"satuan":"pcs","harga":10000},{"id":6173,"tanggal":"2026-07-14","uraian":"Perekat velcro","volume":2,"satuan":"pcs","harga":50000},{"id":6174,"tanggal":"2026-07-14","uraian":"Spidol warna-warni","volume":2,"satuan":"paket","harga":50000},{"id":6175,"tanggal":"2026-07-14","uraian":"spidol hitam","volume":2,"satuan":"lusin","harga":30000},{"id":6176,"tanggal":"2026-07-14","uraian":"spidol hitam permanen","volume":3,"satuan":"buah","harga":12000},{"id":6177,"tanggal":"2026-07-14","uraian":"Uang mainan","volume":2,"satuan":"set","harga":50000},{"id":6178,"tanggal":"2026-07-14","uraian":"Lakban bening","volume":15,"satuan":"buah","harga":12000},{"id":6179,"tanggal":"2026-07-14","uraian":"Karpet Plastik","volume":2,"satuan":"buah","harga":150000},{"id":6180,"tanggal":"2026-07-14","uraian":"Plastik laminating","volume":3,"satuan":"rim","harga":100000},{"id":6181,"tanggal":"2026-07-14","uraian":"Kartu angka","volume":5,"satuan":"set","harga":20000},{"id":6182,"tanggal":"2026-07-14","uraian":"Kartu Simbol","volume":2,"satuan":"set","harga":15000},{"id":6183,"tanggal":"2026-07-14","uraian":"Kartu nilai tempat","volume":2,"satuan":"set","harga":25000},{"id":6184,"tanggal":"2026-07-14","uraian":"Flash card bilangan","volume":1,"satuan":"set","harga":40000},{"id":6185,"tanggal":"2026-07-14","uraian":"Amplop plastik","volume":15,"satuan":"buah","harga":7000},{"id":6186,"tanggal":"2026-07-14","uraian":"dKertas Origami","volume":10,"satuan":"pcs","harga":10000},{"id":6187,"tanggal":"2026-07-14","uraian":"Sticky note","volume":20,"satuan":"pack","harga":15000},{"id":6188,"tanggal":"2026-07-14","uraian":"Penggaris besi 30 cm","volume":1,"satuan":"buah","harga":25000},{"id":6189,"tanggal":"2026-07-14","uraian":"Penggaris kayu 1 meter","volume":1,"satuan":"buah","harga":35000},{"id":6190,"tanggal":"2026-07-14","uraian":"Busur derajat","volume":10,"satuan":"buah","harga":10000},{"id":6191,"tanggal":"2026-07-14","uraian":"Jangka sederhana","volume":10,"satuan":"buah","harga":10000},{"id":6192,"tanggal":"2026-07-14","uraian":"Papan grafik lipat","volume":1,"satuan":"buah","harga":75000},{"id":6193,"tanggal":"2026-07-14","uraian":"Stiker bintang","volume":50,"satuan":"pack","harga":5000},{"id":6194,"tanggal":"2026-07-14","uraian":"Peta Indonesia","volume":3,"satuan":"buah","harga":100000},{"id":6195,"tanggal":"2026-07-14","uraian":"Peta NTB","volume":1,"satuan":"buah","harga":100000},{"id":6196,"tanggal":"2026-07-14","uraian":"Poster Pencernaan","volume":2,"satuan":"buah","harga":20000},{"id":6197,"tanggal":"2026-07-14","uraian":"Poster Pernafasan","volume":2,"satuan":"buah","harga":20000},{"id":6198,"tanggal":"2026-07-14","uraian":"poster rantai makanan","volume":2,"satuan":"buah","harga":20000},{"id":6199,"tanggal":"2026-07-14","uraian":"Alat peraga telinga","volume":1,"satuan":"set","harga":250000},{"id":6200,"tanggal":"2026-07-14","uraian":"Alat peraga mata","volume":1,"satuan":"set","harga":100000},{"id":6201,"tanggal":"2026-07-14","uraian":"Magnet","volume":3,"satuan":"buah","harga":30000},{"id":6202,"tanggal":"2026-07-14","uraian":"Mobil mainan","volume":6,"satuan":"buah","harga":15000},{"id":6203,"tanggal":"2026-07-14","uraian":"Kertas manila","volume":10,"satuan":"lembar","harga":5000},{"id":6204,"tanggal":"2026-07-14","uraian":"Sabuncuci tangan","volume":1,"satuan":"buah","harga":35000},{"id":6205,"tanggal":"2026-07-14","uraian":"Pasta gigi","volume":1,"satuan":"buah","harga":20000},{"id":6206,"tanggal":"2026-07-14","uraian":"Gunting kuku","volume":1,"satuan":"buah","harga":15000},{"id":6207,"tanggal":"2026-07-14","uraian":"Poster pancasila","volume":11,"satuan":"buah","harga":10000},{"id":6208,"tanggal":"2026-07-14","uraian":"Poster undang-undang","volume":5,"satuan":"buah","harga":10000},{"id":6209,"tanggal":"2026-07-14","uraian":"stick es krim warna-warni","volume":2,"satuan":"bungkus","harga":50000},{"id":6210,"tanggal":"2026-07-14","uraian":"Kertas A4 Warna-warni","volume":1,"satuan":"pack","harga":100000}],"realisasi":[{"id":6211,"tanggal":"2026-07-14","tanggalReal":"2026-08-21","anggaranTerpakai":250000,"keterangan":"kertas A4/ Tunas Mawar (Faktur Terlampir)"},{"id":6212,"tanggal":"2026-07-14","tanggalReal":"2026-08-21","anggaranTerpakai":408000,"keterangan":"Stik Es krim, Penggaris Kayu, dll/ Anak Dara (Faktur Terlampir)"},{"id":6213,"tanggal":"2026-07-14","tanggalReal":"2026-09-04","anggaranTerpakai":510000,"keterangan":"Plastik Laminasi, HVS A4/ Adi Copy Center (Faktur Terlampir)"},{"id":6214,"tanggal":"2026-07-14","tanggalReal":"2026-09-05","anggaranTerpakai":500000,"keterangan":"Kertas HVS A4 / Adi Copy Center (Faktur Terlampir)"}],"serahTerima":[{"id":6215,"tanggal":"2026-10-05","nominal":7466000,"dates":["2026-07-14"],"mode":"total","noBast":"001/BA-STD/X/2026","budgetRef":7466000}],"pengembalianUangMuka":[{"id":6216,"tanggal":"2026-10-05","nominal":1400000,"keterangan":"sisa anggaran dari bu Jeniati"}]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja biaya langganan wifi","deskripsi":"Biaya bulanan langganan wifi","tanggal":["2026-07-31","2026-08-31","2026-09-30","2026-10-31","2026-11-30","2026-12-31","2027-01-31","2027-02-28","2027-03-31","2027-04-30","2027-05-31","2027-06-30"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":7794,"tanggal":"2026-07-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7795,"tanggal":"2026-08-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7796,"tanggal":"2026-09-30","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7797,"tanggal":"2026-10-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7798,"tanggal":"2026-11-30","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7799,"tanggal":"2026-12-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7800,"tanggal":"2027-01-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7801,"tanggal":"2027-02-28","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7802,"tanggal":"2027-03-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7803,"tanggal":"2027-04-30","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7804,"tanggal":"2027-05-31","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000},{"id":7805,"tanggal":"2027-06-30","uraian":"Biaya langganan wifi","volume":1,"satuan":"bulan","harga":450000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja beban listrik","deskripsi":"Belanja kebutuhan daya listrik","tanggal":["2026-10-06","2026-11-01","2026-12-01","2027-01-01","2027-02-01","2027-03-01","2027-04-01","2027-05-01","2027-06-01","2026-07-01","2026-08-01","2026-09-01"],"status":"Menunggu Persetujuan","pj":"","budgets":[{"id":7807,"tanggal":"2026-10-06","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7808,"tanggal":"2026-11-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7809,"tanggal":"2026-12-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7810,"tanggal":"2027-01-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7811,"tanggal":"2027-02-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7812,"tanggal":"2027-03-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7813,"tanggal":"2027-04-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7814,"tanggal":"2027-05-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7815,"tanggal":"2027-06-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7816,"tanggal":"2026-07-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7817,"tanggal":"2026-08-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500},{"id":7818,"tanggal":"2026-09-01","uraian":"Token Listrik","volume":1,"satuan":"token","harga":203500}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]}],"spp":[{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja Gaji GTK Tetap","deskripsi":"Baya Gaji Bulanan GTK Tetap","tanggal":["2026-08-02","2026-09-02","2026-11-02","2026-12-02","2027-01-02","2027-02-02","2027-03-02","2027-04-02","2027-05-02","2027-06-02","2026-10-02","2027-03-01"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":6959,"tanggal":"2026-08-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6960,"tanggal":"2026-09-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6961,"tanggal":"2026-11-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6962,"tanggal":"2026-12-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6963,"tanggal":"2027-01-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6964,"tanggal":"2027-02-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6965,"tanggal":"2027-03-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6966,"tanggal":"2027-04-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6967,"tanggal":"2027-05-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6968,"tanggal":"2027-06-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6969,"tanggal":"2026-10-02","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000},{"id":6970,"tanggal":"2027-03-01","uraian":"Gaji GTK","volume":1,"satuan":"Bundel","harga":41644000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja Honor Kepala Unit Usaha Sekolah","deskripsi":"Honor Pengelola Unit Usaha Sekolah","tanggal":["2026-09-02","2026-10-02","2026-11-02","2026-12-02","2027-01-02","2027-02-02","2027-03-02","2027-04-02","2027-05-02","2027-06-02","2027-06-30"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":7495,"tanggal":"2026-09-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7496,"tanggal":"2026-10-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7497,"tanggal":"2026-11-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7498,"tanggal":"2026-12-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7499,"tanggal":"2027-01-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7500,"tanggal":"2027-02-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7501,"tanggal":"2027-03-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7502,"tanggal":"2027-04-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7503,"tanggal":"2027-05-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7504,"tanggal":"2027-06-02","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000},{"id":7505,"tanggal":"2027-06-30","uraian":"Honor Pengelola UUS","volume":1,"satuan":"orang/bulan","harga":1100000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja Honor Absensi GTK","deskripsi":"Belanja Honor Absensi bulanan GTK","tanggal":["2026-08-02","2026-09-02","2026-10-02","2026-11-02","2026-12-02","2027-01-02","2027-02-02","2027-03-02","2027-04-02","2027-05-02","2027-06-02","2027-06-30"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":7586,"tanggal":"2026-08-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7587,"tanggal":"2026-09-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7588,"tanggal":"2026-10-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7589,"tanggal":"2026-11-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7590,"tanggal":"2026-12-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7591,"tanggal":"2027-01-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7592,"tanggal":"2027-02-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7593,"tanggal":"2027-03-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7594,"tanggal":"2027-04-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7595,"tanggal":"2027-05-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7596,"tanggal":"2027-06-02","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000},{"id":7597,"tanggal":"2027-06-30","uraian":"Honor Absensi GTK","volume":23,"satuan":"orang","harga":200000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]}],"pangkal":[],"lain":[{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja Biaya Transport Perjalanan Dinas Kepala Sekolah","deskripsi":"Segala biaya yang dibutuhkan untuk perjalanan dinas kepala sekolah baik dari dinas pendidikan ataupun pimpinan PAH Mataram","tanggal":["2026-09-01","2026-12-01","2027-03-01","2027-06-01"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":8055,"tanggal":"2026-09-01","uraian":"Transport","volume":2,"satuan":"kali","harga":150000},{"id":8059,"tanggal":"2026-12-01","uraian":"Transport","volume":2,"satuan":"kali","harga":150000},{"id":8060,"tanggal":"2027-03-01","uraian":"Transport","volume":2,"satuan":"kali","harga":150000},{"id":8061,"tanggal":"2027-06-01","uraian":"Transport","volume":2,"satuan":"kali","harga":150000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Belanja Honor Satpam","deskripsi":"Honor bulanan Satpam","tanggal":["2026-08-02","2026-09-02","2026-10-02","2026-11-02","2026-12-02","2027-01-02","2027-02-02","2027-03-02","2027-04-02","2027-05-02","2027-06-02","2027-06-30"],"status":"Disetujui","pj":"Royandi Setiadi, S.Si.","budgets":[{"id":8194,"tanggal":"2026-08-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8195,"tanggal":"2026-09-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8196,"tanggal":"2026-10-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8197,"tanggal":"2026-11-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8198,"tanggal":"2026-12-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8199,"tanggal":"2027-01-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8200,"tanggal":"2027-02-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8201,"tanggal":"2027-03-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8202,"tanggal":"2027-04-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8203,"tanggal":"2027-05-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8204,"tanggal":"2027-06-02","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000},{"id":8205,"tanggal":"2027-06-30","uraian":"Honor Satpam","volume":1,"satuan":"orang","harga":500000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]},{"namaPengaju":"Royandi Setiadi, S.Si.","namaProgram":"Pelaksanaan Sumatif Tengah Semester (STS)","deskripsi":"Sumatif Tengah Semester","tanggal":["2026-09-10","2027-03-10"],"status":"Menunggu Persetujuan","pj":"","budgets":[{"id":8638,"tanggal":"2026-09-10","uraian":"Fotocopy","volume":4000,"satuan":"lembar","harga":300},{"id":8639,"tanggal":"2026-09-10","uraian":"Reward Mumtaz Murtafi'","volume":100,"satuan":"siswa","harga":10000},{"id":8788,"tanggal":"2026-09-10","uraian":"Honor Panitia","volume":1,"satuan":"Paket","harga":3300000},{"id":8943,"tanggal":"2027-03-10","uraian":"Fotocopy","volume":4000,"satuan":"lembar","harga":300},{"id":8944,"tanggal":"2027-03-10","uraian":"Reward Mumtaz Murtafi'","volume":100,"satuan":"siswa","harga":10000},{"id":8945,"tanggal":"2027-03-10","uraian":"Honor Panitia","volume":1,"satuan":"Paket","harga":3300000}],"realisasi":[],"serahTerima":[],"pengembalianUangMuka":[]}]},"bku":{"bos":[{"tanggal":"2026-10-05","komponen":"","kodeRekening":"","noBukti":"","uraian":"Serah Terima Dana (Uang Muka Kegiatan): Kebutuhan KBM guru kelas — PJ: Jeniati, S.Pd.","kegiatan":"","keterangan":"","penerimaan":"0","pengeluaran":"7466000","autoRealisasiId":"","autoSerahTerimaId":"6215","autoPengembalianId":"","autoPiutangId":""},{"tanggal":"2026-10-05","komponen":"","kodeRekening":"","noBukti":"","uraian":"Pengembalian Sisa Uang Muka: Kebutuhan KBM guru kelas — PJ: Jeniati, S.Pd. — sisa anggaran dari bu Jeniati","kegiatan":"","keterangan":"","penerimaan":"1400000","pengeluaran":"0","autoRealisasiId":"","autoSerahTerimaId":"","autoPengembalianId":"6216","autoPiutangId":""}],"spp":[],"pangkal":[],"lain":[]},"sppTx":[],"itemTx":[],"pinjaman":[]};
 
-  Object.values(state.program).flat().forEach(p=>{
-    p.realisasi = p.realisasi || [];
-    p.realisasiBatal = p.realisasiBatal || [];
-    p.budgets = p.budgets || [];
-    p.serahTerima = p.serahTerima || [];
-    p.pengembalianUangMuka = p.pengembalianUangMuka || [];
-  });
-  const programBudgetIds = Object.values(state.program).flat().flatMap(p=>(p.budgets||[]).map(b=>Number(b.id)||0));
-  const programRealisasiIds = Object.values(state.program).flat().flatMap(p=>(p.realisasi||[]).map(r=>Number(r.id)||0));
-  const programSerahTerimaIds = Object.values(state.program).flat().flatMap(p=>(p.serahTerima||[]).map(r=>Number(r.id)||0));
-  const programPengembalianIds = Object.values(state.program).flat().flatMap(p=>(p.pengembalianUangMuka||[]).map(r=>Number(r.id)||0));
-  const pinjamanCicilanIds = (state.pinjaman||[]).flatMap(pj=>(pj.cicilan||[]).map(c=>Number(c.id)||0));
-  const allIds = [...state.siswa, ...state.gtk, ...state.sppTx, ...state.itemTx, ...state.pinjaman, ...Object.values(state.program).flat(), ...Object.values(state.bku).flat()]
-    .map(r=>Number(r.id)||0).concat(programBudgetIds, programRealisasiIds, programSerahTerimaIds, programPengembalianIds, pinjamanCicilanIds);
-  uidCounter = (allIds.length ? Math.max(...allIds) : 0) + 1;
 
-  try {
-    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ savedAt: new Date().toISOString(), state }));
-  } catch(e){}
-
-  if (!currentUser.name || currentUser.name === "Admin Sekolah") {
-    currentUser = { name: (state.sekolah && state.sekolah.bendaharaBos) ? state.sekolah.bendaharaBos : "Royandi Setiadi, S.Si.", role: "Admin" };
-    try {
-      localStorage.setItem(USER_SESSION_KEY, JSON.stringify(currentUser));
-    } catch(e){}
-  }
-
-  renderAll();
-  refreshHeader();
-}
-window.applyStateFromCloud = applyStateFromCloud;
-
+/* Cloud-only: tidak membaca penyimpanan lokal dan tidak ada data awal
+   tersembunyi. State dimulai kosong; data asli dimuat dari Google Sheets. */
 function restoreAutosavedStateIfAny(){
-  let saved = loadStateFromLocalStorage();
-  window.__stateFromSeed = false;
-  if(!saved || !saved.sekolah || !saved.sekolah.namaSekolah) {
-    saved = JSON.parse(JSON.stringify(SEEDED_SCHOOL_STATE));
-    window.__stateFromSeed = true;
-  }
-  state = saved;
-  /* Lengkapi struktur kalau data lama tersimpan sebelum ada field/bagian
-     baru ditambahkan (mis. sebelum realisasiBatal ada) — pola yang sama
-     seperti pemulihan Impor Data (.json). */
-  state.sekolah = Object.assign(emptySekolah(), state.sekolah||{});
-  state.program = Object.assign({bos:[],spp:[],pangkal:[],lain:[]}, state.program||{});
-  state.bku = Object.assign({bos:[],spp:[],pangkal:[],lain:[]}, state.bku||{});
-  state.siswa = state.siswa||[]; state.gtk = state.gtk||[]; state.sppTx = state.sppTx||[]; state.itemTx = state.itemTx||[];
-  state.pinjaman = state.pinjaman||[];
-  state.pinjaman.forEach(pj=>{ pj.cicilan = pj.cicilan||[]; if(!SUMBER_KEYS.includes(pj.sumberDana)) pj.sumberDana = SUMBER_KEYS[0]; });
-  state.lpj = Object.assign({periode:"Triwulan I",danaDiterima:0,penerimaanLain:0}, state.lpj||{});
-  state.docCounters = Object.assign({kwitansi:0,bast:0,peminjaman:0}, state.docCounters||{});
-  Object.values(state.program).flat().forEach(p=>{ p.realisasi = p.realisasi||[]; p.realisasiBatal = p.realisasiBatal||[]; p.budgets = p.budgets||[]; p.serahTerima = p.serahTerima||[]; p.pengembalianUangMuka = p.pengembalianUangMuka||[]; });
-  const programBudgetIds = Object.values(state.program).flat().flatMap(p=>(p.budgets||[]).map(b=>b.id||0));
-  const programRealisasiIds = Object.values(state.program).flat().flatMap(p=>(p.realisasi||[]).map(r=>r.id||0));
-  const programSerahTerimaIds = Object.values(state.program).flat().flatMap(p=>(p.serahTerima||[]).map(r=>r.id||0));
-  const programPengembalianIds = Object.values(state.program).flat().flatMap(p=>(p.pengembalianUangMuka||[]).map(r=>r.id||0));
-  const pinjamanCicilanIds = state.pinjaman.flatMap(pj=>(pj.cicilan||[]).map(c=>c.id||0));
-  const allIds = [...state.siswa, ...state.gtk, ...state.sppTx, ...state.itemTx, ...state.pinjaman, ...Object.values(state.program).flat(), ...Object.values(state.bku).flat()]
-    .map(r=>r.id||0).concat(programBudgetIds, programRealisasiIds, programSerahTerimaIds, programPengembalianIds, pinjamanCicilanIds);
-  uidCounter = (allIds.length? Math.max(...allIds) : 0) + 1;
+  state.sekolah = Object.assign(emptySekolah(), state.sekolah || {});
 }
-setInterval(saveStateToLocalStorage, 12000);
-window.addEventListener("beforeunload", saveStateToLocalStorage);
-document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden") saveStateToLocalStorage(); });
-
-function updateOnlineStatusBadge(){
-  const badge = document.getElementById("onlineStatusBadge");
-  if(!badge) return;
-  const online = navigator.onLine;
-  badge.textContent = online ? "● Online" : "● Offline";
-  badge.className = "online-badge " + (online ? "online" : "offline");
-}
-function startAutoSync(){
-  updateOnlineStatusBadge();
-  window.addEventListener("online", updateOnlineStatusBadge);
-  window.addEventListener("offline", updateOnlineStatusBadge);
-}
+function startAutoSync(){}
 
 /* =========================================================================
    INIT
    ========================================================================= */
+/* =========================================================================
+   PAGU & PENGATURAN SUMBER DANA
+   ========================================================================= */
+function paguInfo(key){
+  const meta = SUMBER_META[key];
+  const pagu = meta ? (Number(meta.pagu)||0) : 0;
+  let disetujui = 0, diajukan = 0;
+  ((state.program && state.program[key]) || []).forEach(p=>{
+    const t = programBudgetTotal(p);
+    if(p.status === PROGRAM_STATUS.DISETUJUI) disetujui += t;
+    else if(p.status === PROGRAM_STATUS.MENUNGGU || p.status === PROGRAM_STATUS.PERBAIKAN) diajukan += t;
+  });
+  const komitmen = disetujui + diajukan;
+  return { pagu, disetujui, diajukan, komitmen, sisa: pagu - komitmen, pct: pagu ? komitmen/pagu : 0, over: pagu > 0 && komitmen > pagu, overDisetujui: pagu > 0 && disetujui > pagu };
+}
+function paguStatHtml(key){
+  const i = paguInfo(key);
+  if(!i.pagu) return "";
+  const warn = i.over ? ` <span style="color:#b91c1c;font-weight:700;">⚠ melebihi pagu</span>` : "";
+  return `<div class="stat-sub" style="margin-top:2px;">Pagu ${rp(i.pagu)} · terpakai ${pct(i.pct)}${warn}</div>`;
+}
+function movePaguWarning(prog, newKey){
+  const t = paguInfo(newKey);
+  const add = programBudgetTotal(prog);
+  if(t.pagu > 0 && t.komitmen + add > t.pagu){
+    return `\n\n⚠ Pemindahan ini membuat anggaran ${SUMBER_META[newKey].label} melebihi pagunya sebesar ${rp(t.komitmen + add - t.pagu)} (pagu ${rp(t.pagu)}).`;
+  }
+  return "";
+}
+function isAdminNow(){ return !!(currentUser && currentUser.role === "Admin"); }
+
+/* Panel pagu di halaman Program Kerja (untuk sumber dana pada tab aktif). */
+function renderPaguPanel(){
+  const el = document.getElementById("paguPanel");
+  if(!el) return;
+  const key = currentProgramKey, meta = SUMBER_META[key];
+  if(!meta){ el.innerHTML = ""; return; }
+  const i = paguInfo(key), isAdmin = isAdminNow();
+  const btns = isAdmin ? `<span class="sp"></span><button class="btn small" id="btnAturPagu" type="button">⚙ Atur Pagu</button><button class="btn small" id="btnKelolaSumber" type="button">Kelola Sumber Dana</button>` : "";
+  if(!i.pagu){
+    el.innerHTML = `<div class="pagu-box"><div class="pagu-head"><span class="pagu-title">${meta.icon} Pagu ${meta.label}</span><span class="pagu-none">Belum ditetapkan — anggaran program tidak dibatasi.${isAdmin ? "" : " (Pagu diatur oleh Admin.)"}</span>${btns}</div></div>`;
+  } else {
+    const a = Math.min(100, i.disetujui / i.pagu * 100);
+    const b = Math.max(0, Math.min(100 - a, i.diajukan / i.pagu * 100));
+    el.innerHTML = `<div class="pagu-box${i.over ? " over" : ""}">
+      <div class="pagu-head"><span class="pagu-title">${meta.icon} Pagu ${meta.label}</span><span class="pagu-val">${rp(i.pagu)}</span>${btns}</div>
+      <div class="pagu-bar"><i class="a" style="width:${a}%;background:${meta.color}"></i><i class="b" style="width:${b}%;background:${meta.color}"></i></div>
+      <div class="pagu-meta"><span>Disetujui <b>${rp(i.disetujui)}</b></span><span>Diajukan <b>${rp(i.diajukan)}</b></span><span>${i.sisa < 0 ? "Melebihi pagu" : "Sisa pagu"} <b style="${i.sisa < 0 ? "color:#b91c1c" : ""}">${rp(Math.abs(i.sisa))}</b></span><span>Terpakai <b>${pct(i.pct)}</b></span></div>
+      ${i.over ? `<div class="pagu-warn">⚠ Total anggaran (disetujui + diajukan) melebihi pagu sebesar ${rp(-i.sisa)}.</div>` : ""}
+      ${meta.paguKet ? `<div class="pagu-none" style="margin-top:6px;">${meta.paguKet}</div>` : ""}
+    </div>`;
+  }
+  const b1 = document.getElementById("btnAturPagu"); if(b1) b1.addEventListener("click", ()=> openSumberModal(currentProgramKey));
+  const b2 = document.getElementById("btnKelolaSumber"); if(b2) b2.addEventListener("click", ()=> switchView("sumberdana"));
+}
+/* Ringkasan pagu kecil di modal Kelola Anggaran. */
+function renderPaguInfo(prog){
+  const el = document.getElementById("paPaguInfo");
+  if(!el || !prog) return;
+  const key = getProgramSumberKey(prog), m = SUMBER_META[key];
+  if(!m){ el.innerHTML = ""; return; }
+  const i = paguInfo(key);
+  if(!i.pagu){ el.innerHTML = `<div class="pagu-mini none">Pagu ${m.label} belum ditetapkan — anggaran tidak dibatasi.</div>`; return; }
+  const cls = i.over ? "over" : (i.pct >= 0.9 ? "warn" : "ok");
+  el.innerHTML = `<div class="pagu-mini ${cls}"><span>Pagu ${m.label}: <b>${rp(i.pagu)}</b></span><span>Disetujui: <b>${rp(i.disetujui)}</b></span><span>Diajukan: <b>${rp(i.diajukan)}</b></span><span>${i.over ? "⚠ Melebihi pagu " : "Sisa pagu "}<b>${rp(Math.abs(i.sisa))}</b></span></div>`;
+}
+
+/* ---- data daftar sumber dana (dimaterialkan ke state saat pertama diubah) ---- */
+function sumberList(){
+  if(!Array.isArray(state.sekolah.sumberDana) || !state.sekolah.sumberDana.length){
+    state.sekolah.sumberDana = sumberListNow().map(s=>({ id:s.id, nama:s.nama, ikon:s.ikon, warna:s.warna, pagu:s.pagu, paguKet:s.paguKet }));
+  }
+  return state.sekolah.sumberDana;
+}
+function sumberSetField(k, field, v){
+  const it = sumberList().find(s=> s && s.id === k);
+  if(!it) return false;
+  it[field] = v;
+  const map = { nama:"label", ikon:"icon", warna:"color", pagu:"pagu", paguKet:"paguKet" };
+  if(SUMBER_META[k] && map[field]) SUMBER_META[k][map[field]] = v;
+  return true;
+}
+function newSumberId(nama){
+  let base = "x_" + nama.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"").slice(0,24);
+  if(base === "x_") base = "x_dana";
+  let id = base, n = 2;
+  const has = (o,k)=> o && Object.prototype.hasOwnProperty.call(o,k);
+  while(SUMBER_KEYS.includes(id) || has(state.program,id) || has(state.bku,id)) id = base + "_" + (n++);
+  return id;
+}
+
+/* ---- halaman Sumber Dana & Pagu ---- */
+function sdComputedCells(k){
+  const i = paguInfo(k);
+  const sisaTxt = i.pagu ? rp(i.sisa) : "-";
+  const bar = i.pagu ? `<span class="sd-bar" title="${pct(i.pct)} dari pagu"><i style="width:${Math.min(100, i.pct*100)}%;background:${i.over ? "#b91c1c" : SUMBER_META[k].color}"></i></span> <span style="font-size:11.5px;${i.over ? "color:#b91c1c;font-weight:700;" : ""}">${pct(i.pct)}</span>` : "-";
+  return `<td class="computed sd-diajukan">${rp(i.diajukan)}</td><td class="computed sd-disetujui">${rp(i.disetujui)}</td><td class="computed sd-sisa${i.over ? " neg" : ""}">${sisaTxt}</td><td class="sd-pakai">${bar}</td>`;
+}
+function sdRowHtml(k, no, isAdmin){
+  const m = SUMBER_META[k], i = paguInfo(k);
+  const saldo = Number(state.sekolah[m.saldoKey]) || 0;
+  const paguCell = isAdmin
+    ? `<input data-sdpagu="${k}" data-currency inputmode="numeric" autocomplete="off" value="${formatRibuan(i.pagu)}" placeholder="Belum diatur">`
+    : (i.pagu ? rp(i.pagu) : `<span style="color:var(--text-muted)">Belum diatur</span>`);
+  const aksi = isAdmin
+    ? `<button class="btn small" type="button" data-sdedit="${k}">Ubah</button> ${k === SUMBER_WAJIB ? `<span class="badge-note" title="Dipakai oleh LPJ BOS">Wajib</span>` : `<button class="row-del" type="button" data-sddel="${k}" title="Hapus sumber dana">&times;</button>`}`
+    : `<span style="color:var(--text-muted);font-size:11px;">Hanya Lihat</span>`;
+  return `<tr data-k="${k}"><td style="text-align:center">${no}</td>
+    <td><span class="badge-sumber ${k}">${m.icon} ${m.label}</span>${m.bawaan ? "" : ` <span class="pill info" style="font-size:9.5px;padding:2px 6px;">Tambahan</span>`}${m.paguKet ? `<div style="font-size:11px;color:var(--text-muted);margin-top:3px;">${m.paguKet}</div>` : ""}</td>
+    <td class="num">${paguCell}</td>${sdComputedCells(k)}<td class="computed">${rp(saldo)}</td><td>${aksi}</td></tr>`;
+}
+function sdRenderFoot(){
+  const tf = document.querySelector("#tblSumber tfoot");
+  if(!tf) return;
+  let pagu = 0, dj = 0, ds = 0, sisa = 0;
+  SUMBER_KEYS.forEach(k=>{ const i = paguInfo(k); pagu += i.pagu; dj += i.diajukan; ds += i.disetujui; if(i.pagu) sisa += i.sisa; });
+  tf.innerHTML = `<tr><td colspan="2" style="text-align:right">TOTAL</td><td class="computed">${rp(pagu)}</td><td class="computed">${rp(dj)}</td><td class="computed">${rp(ds)}</td><td class="computed${sisa < 0 ? " neg" : ""}" title="Hanya dari sumber dana yang memiliki pagu">${rp(sisa)}</td><td colspan="3"></td></tr>`;
+}
+function renderSumberDanaView(){
+  const tb = document.querySelector("#tblSumber tbody");
+  if(!tb) return;
+  const isAdmin = isAdminNow();
+  const btnAdd = document.getElementById("btnAddSumber");
+  if(btnAdd) btnAdd.style.display = isAdmin ? "" : "none";
+  tb.innerHTML = SUMBER_KEYS.map((k,i)=> sdRowHtml(k, i+1, isAdmin)).join("");
+  tb.querySelectorAll("input[data-sdpagu]").forEach(wireCurrencyInput);
+  sdRenderFoot();
+}
+function sdLiveUpdate(k){
+  const tr = document.querySelector(`#tblSumber tbody tr[data-k="${k}"]`);
+  if(!tr) return;
+  const tmp = document.createElement("tbody");
+  tmp.innerHTML = `<tr>${sdComputedCells(k)}</tr>`;
+  const old = tr.querySelectorAll("td.sd-diajukan, td.sd-disetujui, td.sd-sisa, td.sd-pakai");
+  const nw = tmp.firstElementChild.children;
+  old.forEach((td,idx)=>{ td.className = nw[idx].className; td.innerHTML = nw[idx].innerHTML; });
+  sdRenderFoot();
+}
+(function wireSumberTable(){
+  const tb = document.querySelector("#tblSumber tbody");
+  if(!tb) return;
+  tb.addEventListener("input", (e)=>{
+    const inp = e.target;
+    if(!inp.dataset || !inp.dataset.sdpagu) return;
+    if(!isAdminNow()) return;
+    const k = inp.dataset.sdpagu;
+    if(sumberSetField(k, "pagu", parseRibuan(inp.value))){
+      sdLiveUpdate(k);
+      saveStateToLocalStorage();
+    }
+  });
+  tb.addEventListener("click", (e)=>{
+    const ed = e.target.closest ? e.target.closest("[data-sdedit]") : null;
+    if(ed){ openSumberModal(ed.dataset.sdedit); return; }
+    const del = e.target.closest ? e.target.closest("[data-sddel]") : null;
+    if(del){ deleteSumber(del.dataset.sddel); }
+  });
+  const add = document.getElementById("btnAddSumber");
+  if(add) add.addEventListener("click", ()=> openSumberModal(null));
+})();
+
+/* ---- modal tambah / ubah ---- */
+let sdEditingId = null, sdDraftColor = SUMBER_COLORS[4];
+function sdRenderPickers(){
+  const ik = cleanSumberIcon(document.getElementById("sdIkon").value);
+  document.getElementById("sdIconPick").innerHTML = SUMBER_ICONS.map(ic=>`<button type="button" data-ic="${ic}" class="${ic === ik ? "sel" : ""}">${ic}</button>`).join("");
+  document.getElementById("sdColorPick").innerHTML = SUMBER_COLORS.map(c=>`<button type="button" data-c="${c}" class="${c === sdDraftColor ? "sel" : ""}" style="background:${c}" title="${c}"></button>`).join("");
+}
+document.getElementById("sdIconPick").addEventListener("click", (e)=>{
+  const b = e.target.closest("[data-ic]"); if(!b) return;
+  document.getElementById("sdIkon").value = b.dataset.ic; sdRenderPickers();
+});
+document.getElementById("sdColorPick").addEventListener("click", (e)=>{
+  const b = e.target.closest("[data-c]"); if(!b) return;
+  sdDraftColor = b.dataset.c; sdRenderPickers();
+});
+document.getElementById("sdIkon").addEventListener("input", sdRenderPickers);
+function openSumberModal(id){
+  if(!isAdminNow()){ alert("Hanya Admin yang dapat mengatur sumber dana dan pagu."); return; }
+  sdEditingId = id || null;
+  const m = id ? SUMBER_META[id] : null;
+  if(id && !m) return;
+  document.getElementById("sdModalTitle").textContent = m ? `Ubah Sumber Dana: ${m.label}` : "Tambah Sumber Dana";
+  document.getElementById("sdNama").value = m ? m.label : "";
+  document.getElementById("sdIkon").value = m ? m.icon : SUMBER_ICONS[4];
+  sdDraftColor = m ? m.color : SUMBER_COLORS.find(c=> !SUMBER_KEYS.some(k=> SUMBER_META[k].color === c)) || SUMBER_COLORS[4];
+  document.getElementById("sdPagu").value = m ? formatRibuan(m.pagu) : "";
+  document.getElementById("sdKet").value = m ? (m.paguKet || "") : "";
+  document.getElementById("sdSaldo").value = m ? formatRibuan(state.sekolah[m.saldoKey]) : "";
+  document.getElementById("sdError").style.display = "none";
+  sdRenderPickers();
+  openModal("modal-sumber");
+  setTimeout(()=>{ const n = document.getElementById("sdNama"); if(n) n.focus(); }, 30);
+}
+document.getElementById("sdSimpan").addEventListener("click", ()=>{
+  if(!isAdminNow()) return;
+  const err = (t)=>{ const el = document.getElementById("sdError"); el.textContent = t; el.style.display = ""; };
+  const nama = cleanSumberName(document.getElementById("sdNama").value);
+  if(!nama){ err("Nama sumber dana wajib diisi."); return; }
+  if(SUMBER_KEYS.some(k=> k !== sdEditingId && SUMBER_META[k].label.toLowerCase() === nama.toLowerCase())){ err(`Sudah ada sumber dana bernama "${nama}".`); return; }
+  const ikon = cleanSumberIcon(document.getElementById("sdIkon").value) || "💰";
+  const pagu = parseRibuan(document.getElementById("sdPagu").value);
+  const saldo = parseRibuan(document.getElementById("sdSaldo").value);
+  const ket = document.getElementById("sdKet").value.replace(/[<>"`\u0000-\u001f]/g,"").trim().slice(0,120);
+  const list = sumberList();
+  let id = sdEditingId;
+  if(!id){
+    id = newSumberId(nama);
+    list.push({ id, nama, ikon, warna:sdDraftColor, pagu, paguKet:ket });
+    state.program[id] = state.program[id] || [];
+    state.bku[id] = state.bku[id] || [];
+  } else {
+    const it = list.find(s=> s && s.id === id);
+    if(!it){ err("Sumber dana tidak ditemukan."); return; }
+    Object.assign(it, { nama, ikon, warna:sdDraftColor, pagu, paguKet:ket });
+  }
+  rebuildSumberRegistry();
+  state.sekolah[SUMBER_META[id].saldoKey] = saldo;
+  closeModal("modal-sumber");
+  if(!sdEditingId) currentProgramKey = id;
+  renderAll();
+  saveStateToLocalStorage();
+});
+
+/* ---- hapus ---- */
+function deleteSumber(id){
+  if(!isAdminNow()){ alert("Hanya Admin yang dapat menghapus sumber dana."); return; }
+  const m = SUMBER_META[id];
+  if(!m) return;
+  if(id === SUMBER_WAJIB){ alert(`Sumber dana "${m.label}" tidak dapat dihapus karena dipakai oleh LPJ BOS.`); return; }
+  const nProg = ((state.program[id]) || []).length;
+  const nBku = ((state.bku[id]) || []).length;
+  const nPj = (state.pinjaman || []).filter(pj=> pj.sumberDana === id).length;
+  const saldo = Number(state.sekolah[m.saldoKey]) || 0;
+  const alasan = [];
+  if(nProg) alasan.push(`${nProg} program kerja`);
+  if(nBku) alasan.push(`${nBku} baris Buku Kas Umum`);
+  if(nPj) alasan.push(`${nPj} pinjaman GTK`);
+  if(saldo) alasan.push(`saldo awal kas ${rp(saldo)}`);
+  if(alasan.length){
+    alert(`Sumber dana "${m.label}" belum bisa dihapus karena masih memiliki: ${alasan.join(", ")}.\n\nPindahkan atau hapus data tersebut lebih dulu (program dapat dipindah lewat Edit Program atau Tindakan Admin) supaya riwayat keuangan tidak hilang.`);
+    return;
+  }
+  if(!confirmWithAdminCode(`Hapus sumber dana "${m.label}" beserta pengaturan pagunya?`)) return;
+  const wasBawaan = m.bawaan, saldoKey = m.saldoKey;
+  state.sekolah.sumberDana = sumberList().filter(s=> s && s.id !== id);
+  delete state.program[id];
+  delete state.bku[id];
+  if(wasBawaan) state.sekolah[saldoKey] = 0; else delete state.sekolah[saldoKey];
+  rebuildSumberRegistry();
+  renderAll();
+  saveStateToLocalStorage();
+}
+
+/* ---- menu ekspor: tombol BKU & daftar laporan PDF mengikuti sumber dana ---- */
+function uniqueSheetName(base, used){
+  let n = String(base).replace(/[\[\]:*?\/\\]/g,"").trim().slice(0,31) || "Sheet";
+  let i = 2, cand = n;
+  while(used.has(cand.toLowerCase())) cand = n.slice(0,27) + " " + (i++);
+  used.add(cand.toLowerCase());
+  return cand;
+}
+function renderMecDynamic(){
+  const box = document.getElementById("mecBkuButtons");
+  if(box){
+    box.innerHTML = SUMBER_KEYS.map(k=>`<button class="btn small" type="button" data-mecbku="${k}" style="justify-content:center;">BKU ${SUMBER_META[k].label} (.xlsx)</button>`).join("");
+    box.querySelectorAll("[data-mecbku]").forEach(b=> b.addEventListener("click", ()=>{ exportBkuKeyToExcel(b.dataset.mecbku); closeModal("modal-export-center"); }));
+  }
+  const sel = document.getElementById("mecPdfReportSelect");
+  if(sel){
+    const cur = sel.value;
+    const opts = [["realisasi","Laporan Realisasi Anggaran"]]
+      .concat(SUMBER_KEYS.map(k=>["bku-"+k, "BKU "+SUMBER_META[k].label]))
+      .concat([["lpjbos","LPJ BOS"],["lpjkons","LPJ Konsolidasi"],["rekapspp","Rekap SPP Siswa (12 Bulan)"],["rekappangkal","Rekap Uang Pangkal"]])
+      .concat(SUMBER_KEYS.map(k=>["rab-"+k, "RAB "+SUMBER_META[k].label]))
+      .concat([["kalender","Kalender Program Kerja"]]);
+    sel.innerHTML = opts.map(o=>`<option value="${o[0]}">${o[1]}</option>`).join("");
+    if(opts.some(o=>o[0] === cur)) sel.value = cur;
+  }
+}
+
+/* =========================================================================
+   DRAFT PENGELUARAN — catatan awal per KEGIATAN, berdiri sendiri (tidak terkait fitur lain).
+   Disimpan di state.sekolah.draftPengeluaran =
+     [{ id, tanggal, kegiatan, items:[{ id, uraian, jumlah, harga }] }]
+   sehingga ikut tersinkron lewat bagian "sekolah" (tanpa mengubah Code.gs).
+   Data versi lama (baris datar) otomatis dikelompokkan per tanggal+kegiatan (ddNormalize).
+   ========================================================================= */
+const DD_ITEM_FIELDS = ["uraian","jumlah","harga"];
+let ddSig = "";
+const ddCollapsed = new Set();
+let ddQuery = "";
+let ddAllCollapsed = false;
+
+function ddNormalize(arr){
+  if(!Array.isArray(arr)) return [];
+  const out = [], idx = {};
+  arr.forEach(r=>{
+    if(!r || typeof r !== "object") return;
+    if(Array.isArray(r.items)){ out.push(r); return; }
+    const key = String(r.tanggal||"") + "|" + String(r.kegiatan||"").trim().toLowerCase();
+    let g = idx[key];
+    if(!g){ g = { id:"m" + r.id, tanggal:r.tanggal||"", kegiatan:r.kegiatan||"", items:[] }; idx[key] = g; out.push(g); }
+    g.items.push({ id:r.id, uraian:r.uraian||"", jumlah:Number(r.jumlah)||0, harga:Number(r.harga)||0 });
+  });
+  return out;
+}
+function ddList(){
+  if(!state.sekolah) return [];
+  if(!Array.isArray(state.sekolah.draftPengeluaran)) state.sekolah.draftPengeluaran = [];
+  return state.sekolah.draftPengeluaran;
+}
+function ddGroup(id){ return ddList().find(g=> String(g.id) === String(id)) || null; }
+function ddItemTotal(it){ return (Number(it.jumlah)||0) * (Number(it.harga)||0); }
+function ddGroupTotal(g){ return (g.items||[]).reduce((s,it)=> s + ddItemTotal(it), 0); }
+function ddItemEmpty(it){ return !String(it.uraian||"").trim() && !Number(it.jumlah) && !Number(it.harga); }
+function ddTodayIso(){
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+/* Tanggal bebas -> "YYYY-MM-DD"; null bila tidak dikenali; "" bila kosong. */
+function ddParseDate(s){
+  s = String(s||"").trim();
+  if(!s) return "";
+  let m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/);
+  let y, mo, d;
+  if(m){ y = +m[1]; mo = +m[2]; d = +m[3]; }
+  else if((m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/))){ d = +m[1]; mo = +m[2]; y = +m[3]; if(y < 100) y += 2000; }
+  else return null;
+  const dt = new Date(Date.UTC(y, mo-1, d));
+  if(dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo-1 || dt.getUTCDate() !== d) return null;
+  return String(y).padStart(4,"0") + "-" + String(mo).padStart(2,"0") + "-" + String(d).padStart(2,"0");
+}
+function ddShowDate(v){
+  const m = String(v||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : String(v||"");
+}
+function ddDateBad(v){ v = String(v||"").trim(); return !!v && !/^\d{4}-\d{2}-\d{2}$/.test(v); }
+
+function ddItemRowHtml(it, no){
+  return `<tr class="dd-row${it?"":" dd-new"}" data-iid="${it?it.id:""}">
+    <td class="dd-no" style="text-align:center;color:var(--text-muted);">${it?no:"+"}</td>
+    <td><input data-f="uraian" value="${escapeHtml(it?it.uraian:"")}" placeholder="${it?"":"Ketik kebutuhan baru di sini…"}" autocomplete="off"></td>
+    <td class="num"><input data-f="jumlah" inputmode="decimal" value="${it&&it.jumlah?escapeHtml(String(it.jumlah).replace(".",",")):""}" autocomplete="off"></td>
+    <td class="num"><input data-f="harga" value="${it?formatRibuan(it.harga):""}" autocomplete="off"></td>
+    <td class="computed dd-total">${it&&ddItemTotal(it)?rp(ddItemTotal(it)):""}</td>
+    <td style="text-align:center;">${it?`<button class="row-del" type="button" data-dddel tabindex="-1" title="Hapus item">&times;</button>`:""}</td>
+  </tr>`;
+}
+function ddCardHtml(g){
+  const items = g.items || [];
+  const col = ddCollapsed.has(String(g.id));
+  return `<div class="dd-card${col?" collapsed":""}" data-gid="${escapeHtml(String(g.id))}">
+    <div class="dd-head">
+      <button class="dd-toggle" type="button" data-ddtoggle tabindex="-1" title="Buka / ciutkan">&#9662;</button>
+      <input class="dd-date${ddDateBad(g.tanggal)?" dd-bad":""}" data-gf="tanggal" value="${escapeHtml(ddShowDate(g.tanggal))}" placeholder="dd/mm/yyyy" autocomplete="off" title="Tanggal kegiatan">
+      <input class="dd-name" data-gf="kegiatan" value="${escapeHtml(g.kegiatan||"")}" placeholder="Nama kegiatan…" autocomplete="off">
+      <span class="dd-cnt">${items.length} item</span>
+      <span class="dd-sub">${rp(ddGroupTotal(g))}</span>
+      <span class="dd-acts">
+        <button class="btn small" type="button" data-ddcopy tabindex="-1" title="Gandakan kegiatan beserta itemnya">Salin</button>
+        <button class="btn small danger" type="button" data-ddgdel tabindex="-1" title="Hapus kegiatan ini">Hapus</button>
+      </span>
+    </div>
+    <div class="dd-body"><div class="table-scroll">
+      <table class="datatable dd-items">
+        <thead><tr><th>No</th><th>Uraian Kebutuhan</th><th>Jumlah</th><th>Harga (Rp)</th><th>Total (Rp)</th><th></th></tr></thead>
+        <tbody>${items.map((it,i)=>ddItemRowHtml(it,i+1)).join("")}${ddItemRowHtml(null,0)}</tbody>
+        <tfoot><tr><td colspan="4" style="text-align:right">SUBTOTAL KEGIATAN</td><td class="computed dd-foot">${rp(ddGroupTotal(g))}</td><td></td></tr></tfoot>
+      </table>
+    </div></div>
+  </div>`;
+}
+function ddUpdateSummary(){
+  const list = ddList();
+  let tot = 0, n = 0;
+  list.forEach(g=>{ tot += ddGroupTotal(g); n += (g.items||[]).length; });
+  const el = document.getElementById("ddSummary");
+  if(el) el.innerHTML = `<span><b>${list.length}</b> kegiatan</span><span><b>${n}</b> item</span><span>Total keseluruhan: <span class="dd-sum">${rp(tot)}</span></span>`;
+}
+function ddRefreshCard(card, g){
+  card.querySelector(".dd-sub").textContent = rp(ddGroupTotal(g));
+  card.querySelector(".dd-cnt").textContent = (g.items||[]).length + " item";
+  card.querySelector(".dd-foot").textContent = rp(ddGroupTotal(g));
+  ddUpdateSummary();
+  ddSig = JSON.stringify(ddList());
+}
+function ddApplyFilter(){
+  const q = ddQuery.trim().toLowerCase();
+  document.querySelectorAll("#ddList .dd-card").forEach(card=>{
+    const g = ddGroup(card.dataset.gid);
+    const hay = g ? (String(g.kegiatan||"") + " " + (g.items||[]).map(i=>i.uraian||"").join(" ")).toLowerCase() : "";
+    card.style.display = (!q || hay.includes(q)) ? "" : "none";
+  });
+}
+function ddFocusSpec(spec){
+  if(!spec) return;
+  const card = document.querySelector(`#ddList .dd-card[data-gid="${String(spec.gid).replace(/"/g,"")}"]`);
+  if(!card) return;
+  let inp = null;
+  if(spec.kind === "name") inp = card.querySelector('input[data-gf="kegiatan"]');
+  else {
+    const trs = card.querySelectorAll("tr.dd-row");
+    const tr = trs[Math.max(0, Math.min(spec.row||0, trs.length-1))];
+    inp = tr && tr.querySelector(`input[data-f="${spec.field||"uraian"}"]`);
+  }
+  if(inp){ if(spec.scroll) card.scrollIntoView({ block:"nearest", behavior:"smooth" }); inp.focus(); }
+}
+function renderDraftPengeluaran(focusSpec, force){
+  const box = document.getElementById("ddList");
+  if(!box || !state.sekolah) return;
+  const sig = JSON.stringify(ddList());
+  /* Jangan merender ulang saat pengguna sedang mengetik di daftar dan data tidak berubah dari luar. */
+  if(!force && !focusSpec && sig === ddSig && box.contains(document.activeElement)){ ddUpdateSummary(); return; }
+  ddSig = sig;
+  const list = ddList();
+  box.innerHTML = list.length
+    ? list.map(ddCardHtml).join("")
+    : `<div class="dd-empty">Belum ada kegiatan. Klik <b>+ Tambah Kegiatan</b> untuk mulai mencatat.</div>`;
+  box.querySelectorAll('input[data-f="harga"]').forEach(wireCurrencyInput);
+  ddUpdateSummary();
+  ddApplyFilter();
+  ddFocusSpec(focusSpec);
+}
+function ddApplyItem(it, f, val, fromPaste){
+  val = String(val);
+  if(f === "uraian") it.uraian = val;
+  else if(f === "jumlah") it.jumlah = parseAngka(val.replace(/["']/g,""));
+  else if(f === "harga") it.harga = fromPaste ? Math.round(parseAngka(val.replace(/["']/g,""))) : parseRibuan(val);
+}
+function ddNewItem(){ return { id:uid(), uraian:"", jumlah:0, harga:0 }; }
+function ddItemOf(tr, g){
+  const id = tr && tr.dataset ? tr.dataset.iid : "";
+  return id ? (g.items||[]).find(i=> String(i.id) === id) || null : null;
+}
+function ddRenumber(tbody){
+  let n = 0;
+  tbody.querySelectorAll("tr.dd-row:not(.dd-new)").forEach(tr=>{ tr.querySelector(".dd-no").textContent = ++n; });
+}
+function ddAddGroup(src){
+  const list = ddList();
+  const g = src
+    ? { id:uid(), tanggal:src.tanggal||"", kegiatan:(src.kegiatan||"") + " (salinan)", items:(src.items||[]).map(i=>({ id:uid(), uraian:i.uraian, jumlah:i.jumlah, harga:i.harga })) }
+    : { id:uid(), tanggal:ddTodayIso(), kegiatan:"", items:[] };
+  list.unshift(g);
+  ddCollapsed.delete(String(g.id));
+  if(ddQuery){ ddQuery = ""; const s = document.getElementById("ddSearch"); if(s) s.value = ""; }
+  renderDraftPengeluaran({ gid:g.id, kind:"name", scroll:true }, true);
+  saveStateToLocalStorage();
+}
+(function wireDraft(){
+  const box = document.getElementById("ddList");
+  if(!box) return;
+
+  box.addEventListener("input", (e)=>{
+    const inp = e.target;
+    const card = inp.closest ? inp.closest(".dd-card") : null;
+    if(!card) return;
+    const g = ddGroup(card.dataset.gid); if(!g) return;
+    if(inp.dataset.gf){
+      if(inp.dataset.gf === "kegiatan"){ g.kegiatan = inp.value; ddSig = JSON.stringify(ddList()); saveStateToLocalStorage(); }
+      return;                                   // tanggal diproses saat selesai mengetik (change)
+    }
+    const f = inp.dataset.f; if(!f) return;
+    const tr = inp.closest("tr");
+    let it = ddItemOf(tr, g);
+    const tbody = tr.parentElement;
+    if(!it){
+      if(!String(inp.value).trim()) return;
+      it = ddNewItem(); g.items.push(it);
+      tr.dataset.iid = it.id; tr.classList.remove("dd-new");
+      tr.lastElementChild.innerHTML = `<button class="row-del" type="button" data-dddel tabindex="-1" title="Hapus item">&times;</button>`;
+      const tmp = document.createElement("tbody");
+      tmp.innerHTML = ddItemRowHtml(null,0);
+      const nt = tmp.firstElementChild;
+      tbody.appendChild(nt);
+      wireCurrencyInput(nt.querySelector('input[data-f="harga"]'));
+      ddRenumber(tbody);
+    }
+    ddApplyItem(it, f, inp.value);
+    tr.querySelector(".dd-total").textContent = ddItemTotal(it) ? rp(ddItemTotal(it)) : "";
+    ddRefreshCard(card, g);
+    saveStateToLocalStorage();
+  });
+
+  box.addEventListener("change", (e)=>{
+    const inp = e.target;
+    const card = inp.closest ? inp.closest(".dd-card") : null;
+    if(!card) return;
+    const g = ddGroup(card.dataset.gid); if(!g) return;
+    if(inp.dataset.gf === "tanggal"){
+      const p = ddParseDate(inp.value);
+      g.tanggal = p === null ? inp.value.trim() : p;
+      inp.value = ddShowDate(g.tanggal);
+      inp.classList.toggle("dd-bad", ddDateBad(g.tanggal));
+      ddSig = JSON.stringify(ddList()); saveStateToLocalStorage();
+      return;
+    }
+    if(inp.dataset.gf === "kegiatan"){ g.kegiatan = inp.value.trim(); inp.value = g.kegiatan; ddSig = JSON.stringify(ddList()); saveStateToLocalStorage(); return; }
+    const f = inp.dataset.f; if(!f) return;
+    const it = ddItemOf(inp.closest("tr"), g); if(!it) return;
+    if(f === "uraian"){ it.uraian = inp.value.trim(); inp.value = it.uraian; }
+    else if(f === "jumlah"){ inp.value = it.jumlah ? String(it.jumlah).replace(".",",") : ""; }
+    inp.closest("tr").querySelector(".dd-total").textContent = ddItemTotal(it) ? rp(ddItemTotal(it)) : "";
+    ddRefreshCard(card, g);
+    saveStateToLocalStorage();
+  });
+
+  box.addEventListener("keydown", (e)=>{
+    const inp = e.target;
+    if(!inp.dataset) return;
+    const card = inp.closest ? inp.closest(".dd-card") : null;
+    if(!card) return;
+    if(inp.dataset.gf){
+      if(e.key === "Enter"){
+        e.preventDefault();
+        if(inp.dataset.gf === "tanggal"){ const n = card.querySelector('input[data-gf="kegiatan"]'); if(n) n.focus(); }
+        else {
+          if(inp.dataset.gf === "kegiatan"){ const g = ddGroup(card.dataset.gid); if(g){ g.kegiatan = inp.value.trim(); } }
+          const first = card.querySelector('tr.dd-row input[data-f="uraian"]'); if(first) first.focus();
+        }
+      } else if(e.key === "Escape"){ inp.blur(); }
+      return;
+    }
+    if(!inp.dataset.f) return;
+    const tr = inp.closest("tr"), f = inp.dataset.f;
+    const move = (dir)=>{
+      const sib = dir>0 ? tr.nextElementSibling : tr.previousElementSibling;
+      const t = sib && sib.querySelector(`input[data-f="${f}"]`);
+      if(t) t.focus();
+      else if(dir < 0){ const n = card.querySelector('input[data-gf="kegiatan"]'); if(n) n.focus(); }
+    };
+    if(e.key === "Enter"){
+      e.preventDefault();
+      /* Enter di kolom terakhir (Harga) -> kolom pertama (Uraian) di baris berikutnya, seperti mengetik daftar di Excel. */
+      if(f === "harga" && !e.shiftKey){
+        const nx = tr.nextElementSibling;
+        const t = nx && nx.querySelector('input[data-f="uraian"]');
+        if(t) t.focus();
+      } else move(e.shiftKey ? -1 : 1);
+    }
+    else if(e.key === "ArrowDown" || e.key === "ArrowUp"){
+      if(f === "jumlah" || f === "harga"){ e.preventDefault(); move(e.key === "ArrowDown" ? 1 : -1); }
+    }
+    else if(e.key === "Escape"){ inp.blur(); }
+  });
+
+  box.addEventListener("focusin", (e)=>{
+    const inp = e.target;
+    if(inp.dataset && (inp.dataset.f || inp.dataset.gf)) setTimeout(()=>{ try{ inp.select(); }catch(_){} }, 0);
+  });
+
+  box.addEventListener("click", (e)=>{
+    const t = e.target.closest ? e.target.closest("button") : null;
+    if(!t) return;
+    const card = t.closest(".dd-card"); if(!card) return;
+    const g = ddGroup(card.dataset.gid); if(!g) return;
+    if(t.hasAttribute("data-ddtoggle")){
+      const id = String(g.id);
+      if(ddCollapsed.has(id)) ddCollapsed.delete(id); else ddCollapsed.add(id);
+      card.classList.toggle("collapsed", ddCollapsed.has(id));
+    } else if(t.hasAttribute("data-ddcopy")){
+      ddAddGroup(g);
+    } else if(t.hasAttribute("data-ddgdel")){
+      const n = (g.items||[]).filter(i=>!ddItemEmpty(i)).length;
+      if(n || String(g.kegiatan||"").trim()){
+        if(!confirm(`Hapus kegiatan "${g.kegiatan || "(tanpa nama)"}"${n ? ` beserta ${n} item kebutuhannya` : ""}? Data yang sudah dihapus tidak dapat dikembalikan.`)) return;
+      }
+      state.sekolah.draftPengeluaran = ddList().filter(x=> x.id !== g.id);
+      ddCollapsed.delete(String(g.id));
+      renderDraftPengeluaran(null, true);
+      saveStateToLocalStorage();
+    } else if(t.hasAttribute("data-dddel")){
+      const tr = t.closest("tr");
+      const it = ddItemOf(tr, g); if(!it) return;
+      if(!ddItemEmpty(it) && !confirmDelete(`item "${it.uraian || "(tanpa uraian)"}"`)) return;
+      const idx = [...card.querySelectorAll("tr.dd-row")].indexOf(tr);
+      g.items = g.items.filter(x=> x.id !== it.id);
+      renderDraftPengeluaran({ gid:g.id, kind:"item", row:idx, field:"uraian" }, true);
+      saveStateToLocalStorage();
+    }
+  });
+
+  box.addEventListener("paste", (e)=>{
+    const inp = e.target;
+    if(!inp.dataset || !inp.dataset.f) return;
+    const card = inp.closest(".dd-card"); if(!card) return;
+    const g = ddGroup(card.dataset.gid); if(!g) return;
+    const text = (e.clipboardData || window.clipboardData).getData("text") || "";
+    if(!/[\t\n]/.test(text.replace(/[\r\n]+$/,""))) return;      // satu nilai saja: tempel biasa
+    e.preventDefault();
+    let grid = text.replace(/\r/g,"").split("\n");
+    while(grid.length && !grid[grid.length-1].trim()) grid.pop();
+    grid = grid.map(l=> l.split("\t").map(c=>c.trim()));
+    if(grid.length > 1 && grid[0].some(c=>/^(no\.?|uraian|kebutuhan|nama|jumlah|volume|vol\.?|qty|harga|total)/i.test(c)) && !grid[0].some(c=>/\d/.test(c))) grid.shift();
+    let startCol = DD_ITEM_FIELDS.indexOf(inp.dataset.f);
+    /* kolom "No" di kiri (1,2,3,…) dibuang bila dimulai dari kolom Uraian */
+    if(startCol === 0 && grid.length && grid.every(r=> r.length >= 4 && /^\d+\.?$/.test(r[0]))) grid = grid.map(r=>r.slice(1));
+    const trs = [...card.querySelectorAll("tr.dd-row")];
+    const startIdx = trs.indexOf(inp.closest("tr"));
+    let last = startIdx;
+    grid.forEach((cells,i)=>{
+      if(cells.every(c=>!c)) return;
+      const p = startIdx + i;
+      let it = g.items[p];
+      if(!it){ it = ddNewItem(); g.items.push(it); }
+      cells.forEach((c,j)=>{ const f = DD_ITEM_FIELDS[startCol+j]; if(f) ddApplyItem(it, f, c, true); });
+      last = p;
+    });
+    renderDraftPengeluaran({ gid:g.id, kind:"item", row:last, field:inp.dataset.f }, true);
+    saveStateToLocalStorage();
+  });
+
+  const on = (id, fn)=>{ const el = document.getElementById(id); if(el) el.addEventListener("click", fn); };
+  on("ddAdd", ()=> ddAddGroup(null));
+  on("ddSort", ()=>{
+    const list = ddList();
+    const idx = new Map(list.map((g,i)=>[g.id,i]));
+    list.sort((a,b)=>{
+      const ta = ddDateBad(a.tanggal) ? "" : String(a.tanggal||""), tb = ddDateBad(b.tanggal) ? "" : String(b.tanggal||"");
+      if(!ta && tb) return 1; if(ta && !tb) return -1;
+      return ta < tb ? -1 : ta > tb ? 1 : idx.get(a.id) - idx.get(b.id);
+    });
+    renderDraftPengeluaran(null, true);
+    saveStateToLocalStorage();
+  });
+  on("ddToggleAll", ()=>{
+    ddAllCollapsed = !ddAllCollapsed;
+    ddCollapsed.clear();
+    if(ddAllCollapsed) ddList().forEach(g=> ddCollapsed.add(String(g.id)));
+    document.querySelectorAll("#ddList .dd-card").forEach(c=> c.classList.toggle("collapsed", ddAllCollapsed));
+    document.getElementById("ddToggleAll").textContent = ddAllCollapsed ? "Buka Semua" : "Ciutkan Semua";
+  });
+  on("ddClear", ()=>{
+    const list = ddList();
+    if(!list.length){ alert("Draft masih kosong."); return; }
+    if(!confirm(`Hapus SEMUA ${list.length} kegiatan beserta seluruh itemnya? Data yang sudah dihapus tidak dapat dikembalikan.`)) return;
+    state.sekolah.draftPengeluaran = [];
+    ddCollapsed.clear();
+    renderDraftPengeluaran(null, true);
+    saveStateToLocalStorage();
+  });
+  on("ddExcel", ()=>{
+    if(typeof XLSX === "undefined"){ alert("Pustaka Excel belum siap."); return; }
+    const list = ddList();
+    if(!list.length){ alert("Draft masih kosong."); return; }
+    const aoa = [["DRAFT PENCATATAN PENGELUARAN"], [`${state.sekolah.namaSekolah || "Sekolah"}`], [""],
+      ["Tanggal","Kegiatan","No","Uraian Kebutuhan","Jumlah","Harga (Rp)","Total (Rp)"]];
+    let grand = 0;
+    list.forEach(g=>{
+      const items = (g.items||[]).filter(i=>!ddItemEmpty(i));
+      items.forEach((it,i)=> aoa.push([ddShowDate(g.tanggal), g.kegiatan||"", i+1, it.uraian||"", Number(it.jumlah)||0, Number(it.harga)||0, ddItemTotal(it)]));
+      const sub = ddGroupTotal(g); grand += sub;
+      aoa.push([ddShowDate(g.tanggal), g.kegiatan||"", "", "Subtotal " + (g.kegiatan||""), "", "", sub]);
+    });
+    aoa.push(["","","","","","TOTAL KESELURUHAN", grand]);
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws["!cols"] = [{wch:12},{wch:28},{wch:5},{wch:36},{wch:9},{wch:14},{wch:16}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Draft Pengeluaran");
+    XLSX.writeFile(wb, "Draft-Pengeluaran.xlsx");
+  });
+  const s = document.getElementById("ddSearch");
+  if(s) s.addEventListener("input", ()=>{ ddQuery = s.value; ddApplyFilter(); });
+})();
+
 function renderAll(){
+  rebuildSumberRegistry();
+  renderMecDynamic();
+  renderSumberDanaView();
+  renderDraftPengeluaran();
   updateRoleUI();
   renderSekolahForm();
   renderKopSection();
@@ -6936,323 +7926,482 @@ startAutoSync();
    wireCurrencyInput/wireCurrencyInputs sendiri di titik pembuatannya). */
 wireCurrencyInputs(document);
 </script>
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
-import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
-import { getFirestore, doc, setDoc, onSnapshot, getDocFromServer } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
+<script>
+/* =========================================================================
+   SINKRONISASI GOOGLE SHEETS (cloud-only)
+   - Tidak ada data keuangan yang disimpan di perangkat (tanpa localStorage).
+     Sumber kebenaran = Google Sheets lewat Apps Script (lihat Code.gs).
+   - Data dibagi 10 bagian, masing-masing bernomor versi. Hanya bagian yang
+     berubah yang dikirim. Kalau orang lain sudah mengubah bagian yang sama,
+     server menolak dan aplikasi MENGGABUNGKAN (merge 3 arah per id), bukan
+     menimpa.
+   - Perubahan yang gagal terkirim (offline) tetap di memori dan dicoba lagi;
+     menutup tab saat belum tersimpan memunculkan peringatan.
+   ========================================================================= */
+(function(){
+"use strict";
+var SECTIONS = ["sekolah","siswa","gtk","program","bku","sppTx","itemTx","pinjaman","lpj","docCounters"];
+var CFG = Object.assign({ apiUrl:"", pollMs:30000, debounceMs:1500, retryMs:5000 }, window.APP_CONFIG || {});
+var LS_URL = "rkasApiUrl", LS_KEY = "rkasAccessKey";   // hanya pengaturan koneksi, bukan data
+function lsGet(k){ try{ return localStorage.getItem(k) || ""; }catch(e){ return ""; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 
-const defaultFirebaseConfig = {
-  projectId: "robust-lore-ccb1c",
-  appId: "1:313861927330:web:4e367ee24df800fbf582fb",
-  apiKey: "AIzaSyC3OgN8WC3yMB-2fGY4EPD5V9zJYlbJH0s",
-  authDomain: "robust-lore-ccb1c.firebaseapp.com",
-  firestoreDatabaseId: "ai-studio-abhurrkas-dabc7792-4000-4801-ae43-67bf9b14c8de",
-  storageBucket: "robust-lore-ccb1c.firebasestorage.app",
-  messagingSenderId: "313861927330"
-};
+var apiUrl = CFG.apiUrl || lsGet(LS_URL);
+var accessKey = lsGet(LS_KEY);
+var serverV = {}, baseJson = {}, overwrite = {};
+var started = false, pushInFlight = false, pushAgain = false, pushTimer = null, retryTimer = null;
+var retryDelay = CFG.retryMs, failing = false, pollBusy = false, pollTimer = null, keyPromptOpen = false;
 
-const OperationType = {
-  CREATE: 'create',
-  UPDATE: 'update',
-  DELETE: 'delete',
-  LIST: 'list',
-  GET: 'get',
-  WRITE: 'write',
-};
-
-let app = null;
-let db = null;
-let auth = null;
-let isApplyingCloudSnapshot = false;
-let lastPushedTimestamp = null;
-let firestorePushTimer = null;
-
-function handleFirestoreError(error, operationType, path) {
-  const errInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth && auth.currentUser ? auth.currentUser.uid : null,
-      email: auth && auth.currentUser ? auth.currentUser.email : null,
-      emailVerified: auth && auth.currentUser ? auth.currentUser.emailVerified : null,
-      isAnonymous: auth && auth.currentUser ? auth.currentUser.isAnonymous : null,
-      tenantId: auth && auth.currentUser ? auth.currentUser.tenantId : null,
-      providerInfo: (auth && auth.currentUser && auth.currentUser.providerData) ? auth.currentUser.providerData.map(p => ({
-        providerId: p.providerId,
-        email: p.email,
-      })) : []
-    },
-    operationType,
-    path
-  };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+/* ---------------------------------------------------------- util data ---- */
+function clone(v){ return v === undefined ? undefined : JSON.parse(JSON.stringify(v)); }
+function canon(v){
+  if(Array.isArray(v)) return "[" + v.map(canon).join(",") + "]";
+  if(v && typeof v === "object") return "{" + Object.keys(v).sort().map(function(k){ return JSON.stringify(k)+":"+canon(v[k]); }).join(",") + "}";
+  return JSON.stringify(v === undefined ? null : v);
+}
+function eq(a,b){ return canon(a) === canon(b); }
+function isPlain(v){ return v && typeof v === "object" && !Array.isArray(v); }
+function isIdArray(a){
+  return Array.isArray(a) && a.every(function(x){ return isPlain(x) && x.id !== undefined && x.id !== null; });
+}
+function emptyFor(n){
+  if(n==="siswa"||n==="gtk"||n==="sppTx"||n==="itemTx"||n==="pinjaman") return [];
+  return {};
 }
 
-function updateOnlineBadge(isOnline, text, isSyncing = false) {
-  const badge = document.getElementById("onlineStatusBadge");
-  if (!badge) return;
-  badge.textContent = text;
-  badge.className = "online-badge " + (isSyncing ? "syncing" : (isOnline ? "online" : "offline"));
-  badge.title = isOnline 
-    ? "Firestore Realtime Aktif: Semua perubahan data tersinkronisasi otomatis antar-perangkat!" 
-    : "Koneksi terputus. Data tersimpan di penyimpanan lokal dan akan sinkron saat online.";
-}
-
-function showSyncToast(msg) {
-  let toast = document.getElementById("firestoreSyncToast");
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.id = "firestoreSyncToast";
-    toast.style.cssText = "position:fixed;bottom:20px;right:20px;background:#0f172a;color:#f8fafc;padding:10px 16px;border-radius:8px;font-size:12.5px;font-weight:600;box-shadow:0 10px 25px -5px rgba(0,0,0,0.3);z-index:99999;transition:opacity 0.3s, transform 0.3s;opacity:0;transform:translateY(10px);pointer-events:none;";
-    document.body.appendChild(toast);
-  }
-  toast.textContent = msg;
-  toast.style.opacity = "1";
-  toast.style.transform = "translateY(0)";
-  clearTimeout(toast._timer);
-  toast._timer = setTimeout(() => {
-    toast.style.opacity = "0";
-    toast.style.transform = "translateY(10px)";
-  }, 2500);
-}
-
-async function testConnection() {
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration.");
-    }
-  }
-}
-
-/* ---------------------------------------------------------------------------
-   SINKRONISASI FIRESTORE (diperbaiki)
-   Penyebab data "kembali ke awal" sebelumnya:
-   - setiap 12 detik state didorong ke cloud walau tidak ada perubahan, sehingga
-     perangkat/tab yang datanya lama (atau data awal bawaan) menimpa data cloud;
-   - data dari cloud langsung menimpa isian yang sedang diketik (snapshot lama
-     tiba setelah edit baru);
-   - data awal bawaan bisa terkirim ke cloud sebelum data cloud sempat dimuat.
-   Sekarang: hanya kirim bila isi berubah, tidak kirim sebelum data cloud
-   dimuat, gema tulisan sendiri diabaikan (clientId), dan dan saat ada perubahan
-   lokal yang belum terkirim, data cloud tidak menimpa data lokal.
---------------------------------------------------------------------------- */
-const CLIENT_ID = 'c' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-let cloudReady = false;          // true setelah snapshot server pertama diterima
-let lastSyncedHash = null;       // isi state terakhir yang sama dengan cloud
-let pushInFlight = false;
-let pushQueued = false;
-let initialHash = null;
-
-function contentHash() {
-  const st = (typeof state !== 'undefined') ? state : {};
-  return JSON.stringify({
-    sekolah: st.sekolah || {}, siswa: st.siswa || [], gtk: st.gtk || [],
-    program: st.program || {}, bku: st.bku || {}, sppTx: st.sppTx || [],
-    itemTx: st.itemTx || [], pinjaman: st.pinjaman || [], lpj: st.lpj || {},
-    docCounters: st.docCounters || {}
-  });
-}
-
-async function pushStateToFirestore(immediate = false) {
-  if (isApplyingCloudSnapshot || !db || !cloudReady) return;
-
-  clearTimeout(firestorePushTimer);
-  const doPush = async () => {
-    firestorePushTimer = null;
-    if (isApplyingCloudSnapshot || !cloudReady) return;
-    if (pushInFlight) { pushQueued = true; return; }
-
-    const content = contentHash();
-    if (content === lastSyncedHash) return;   // tidak ada perubahan -> jangan kirim
-
-    pushInFlight = true;
-    try {
-      updateOnlineBadge(true, "● Menyimpan...", true);
-      const timestamp = new Date().toISOString();
-      // JSON round-trip membuang nilai undefined (Firestore menolaknya)
-      const payload = JSON.parse(content);
-      payload.updatedAt = timestamp;
-      payload.updatedBy = (window.currentUser && window.currentUser.name) || (auth && auth.currentUser ? auth.currentUser.email : "Pengguna");
-      payload.clientId = CLIENT_ID;
-      await setDoc(doc(db, 'schools', 'default'), payload);
-      lastSyncedHash = content;
-      updateOnlineBadge(true, "● Realtime Online");
-    } catch (err) {
-      console.warn("Firestore push error:", err);
-      updateOnlineBadge(navigator.onLine, navigator.onLine ? "● Gagal Sync Cloud" : "● Offline");
-      // lastSyncedHash tidak diubah -> akan dicoba lagi pada penyimpanan berikutnya
-    } finally {
-      pushInFlight = false;
-      if (pushQueued) { pushQueued = false; firestorePushTimer = setTimeout(doPush, 300); }
-    }
-  };
-
-  if (immediate) {
-    await doPush();
-  } else {
-    firestorePushTimer = setTimeout(doPush, 600);
-  }
-}
-window.syncStateToFirestore = pushStateToFirestore;
-
-function setupFirestoreRealtime() {
-  const schoolDocRef = doc(db, 'schools', 'default');
-  initialHash = contentHash();
-
-  onSnapshot(schoolDocRef, (snap) => {
-    // Gema tulisan lokal yang belum dikonfirmasi server: abaikan
-    if (snap.metadata && snap.metadata.hasPendingWrites) return;
-
-    const firstSnapshot = !cloudReady;
-    updateOnlineBadge(true, "● Realtime Online");
-
-    if (!snap.exists()) {
-      cloudReady = true;
-      if (typeof state !== 'undefined' && state.sekolah && !sekolahLooksUnconfigured()) {
-        pushStateToFirestore(true);
-      }
-      return;
-    }
-
-    const cloudData = snap.data();
-    if (!cloudData || !cloudData.sekolah) { cloudReady = true; return; }
-
-    // Gema tulisan sendiri: abaikan
-    if (cloudData.clientId === CLIENT_ID) { cloudReady = true; return; }
-
-    // Ada perubahan lokal yang belum terkirim: jangan ditimpa
-    const localDirty = (lastSyncedHash !== null)
-      ? (contentHash() !== lastSyncedHash)
-      : (initialHash !== null && contentHash() !== initialHash);
-    // Perangkat yang baru memakai data awal bawaan selalu mengikuti cloud
-    const keepLocal = localDirty && !window.__stateFromSeed;
-    if (keepLocal) {
-      cloudReady = true;
-      pushStateToFirestore(true);
-      return;
-    }
-
-    isApplyingCloudSnapshot = true;
-    try {
-      if (typeof window.applyStateFromCloud === 'function') {
-        window.applyStateFromCloud(cloudData);
-      }
-      lastSyncedHash = contentHash();
-      window.__stateFromSeed = false;
-      if (!firstSnapshot) showSyncToast("⚡ Data disinkronkan realtime dari cloud!");
-    } finally {
-      isApplyingCloudSnapshot = false;
-      cloudReady = true;
-    }
-  }, (err) => {
-    updateOnlineBadge(false, "● Firestore Terputus");
-    console.warn("Firestore snapshot error:", err);
-  });
-
-  // Simpan segera saat tab disembunyikan / ditutup (best-effort)
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') pushStateToFirestore(true);
-  });
-}
-
-async function initClientAuth() {
-  try {
-    let config = defaultFirebaseConfig;
-    try {
-      const res = await fetch('/api/firebase-config');
-      if (res.ok) {
-        const serverConfig = await res.json();
-        config = { ...defaultFirebaseConfig, ...serverConfig };
-      }
-    } catch(e) {
-      // Direct client usage (GitHub Pages) uses defaultFirebaseConfig
-    }
-
-    app = initializeApp(config);
-    db = getFirestore(app, config.firestoreDatabaseId);
-    auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-
-    await testConnection();
-    setupFirestoreRealtime();
-
-    const btn = document.getElementById('btnGoogleAuth');
-    const label = document.getElementById('btnGoogleAuthLabel');
-
-    if (btn) {
-      btn.addEventListener('click', async () => {
-        if (!auth) return;
-        if (window.currentAuthUser) {
-          if (confirm("Keluar dari akun Google?")) {
-            await signOut(auth);
-            window.currentAuthToken = null;
-            window.currentAuthUser = null;
-            currentAuthToken = null;
-            currentAuthUser = null;
-            if (label) label.textContent = "Masuk Google";
-            if (btn) btn.title = "Masuk dengan akun Google untuk sinkronisasi database";
-          }
-        } else {
-          try {
-            btn.disabled = true;
-            if (label) label.textContent = "Menghubungkan...";
-            const cred = await signInWithPopup(auth, provider);
-            window.currentAuthUser = cred.user;
-            window.currentAuthToken = await cred.user.getIdToken();
-            currentAuthUser = cred.user;
-            currentAuthToken = window.currentAuthToken;
-          } catch(err) {
-            console.error("Login error:", err);
-            alert("Gagal masuk dengan Google: " + (err.message || err));
-          } finally {
-            btn.disabled = false;
-          }
-        }
-      });
-    }
-
-    onAuthStateChanged(auth, async (user) => {
-      window.currentAuthUser = user;
-      currentAuthUser = user;
-      if (user) {
-        window.currentAuthToken = await user.getIdToken();
-        currentAuthToken = window.currentAuthToken;
-        const displayName = user.displayName || user.email || "Akun Google";
-        if (label) label.textContent = displayName;
-        if (btn) btn.title = "Masuk sebagai: " + (user.email || displayName) + " (Klik untuk keluar)";
-
-        try {
-          await fetch('/api/auth/sync-user', {
-            method: 'POST',
-            headers: {
-              'Authorization': 'Bearer ' + window.currentAuthToken
-            }
-          });
-        } catch(e) {
-          // Ignore if running static without node server
-        }
-      } else {
-        window.currentAuthToken = null;
-        window.currentAuthUser = null;
-        currentAuthToken = null;
-        currentAuthUser = null;
-        if (label) label.textContent = "Masuk Google";
-        if (btn) btn.title = "Masuk dengan akun Google untuk sinkronisasi database";
-      }
+/* Gabung 3 arah: base = versi terakhir yang kita tahu sama dengan server,
+   mine = isi lokal sekarang, theirs = isi terbaru di server. */
+function merge3(base, mine, theirs, name){
+  if(eq(mine, base)) return clone(theirs);    // saya tidak mengubah -> ikut server
+  if(eq(theirs, base)) return clone(mine);    // server tidak berubah -> milik saya
+  if(eq(mine, theirs)) return clone(mine);
+  if(isPlain(mine) && isPlain(theirs)){
+    var b = isPlain(base) ? base : {};
+    var out = {};
+    var keys = Object.keys(theirs);
+    Object.keys(mine).forEach(function(k){ if(keys.indexOf(k) < 0) keys.push(k); });
+    keys.forEach(function(k){
+      var inM = k in mine, inT = k in theirs, inB = k in b;
+      if(inM && inT) out[k] = merge3(b[k], mine[k], theirs[k], name);
+      else if(inM){ if(!inB || !eq(mine[k], b[k])) out[k] = clone(mine[k]); }      // server menghapus; simpan hanya bila saya ubah
+      else { if(!inB || !eq(theirs[k], b[k])) out[k] = clone(theirs[k]); }        // saya menghapus; simpan hanya bila server ubah
     });
-  } catch(err) {
-    console.warn("Client auth & firestore init error:", err);
-    updateOnlineBadge(false, "● Firestore Error");
+    return out;
   }
+  if(isIdArray(mine) && isIdArray(theirs) && (!Array.isArray(base) || isIdArray(base))){
+    var mapB = {}, mapM = {}, mapT = {}, seen = {}, res = [];
+    (Array.isArray(base) ? base : []).forEach(function(x){ mapB[String(x.id)] = x; });
+    mine.forEach(function(x){ mapM[String(x.id)] = x; });
+    theirs.forEach(function(x){ mapT[String(x.id)] = x; });
+    theirs.forEach(function(t){
+      var id = String(t.id), m = mapM[id], bb = mapB[id];
+      seen[id] = 1;
+      if(m !== undefined) res.push(merge3(bb, m, t, name));
+      else if(bb === undefined) res.push(clone(t));            // ditambah orang lain
+      else if(!eq(t, bb)) res.push(clone(t));                   // saya hapus, tapi orang lain mengubahnya -> pertahankan
+    });
+    mine.forEach(function(m){
+      var id = String(m.id);
+      if(seen[id]) return;
+      var bb = mapB[id];
+      if(bb === undefined) res.push(clone(m));                  // saya tambah
+      else if(!eq(m, bb)) res.push(clone(m));                   // orang lain hapus, tapi saya mengubahnya -> pertahankan
+    });
+    return res;
+  }
+  if(name === "docCounters" && typeof mine === "number" && typeof theirs === "number") return Math.max(mine, theirs);
+  return clone(mine);                                            // bentrok pada nilai tunggal: milik saya
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initClientAuth);
-} else {
-  initClientAuth();
+function normSection(n, data){
+  var d = clone(data);
+  if(n === "sekolah"){
+    var sk = Object.assign(emptySekolah(), isPlain(d) ? d : {});
+    if(!Array.isArray(sk.sumberDana) || !sk.sumberDana.length) sk.sumberDana = sumberDefaultList();
+    sk.draftPengeluaran = ddNormalize(sk.draftPengeluaran);
+    return sk;
+  }
+  if(n === "program" || n === "bku"){
+    d = Object.assign({}, isPlain(d) ? d : {});   /* kunci sumber dana ditambahkan oleh rebuildSumberRegistry() */
+    if(n === "program") Object.keys(d).forEach(function(k){
+      (Array.isArray(d[k]) ? d[k] : []).forEach(function(p){
+        p.realisasi = p.realisasi || []; p.realisasiBatal = p.realisasiBatal || []; p.budgets = p.budgets || [];
+        p.serahTerima = p.serahTerima || []; p.pengembalianUangMuka = p.pengembalianUangMuka || [];
+      });
+    });
+    return d;
+  }
+  if(n === "lpj") return Object.assign({ periode:"Triwulan I", danaDiterima:0, penerimaanLain:0 }, isPlain(d) ? d : {});
+  if(n === "docCounters") return Object.assign({ kwitansi:0, bast:0, peminjaman:0 }, isPlain(d) ? d : {});
+  d = Array.isArray(d) ? d : [];
+  if(n === "pinjaman") d.forEach(function(pj){
+    pj.cicilan = pj.cicilan || [];
+    if(!pj.sumberDana && typeof SUMBER_KEYS !== "undefined") pj.sumberDana = SUMBER_KEYS[0];
+  });
+  return d;
 }
+function isDirty(n){ return JSON.stringify(state[n]) !== baseJson[n]; }
+function anyDirty(){ return SECTIONS.some(isDirty); }
+function userName(){ return (typeof currentUser !== "undefined" && currentUser && currentUser.name) || "Pengguna"; }
+
+/* ------------------------------------------------------ Firebase lama ---- */
+function decodeFirestore(v){
+  if(v === null || v === undefined) return null;
+  if("stringValue" in v) return v.stringValue;
+  if("integerValue" in v) return Number(v.integerValue);
+  if("doubleValue" in v) return Number(v.doubleValue);
+  if("booleanValue" in v) return !!v.booleanValue;
+  if("nullValue" in v) return null;
+  if("timestampValue" in v) return v.timestampValue;
+  if("arrayValue" in v) return (v.arrayValue.values || []).map(decodeFirestore);
+  if("mapValue" in v){ var o = {}, f = v.mapValue.fields || {}; Object.keys(f).forEach(function(k){ o[k] = decodeFirestore(f[k]); }); return o; }
+  return null;
+}
+var OLD_FB = { projectId:"robust-lore-ccb1c", apiKey:"AIzaSyC3OgN8WC3yMB-2fGY4EPD5V9zJYlbJH0s", dbId:"ai-studio-abhurrkas-dabc7792-4000-4801-ae43-67bf9b14c8de" };
+function fetchOldFirebase(){
+  var url = "https://firestore.googleapis.com/v1/projects/"+OLD_FB.projectId+"/databases/"+OLD_FB.dbId+"/documents/schools/default?key="+OLD_FB.apiKey;
+  return fetch(url).then(function(r){
+    if(!r.ok) throw new Error("Data Firebase lama tidak bisa dibaca (HTTP "+r.status+").");
+    return r.json();
+  }).then(function(doc){
+    if(!doc || !doc.fields) throw new Error("Dokumen Firebase lama kosong.");
+    return decodeFirestore({ mapValue:{ fields:doc.fields } });
+  });
+}
+
+/* --------------------------------------------------- cadangan (.json) ---- */
+function parseBackup(obj){
+  var src = obj && obj.state && isPlain(obj.state) ? obj.state : obj;
+  if(!isPlain(src) || !isPlain(src.sekolah)) throw new Error("Berkas bukan cadangan data aplikasi (bagian 'sekolah' tidak ditemukan).");
+  var out = {};
+  SECTIONS.forEach(function(n){
+    if(src[n] === undefined) return;
+    var wantObj = (n === "sekolah" || n === "program" || n === "bku" || n === "lpj" || n === "docCounters");
+    if(wantObj ? !isPlain(src[n]) : !Array.isArray(src[n])) throw new Error("Bagian '"+n+"' pada berkas tidak valid.");
+    out[n] = src[n];
+  });
+  return out;
+}
+function downloadBackup(){
+  var st = {}; SECTIONS.forEach(function(n){ st[n] = state[n]; });
+  var blob = new Blob([JSON.stringify({ app:"rkas-keuangan-sekolah", version:1, exportedAt:new Date().toISOString(), state:st }, null, 1)], { type:"application/json" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "cadangan-rkas-" + new Date().toISOString().slice(0,10) + ".json";
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function readJsonFile(file){
+  return new Promise(function(res, rej){
+    var fr = new FileReader();
+    fr.onload = function(){ try{ res(JSON.parse(fr.result)); }catch(e){ rej(new Error("Berkas bukan JSON yang valid.")); } };
+    fr.onerror = function(){ rej(new Error("Gagal membaca berkas.")); };
+    fr.readAsText(file);
+  });
+}
+
+/* --------------------------------------------------------------- UI ---- */
+function toast(msg){
+  var t = document.getElementById("rkasToast");
+  if(!t){
+    t = document.createElement("div"); t.id = "rkasToast";
+    t.style.cssText = "position:fixed;bottom:20px;right:20px;background:#0f172a;color:#f8fafc;padding:10px 16px;border-radius:8px;font-size:12.5px;font-weight:600;box-shadow:0 10px 25px -5px rgba(0,0,0,.3);z-index:100001;transition:opacity .3s;max-width:80vw;";
+    document.body.appendChild(t);
+  }
+  t.textContent = msg; t.style.opacity = "1";
+  clearTimeout(t._t); t._t = setTimeout(function(){ t.style.opacity = "0"; }, 3500);
+}
+function setBadge(kind, text){
+  var b = document.getElementById("onlineStatusBadge");
+  if(!b) return;
+  b.textContent = text; b.className = "online-badge " + kind;
+  b.title = kind === "online" ? "Semua perubahan sudah tersimpan di Google Sheets."
+          : kind === "syncing" ? "Sedang menyimpan ke Google Sheets…"
+          : "Perubahan belum tersimpan. Jangan tutup halaman ini; aplikasi mencoba lagi otomatis.";
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function ov(){ return document.getElementById("syncOverlay"); }
+function showOverlay(inner){
+  var o = ov(); if(!o) return;
+  o.style.display = "flex";
+  o.innerHTML = '<div style="background:#fff;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.15);padding:26px;max-width:460px;width:92%;font-size:14px;line-height:1.5;color:#0f172a;">' + inner + '</div>';
+}
+function hideOverlay(){ var o = ov(); if(o){ o.style.display = "none"; o.innerHTML = ""; } }
+var BTN = 'style="display:block;width:100%;margin-top:10px;padding:10px 14px;border-radius:8px;border:1px solid #cbd5e1;background:#f8fafc;font-size:13.5px;font-weight:600;cursor:pointer;text-align:left;"';
+var BTNP = 'style="display:block;width:100%;margin-top:12px;padding:10px 14px;border-radius:8px;border:none;background:#2a78d6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;"';
+var INP = 'style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;margin-top:4px;"';
+
+function showLoading(msg){ showOverlay('<div style="font-weight:700;font-size:15px;">'+esc(msg)+'</div><div style="color:#64748b;font-size:12.5px;margin-top:6px;">Mohon tunggu sebentar.</div>'); }
+function showError(e, retryFn){
+  var msg = e && e.message ? e.message : String(e);
+  showOverlay('<div style="font-weight:800;font-size:15px;color:#b23030;">Tidak bisa terhubung ke Google Sheets</div>'+
+    '<div style="margin-top:8px;color:#334155;">'+esc(msg)+'</div>'+
+    '<div style="margin-top:6px;color:#64748b;font-size:12.5px;">Periksa sinyal internet. Mencoba lagi otomatis…</div>'+
+    '<button id="rkasRetry" '+BTNP+'>Coba lagi sekarang</button>'+
+    '<button id="rkasChangeConn" '+BTN+'>Ubah URL / kunci akses</button>');
+  var t = setTimeout(retryFn, 6000);
+  document.getElementById("rkasRetry").onclick = function(){ clearTimeout(t); retryFn(); };
+  document.getElementById("rkasChangeConn").onclick = function(){ clearTimeout(t); showSetup("", false); };
+}
+function showSetup(errMsg, resume){
+  keyPromptOpen = true;
+  var needUrl = !CFG.apiUrl;
+  showOverlay('<div style="font-weight:800;font-size:16px;">Sambungkan ke Google Sheets</div>'+
+    (errMsg ? '<div style="margin-top:8px;color:#b23030;font-weight:600;">'+esc(errMsg)+'</div>' : '')+
+    (needUrl ? '<label style="display:block;margin-top:12px;font-weight:600;">URL Web App (berakhiran /exec)<input id="rkasUrl" '+INP+' value="'+esc(apiUrl)+'" placeholder="https://script.google.com/macros/s/…/exec"></label>' : '')+
+    '<label style="display:block;margin-top:12px;font-weight:600;">Kunci akses<input id="rkasKey" type="password" '+INP+' autocomplete="off" placeholder="ACCESS_KEY dari Script properties"></label>'+
+    '<button id="rkasConnect" '+BTNP+'>Sambungkan</button>');
+  var go = function(){
+    var u = needUrl ? document.getElementById("rkasUrl").value.trim() : apiUrl;
+    var k = document.getElementById("rkasKey").value;
+    if(!u || !k){ showSetup("URL dan kunci akses wajib diisi.", resume); return; }
+    apiUrl = u; accessKey = k; lsSet(LS_URL, u); lsSet(LS_KEY, k);
+    keyPromptOpen = false;
+    if(resume){ hideOverlay(); retryDelay = CFG.retryMs; pushNow(); pollOnce(); } else boot();
+  };
+  document.getElementById("rkasConnect").onclick = go;
+  document.getElementById("rkasKey").onkeydown = function(e){ if(e.key === "Enter") go(); };
+}
+function showEmptyChoice(){
+  showOverlay('<div style="font-weight:800;font-size:16px;">Spreadsheet masih kosong</div>'+
+    '<div style="margin-top:6px;color:#475569;">Pilih sumber data awal. Pilihan ini hanya muncul sekali.</div>'+
+    '<button id="rkasSeed" '+BTN+'>Mulai dengan data awal sekolah (SD IT Abu Hurairah)</button>'+
+    '<button id="rkasFile" '+BTN+'>Pulihkan dari berkas cadangan (.json)</button>'+
+    '<button id="rkasOld" '+BTN+'>Ambil dari Firebase lama (data yang sudah terisi)</button>'+
+    '<button id="rkasBlank" '+BTN+'>Mulai kosong</button>'+
+    '<input type="file" id="rkasFileInput" accept=".json,application/json" style="display:none">'+
+    '<div id="rkasChoiceErr" style="margin-top:10px;color:#b23030;font-weight:600;"></div>');
+  var err = function(e){ document.getElementById("rkasChoiceErr").textContent = e.message || String(e); };
+  document.getElementById("rkasSeed").onclick = function(){ commitInitial(parseSeed()); };
+  document.getElementById("rkasBlank").onclick = function(){ commitInitial({}); };
+  document.getElementById("rkasFile").onclick = function(){ document.getElementById("rkasFileInput").click(); };
+  document.getElementById("rkasFileInput").onchange = function(ev){
+    var f = ev.target.files[0]; if(!f) return;
+    readJsonFile(f).then(parseBackup).then(commitInitial).catch(err);
+  };
+  document.getElementById("rkasOld").onclick = function(){
+    document.getElementById("rkasChoiceErr").textContent = "Mengambil data…";
+    fetchOldFirebase().then(parseBackup).then(commitInitial).catch(err);
+  };
+}
+function parseSeed(){
+  var s = clone(SEEDED_SCHOOL_STATE), out = {};
+  SECTIONS.forEach(function(n){ if(s[n] !== undefined) out[n] = s[n]; });
+  return out;
+}
+
+/* ------------------------------------------------------------ jaringan ---- */
+function api(action, payload){
+  var body = JSON.stringify(Object.assign({ key:accessKey, action:action }, payload || {}));
+  return fetch(apiUrl, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body:body, redirect:"follow" })
+    .then(function(r){
+      if(!r.ok) throw new Error("Server menjawab HTTP " + r.status + ".");
+      return r.text();
+    })
+    .then(function(t){
+      var j; try{ j = JSON.parse(t); }catch(e){ throw new Error("Jawaban server tidak valid. Pastikan URL benar dan akses Web App diatur ke 'Anyone'."); }
+      if(!j.ok){ var e = new Error(j.error || "Permintaan ditolak server."); e.code = j.code; throw e; }
+      return j;
+    });
+}
+function isKeyError(e){ return e && (e.code === "BAD_KEY" || e.code === "NO_KEY"); }
+
+/* ------------------------------------------------------- muat / terapkan ---- */
+function applySections(secs, force){
+  Object.keys(secs).forEach(function(n){
+    if(SECTIONS.indexOf(n) < 0) return;
+    var s = secs[n];
+    state[n] = normSection(n, s.data);
+    serverV[n] = s.v;
+    baseJson[n] = JSON.stringify(state[n]);
+  });
+  window.state = state;
+}
+function afterLoadUi(){
+  if(typeof currentUser !== "undefined" && (!currentUser.name || currentUser.name === "Admin Sekolah")){
+    var nm = (state.sekolah && state.sekolah.bendaharaBos) || "Admin Sekolah";
+    currentUser = { name:nm, role:"Admin" };
+  }
+  renderAll();
+  if(typeof refreshHeader === "function") refreshHeader();
+}
+function boot(){
+  if(!apiUrl || !accessKey){ showSetup("", false); return; }
+  showLoading("Memuat data dari Google Sheets…");
+  api("get", {}).then(function(res){
+    var secs = res.sections || {};
+    var allEmpty = SECTIONS.every(function(n){ return !secs[n] || !secs[n].v; });
+    if(allEmpty){ showEmptyChoice(); return; }
+    applySections(secs);
+    afterLoadUi();
+    finishBoot();
+  }).catch(function(e){
+    if(isKeyError(e)){ accessKey = ""; lsSet(LS_KEY, ""); showSetup(e.message, false); return; }
+    showError(e, boot);
+  });
+}
+function finishBoot(){
+  hideOverlay();
+  started = true;
+  setBadge("online", "● Tersimpan di Google Sheets");
+  clearInterval(pollTimer);
+  pollTimer = setInterval(pollOnce, CFG.pollMs);
+}
+/* Isi awal spreadsheet kosong: semua bagian dikirim dengan versi dasar 0. */
+function commitInitial(secs){
+  SECTIONS.forEach(function(n){
+    state[n] = normSection(n, secs[n] !== undefined ? secs[n] : emptyFor(n));
+    serverV[n] = 0; baseJson[n] = "";
+  });
+  window.state = state;
+  afterLoadUi();
+  showLoading("Menyimpan data awal ke Google Sheets…");
+  started = true;
+  pushNow().then(function(){
+    if(failing){ started = false; showError(new Error("Data awal belum terkirim."), function(){ commitInitial(secs); }); return; }
+    finishBoot();
+  });
+}
+
+/* ------------------------------------------------------------- polling ---- */
+function userIsEditing(){
+  if(document.querySelector(".modal-overlay.open")) return true;
+  var a = document.activeElement;
+  var o = ov();
+  return !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && !(o && o.contains(a)));
+}
+function pollOnce(){
+  if(!started || pollBusy || pushInFlight || document.hidden || keyPromptOpen) return Promise.resolve();
+  pollBusy = true;
+  return api("poll", { versions:serverV }).then(function(res){
+    if(failing && !pushInFlight && !anyDirty()) setBadge("online", "● Tersimpan di Google Sheets");
+    var names = Object.keys(res.sections || {});
+    if(!names.length) return;
+    if(pushInFlight || userIsEditing()) return;           // coba lagi pada poll berikutnya
+    var changed = false, needPush = false;
+    names.forEach(function(n){
+      var s = res.sections[n];
+      if(!(s.v > (serverV[n] || 0))) return;              // jawaban basi
+      var theirs = normSection(n, s.data);
+      if(!isDirty(n)){
+        state[n] = theirs;
+      } else {
+        var base = baseJson[n] ? JSON.parse(baseJson[n]) : emptyFor(n);
+        state[n] = normSection(n, merge3(base, state[n], theirs, n));
+        needPush = true;
+      }
+      serverV[n] = s.v; baseJson[n] = JSON.stringify(theirs);
+      changed = true;
+    });
+    if(changed){ renderAll(); toast("⚡ Data diperbarui dari pengguna lain"); }
+    if(needPush) schedulePush(300);
+  }).catch(function(e){
+    if(isKeyError(e)){ askKeyAgain(e.message); return; }
+    setBadge("offline", anyDirty() ? "● Belum tersimpan — mencoba lagi…" : "● Offline");
+  }).then(function(){ pollBusy = false; });
+}
+
+/* ------------------------------------------------------------- menyimpan ---- */
+function schedulePush(delay){
+  if(!started) return;
+  clearTimeout(pushTimer);
+  if(!anyDirty()) return;
+  pushTimer = setTimeout(pushNow, delay === undefined ? CFG.debounceMs : delay);
+}
+function askKeyAgain(msg){
+  if(keyPromptOpen) return;
+  accessKey = ""; lsSet(LS_KEY, "");
+  showSetup(msg + " Perubahan Anda belum hilang dan akan dikirim setelah kunci benar.", true);
+}
+function pushNow(){
+  clearTimeout(pushTimer); pushTimer = null;
+  if(keyPromptOpen) return Promise.resolve();
+  if(pushInFlight){ pushAgain = true; return Promise.resolve(); }
+  var changes = [], sent = {};
+  SECTIONS.forEach(function(n){
+    if(!isDirty(n)) return;
+    var j = JSON.stringify(state[n]);
+    sent[n] = j;
+    changes.push({ name:n, baseV:serverV[n] || 0, data:JSON.parse(j) });
+  });
+  if(!changes.length){ if(!failing) setBadge("online", "● Tersimpan di Google Sheets"); return Promise.resolve(); }
+  pushInFlight = true;
+  if(!failing) setBadge("syncing", "● Menyimpan…");
+  var merged = [];
+  return api("save", { user:userName(), changes:changes }).then(function(res){
+    changes.forEach(function(c){
+      var n = c.name, r = (res.results || {})[n];
+      if(r && r.ok){ serverV[n] = r.v; baseJson[n] = sent[n]; delete overwrite[n]; }
+      else if(r && r.conflict){
+        if(overwrite[n]){ serverV[n] = r.v; pushAgain = true; }
+        else {
+          var theirs = normSection(n, r.data);
+          var base = baseJson[n] ? JSON.parse(baseJson[n]) : emptyFor(n);
+          state[n] = normSection(n, merge3(base, state[n], theirs, n));
+          serverV[n] = r.v; baseJson[n] = JSON.stringify(theirs);
+          merged.push(n); pushAgain = true;
+        }
+      } else throw new Error((r && r.error) || "Penyimpanan ditolak server.");
+    });
+    failing = false; retryDelay = CFG.retryMs;
+    if(merged.length){ renderAll(); toast("Perubahan digabung dengan data pengguna lain"); }
+  }).catch(function(e){
+    if(isKeyError(e)){ askKeyAgain(e.message); return; }
+    console.warn("[RKAS] penyimpanan gagal:", e);
+    failing = true;
+    setBadge("offline", "● Belum tersimpan — mencoba lagi…");
+    clearTimeout(retryTimer);
+    retryTimer = setTimeout(function(){ pushNow(); }, retryDelay);
+    retryDelay = Math.min(retryDelay * 2, 60000);
+  }).then(function(){
+    pushInFlight = false;
+    if(pushAgain){ pushAgain = false; schedulePush(300); }
+    else if(!failing && !anyDirty()) setBadge("online", "● Tersimpan di Google Sheets");
+  });
+}
+
+/* ------------------------------------------------- pemulihan dari cadangan ---- */
+function restoreFromSecs(secs){
+  SECTIONS.forEach(function(n){
+    state[n] = normSection(n, secs[n] !== undefined ? secs[n] : emptyFor(n));
+    overwrite[n] = true;
+  });
+  window.state = state;
+  renderAll();
+  pushNow();
+}
+
+/* ------------------------------------------------------------ pemasangan ---- */
+window.addEventListener("beforeunload", function(e){
+  if(started && (anyDirty() || pushInFlight)){ e.preventDefault(); e.returnValue = ""; return ""; }
+});
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState === "hidden") pushNow(); else pollOnce();
+});
+window.addEventListener("online", function(){ retryDelay = CFG.retryMs; pushNow(); pollOnce(); });
+setInterval(function(){ schedulePush(); }, 5000);   // jaring pengaman bila ada perubahan tanpa pemanggilan simpan
+
+var bd = document.getElementById("btnBackupDownload"), br = document.getElementById("btnBackupRestore"), bf = document.getElementById("backupFileInput");
+if(bd) bd.addEventListener("click", downloadBackup);
+if(br) br.addEventListener("click", function(){
+  if(!started){ alert("Data belum selesai dimuat."); return; }
+  if(typeof currentUser !== "undefined" && currentUser.role !== "Admin"){ alert("Hanya Admin/Kepala Sekolah yang dapat memulihkan cadangan."); return; }
+  bf.click();
+});
+if(bf) bf.addEventListener("change", function(ev){
+  var f = ev.target.files[0]; ev.target.value = "";
+  if(!f) return;
+  readJsonFile(f).then(parseBackup).then(function(secs){
+    if(!confirm("Memulihkan cadangan akan MENGGANTI seluruh data yang ada di Google Sheets dengan isi berkas ini. Lanjutkan?")) return;
+    restoreFromSecs(secs);
+  }).catch(function(e){ alert(e.message || e); });
+});
+
+window.__rkasSync = { merge3:merge3, normSection:normSection, decodeFirestore:decodeFirestore, parseBackup:parseBackup,
+  schedulePush:schedulePush, pushNow:pushNow, pollOnce:pollOnce, isDirty:isDirty, boot:boot,
+  serverV:serverV, baseJson:baseJson, isStarted:function(){ return started; } };
+boot();
+})();
 </script>
 </body>
 </html>
