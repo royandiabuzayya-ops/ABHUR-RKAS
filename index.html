@@ -8403,5 +8403,309 @@ window.__rkasSync = { merge3:merge3, normSection:normSection, decodeFirestore:de
 boot();
 })();
 </script>
+<script>
+/* =========================================================================
+   REKAP MATRIKS PROGRAM (Bulan / Triwulan / Tahap) — tambahan mandiri.
+   Tab baru "Matriks" di menu Kalender & Rekap Program.
+   Format mengikuti contoh: NO | Nama Program | Sumber Dana | Penanggung Jawab | Pelaksanaan (Juli..Juni)
+   Triwulan & Tahap mengikuti tahun ajaran Juli–Juni:
+     Triwulan I Jul–Sep, II Okt–Des, III Jan–Mar, IV Apr–Jun
+     Tahap 1 Jul–Des, Tahap 2 Jan–Jun
+   ========================================================================= */
+(function(){
+"use strict";
+if(window.__rekapMatriks) return;
+
+var BL = ["Juli","Agustus","September","Oktober","November","Desember","Januari","Februari","Maret","April","Mei","Juni"];
+var PERIODE = {
+  bulan: BL.map(function(b,i){ return { label:b, sub:"", months:[i] }; }),
+  triwulan: [
+    { label:"Triwulan I",   sub:"Jul–Sep", months:[0,1,2] },
+    { label:"Triwulan II",  sub:"Okt–Des", months:[3,4,5] },
+    { label:"Triwulan III", sub:"Jan–Mar", months:[6,7,8] },
+    { label:"Triwulan IV",  sub:"Apr–Jun", months:[9,10,11] }
+  ],
+  tahap: [
+    { label:"Tahap 1", sub:"Jul–Des", months:[0,1,2,3,4,5] },
+    { label:"Tahap 2", sub:"Jan–Jun", months:[6,7,8,9,10,11] }
+  ]
+};
+var MODE_LABEL = { bulan:"Per Bulan", triwulan:"Per Triwulan", tahap:"Per Tahap (6 Bulan)" };
+var ISI_LABEL = { tanda:"Tanda Jadwal", anggaran:"Anggaran Rencana", realisasi:"Realisasi" };
+
+function num(n){ return (Number(n)||0).toLocaleString("id-ID",{maximumFractionDigits:0}); }
+function esc(s){ return escapeHtml(s); }
+
+/* "YYYY-MM-DD" -> { idx: 0..11 (0=Juli), ta: tahun mulai tahun ajaran } */
+function dateInfo(iso){
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso||""));
+  if(!m) return null;
+  var y = +m[1], mo = +m[2];
+  if(mo < 1 || mo > 12) return null;
+  return { idx: mo >= 7 ? mo - 7 : mo + 5, ta: mo >= 7 ? y : y - 1 };
+}
+function defaultTa(){
+  var m = /(\d{4})/.exec(String((state.sekolah && state.sekolah.tahunAjaran) || ""));
+  return m ? +m[1] : null;
+}
+function allTaYears(){
+  var set = {};
+  SUMBER_KEYS.forEach(function(k){
+    (state.program[k]||[]).forEach(function(p){
+      (p.tanggal||[]).forEach(function(t){ var d = dateInfo(t); if(d) set[d.ta] = 1; });
+    });
+  });
+  var d0 = defaultTa(); if(d0) set[d0] = 1;
+  return Object.keys(set).map(Number).sort();
+}
+
+/* Hitung model rekap dari state. f = {mode,isi,ta,pj,sumber,status} */
+function buildModel(f){
+  var periods = PERIODE[f.mode] || PERIODE.bulan;
+  var rows = [];
+  SUMBER_KEYS.forEach(function(key){
+    if(f.sumber && f.sumber !== key) return;
+    (state.program[key]||[]).forEach(function(p){
+      if(f.status === "disetujui" ? p.status !== PROGRAM_STATUS.DISETUJUI : p.status === PROGRAM_STATUS.DITOLAK) return;
+      if(f.pj && p.pj !== f.pj) return;
+      var cnt = new Array(12).fill(0), ren = new Array(12).fill(0), rea = new Array(12).fill(0);
+      var any = false;
+      (p.tanggal||[]).filter(Boolean).forEach(function(t){
+        var d = dateInfo(t);
+        if(!d) return;
+        if(f.ta && d.ta !== f.ta) return;
+        any = true;
+        cnt[d.idx] += 1;
+        ren[d.idx] += programBudgetTotalForDate(p, t);
+        (p.realisasi||[]).forEach(function(r){ if(r.tanggal === t) rea[d.idx] += Number(r.anggaranTerpakai)||0; });
+      });
+      if(!any) return;
+      var cells = periods.map(function(per){
+        var c = { count:0, rencana:0, real:0 };
+        per.months.forEach(function(i){ c.count += cnt[i]; c.rencana += ren[i]; c.real += rea[i]; });
+        return c;
+      });
+      rows.push({ program:p.namaProgram||"-", sumberKey:key, sumberLabel:SUMBER_META[key].label, pj:p.pj||"-", cells:cells });
+    });
+  });
+  rows.forEach(function(r,i){ r.no = i+1; });
+  var totals = periods.map(function(per,i){
+    var t = { count:0, rencana:0, real:0, programs:0 };
+    rows.forEach(function(r){ var c = r.cells[i]; t.count += c.count; t.rencana += c.rencana; t.real += c.real; if(c.count) t.programs += 1; });
+    return t;
+  });
+  return { periods:periods, rows:rows, totals:totals };
+}
+function cellText(c, isi){
+  if(isi === "anggaran") return c.rencana ? num(c.rencana) : "";
+  if(isi === "realisasi") return c.real ? num(c.real) : "";
+  return c.count ? "\u2714" + (c.count > 1 ? " \u00d7" + c.count : "") : "";
+}
+function totalLabel(isi){ return isi === "tanda" ? "JUMLAH PROGRAM" : "TOTAL"; }
+function totalText(t, isi){
+  if(isi === "anggaran") return t.rencana ? num(t.rencana) : "";
+  if(isi === "realisasi") return t.real ? num(t.real) : "";
+  return t.programs ? String(t.programs) : "";
+}
+
+/* ------------------------------------------------------------- tampilan -- */
+var STYLE = ".mx-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:10px;}" +
+  "table.mx-table{border-collapse:collapse;width:100%;min-width:760px;font-size:12.5px;}" +
+  "table.mx-table th,table.mx-table td{border:1px solid #333;padding:5px 7px;}" +
+  "table.mx-table th{background:#eef2f8;text-align:center;font-weight:700;}" +
+  "table.mx-table th small{display:block;font-weight:400;font-size:10px;color:#52514e;}" +
+  "table.mx-table td.c{text-align:center;}" +
+  "table.mx-table td.r{text-align:right;font-variant-numeric:tabular-nums;}" +
+  "table.mx-table td.mk{text-align:center;font-weight:700;color:#fff;}" +
+  "table.mx-table tfoot td{background:#eef2f8;font-weight:700;}";
+
+function ctl(id, label, opts, val){
+  return '<div class="field"><label>' + label + '</label><select id="' + id + '">' +
+    opts.map(function(o){ return '<option value="' + esc(o[0]) + '"' + (String(o[0]) === String(val) ? " selected" : "") + '>' + esc(o[1]) + '</option>'; }).join("") +
+    '</select></div>';
+}
+function readFilters(){
+  function v(id){ var el = document.getElementById(id); return el ? el.value : ""; }
+  return { mode:v("mxMode") || "bulan", isi:v("mxIsi") || "anggaran", ta:Number(v("mxTa")) || 0,
+           pj:v("mxPj"), sumber:v("mxSumber"), status:v("mxStatus") || "disetujui" };
+}
+function fillControls(){
+  var keep = readFilters();
+  var firstTime = !document.getElementById("mxMode").dataset.ready;
+  var taYears = allTaYears();
+  var taSel = firstTime ? (defaultTa() || 0) : keep.ta;
+  var pjs = {};
+  SUMBER_KEYS.forEach(function(k){ (state.program[k]||[]).forEach(function(p){ if(p.pj) pjs[p.pj] = 1; }); });
+  var pjList = Object.keys(pjs).sort();
+  document.getElementById("mxFilters").innerHTML =
+    ctl("mxMode","Tampilan Periode",[["bulan","Per Bulan"],["triwulan","Per Triwulan"],["tahap","Per Tahap (6 Bulan)"]], keep.mode) +
+    ctl("mxIsi","Isi Kolom",[["anggaran","Anggaran Rencana (Rp)"],["tanda","Tanda Jadwal (\u2714)"],["realisasi","Realisasi (Rp)"]], keep.isi) +
+    ctl("mxTa","Tahun Ajaran",[["0","Semua"]].concat(taYears.map(function(y){ return [String(y), y + "/" + (y+1)]; })), String(taSel)) +
+    ctl("mxPj","Penanggung Jawab",[["","Semua"]].concat(pjList.map(function(n){ return [n,n]; })), keep.pj) +
+    ctl("mxSumber","Sumber Dana",[["","Semua"]].concat(SUMBER_KEYS.map(function(k){ return [k, SUMBER_META[k].label]; })), keep.sumber) +
+    ctl("mxStatus","Status Program",[["disetujui","Disetujui saja"],["semua","Semua (kecuali Ditolak)"]], keep.status);
+  document.getElementById("mxMode").dataset.ready = "1";
+  ["mxMode","mxIsi","mxTa","mxPj","mxSumber","mxStatus"].forEach(function(id){
+    document.getElementById(id).addEventListener("change", function(){ if(id !== "mxMode" || true) renderMatrix(); });
+  });
+}
+function renderMatrix(){
+  var host = document.getElementById("mxTable");
+  if(!host) return;
+  var f = readFilters();
+  var m = buildModel(f);
+  var P = m.periods;
+  var head1 = '<tr><th rowspan="2" style="width:40px">NO</th><th rowspan="2">Nama Program</th><th rowspan="2">Sumber Dana</th><th rowspan="2">Penanggung Jawab</th><th colspan="' + P.length + '">Pelaksanaan</th></tr>';
+  var head2 = '<tr>' + P.map(function(p){ return '<th>' + esc(p.label) + (p.sub ? '<small>' + esc(p.sub) + '</small>' : '') + '</th>'; }).join("") + '</tr>';
+  var body = m.rows.map(function(r){
+    return '<tr><td class="c">' + r.no + '</td><td>' + esc(r.program) + '</td><td>' + esc(r.sumberLabel) + '</td><td>' + esc(r.pj) + '</td>' +
+      r.cells.map(function(c){
+        var t = cellText(c, f.isi);
+        if(f.isi === "tanda") return '<td class="mk"' + (t ? ' style="background:' + SUMBER_META[r.sumberKey].color + '"' : '') + '>' + t + '</td>';
+        return '<td class="r">' + t + '</td>';
+      }).join("") + '</tr>';
+  }).join("") || '<tr><td colspan="' + (4 + P.length) + '" class="c" style="color:var(--text-muted);padding:14px;">Tidak ada program pada filter ini</td></tr>';
+  var foot = m.rows.length ? '<tr><td colspan="4" style="text-align:right">' + totalLabel(f.isi) + '</td>' +
+    m.totals.map(function(t){ return '<td class="' + (f.isi === "tanda" ? "c" : "r") + '">' + totalText(t, f.isi) + '</td>'; }).join("") + '</tr>' : "";
+  host.innerHTML = '<div class="mx-wrap"><table class="mx-table"><thead>' + head1 + head2 + '</thead><tbody>' + body + '</tbody><tfoot>' + foot + '</tfoot></table></div>' +
+    (f.isi === "tanda" ? '<div class="badge-note" style="margin-top:8px;">\u2714 = ada jadwal pelaksanaan pada periode itu (\u00d7N = N tanggal). Warna kotak mengikuti warna sumber dana.</div>' : "");
+}
+
+/* -------------------------------------------------------------- cetak ---- */
+function filterNote(f){
+  var parts = [MODE_LABEL[f.mode], "Isi: " + ISI_LABEL[f.isi]];
+  if(f.ta) parts.push("TA " + f.ta + "/" + (f.ta+1));
+  if(f.pj) parts.push("PJ: " + f.pj);
+  if(f.sumber && SUMBER_META[f.sumber]) parts.push("Sumber: " + SUMBER_META[f.sumber].label);
+  return parts.join(" \u00b7 ");
+}
+function buildPrintHtml(f, m){
+  var P = m.periods, s = state.sekolah;
+  var head1 = '<tr><th rowspan="2">NO</th><th rowspan="2">Nama Program</th><th rowspan="2">Sumber Dana</th><th rowspan="2">Penanggung Jawab</th><th colspan="' + P.length + '">Pelaksanaan</th></tr>';
+  var head2 = '<tr>' + P.map(function(p){ return '<th>' + esc(p.label) + (p.sub ? '<br><span style="font-weight:400;font-size:8.5px;">' + esc(p.sub) + '</span>' : '') + '</th>'; }).join("") + '</tr>';
+  var body = m.rows.map(function(r){
+    return '<tr><td class="c">' + r.no + '</td><td>' + esc(r.program) + '</td><td>' + esc(r.sumberLabel) + '</td><td>' + esc(r.pj) + '</td>' +
+      r.cells.map(function(c){ return '<td class="' + (f.isi === "tanda" ? "c" : "r") + '">' + cellText(c, f.isi) + '</td>'; }).join("") + '</tr>';
+  }).join("") || '<tr><td colspan="' + (4 + P.length) + '" class="c">Tidak ada data</td></tr>';
+  var foot = m.rows.length ? '<tr><td colspan="4" class="r">' + totalLabel(f.isi) + '</td>' +
+    m.totals.map(function(t){ return '<td class="' + (f.isi === "tanda" ? "c" : "r") + '">' + totalText(t, f.isi) + '</td>'; }).join("") + '</tr>' : "";
+  return '<div class="print-page wide" id="print-adhoc-matriks">' + kopSurat() +
+    '<div class="doctitle">Rekap Program Kerja</div><div class="docsub">' + esc(filterNote(f)) + '</div>' +
+    '<table class="print-table"><thead>' + head1 + head2 + '</thead><tbody>' + body + '</tbody><tfoot>' + foot + '</tfoot></table>' +
+    (f.isi === "tanda" ? '<div class="docsub" style="text-align:left">\u2714 = ada jadwal pelaksanaan pada periode tersebut (\u00d7N = N tanggal)</div>' : "") +
+    printDateAuto() + signBlock2("Bendahara Sekolah", s.bendaharaBos, s.nipBendaharaBos) + '</div>';
+}
+function doPrint(){
+  var f = readFilters();
+  /* Paksa A4 LANDSCAPE lewat @page tanpa nama (lebih didukung browser
+     daripada named page "wide"); dicabut lagi setelah dialog cetak. */
+  var old = document.getElementById("mxPageStyle"); if(old) old.remove();
+  var st = document.createElement("style"); st.id = "mxPageStyle";
+  st.textContent = "@page{ size:A4 landscape; margin:8mm; } @media print{ html,body{ height:auto !important; } body > *:not(script):not(style){ max-height:0 !important; overflow:hidden !important; } #view-cetak, #printRoot{ max-height:none !important; overflow:visible !important; } #print-adhoc-matriks{ page:auto !important; width:100% !important; max-width:none !important; } }";
+  document.head.appendChild(st);
+  var cleanup = function(){ var e = document.getElementById("mxPageStyle"); if(e) e.remove(); window.removeEventListener("afterprint", cleanup); };
+  window.addEventListener("afterprint", cleanup);
+  printAdHoc(buildPrintHtml(f, buildModel(f)));
+}
+
+/* -------------------------------------------------------------- excel ---- */
+function buildAoa(f, m){
+  var P = m.periods;
+  var aoa = [
+    ["REKAP PROGRAM KERJA \u2014 " + String(state.sekolah.namaSekolah || "Sekolah").toUpperCase()],
+    [filterNote(f)],
+    [""],
+    ["NO", "Nama Program", "Sumber Dana", "Penanggung Jawab", "Pelaksanaan"].concat(new Array(P.length - 1).fill("")),
+    ["", "", "", ""].concat(P.map(function(p){ return p.sub ? p.label + " (" + p.sub + ")" : p.label; }))
+  ];
+  m.rows.forEach(function(r){
+    aoa.push([r.no, r.program, r.sumberLabel, r.pj].concat(r.cells.map(function(c){
+      if(f.isi === "anggaran") return c.rencana || "";
+      if(f.isi === "realisasi") return c.real || "";
+      return c.count ? (c.count > 1 ? "\u2714 \u00d7" + c.count : "\u2714") : "";
+    })));
+  });
+  if(m.rows.length){
+    aoa.push(["", "", "", totalLabel(f.isi)].concat(m.totals.map(function(t){
+      if(f.isi === "anggaran") return t.rencana || "";
+      if(f.isi === "realisasi") return t.real || "";
+      return t.programs || "";
+    })));
+  }
+  return aoa;
+}
+function doExcel(){
+  if(typeof XLSX === "undefined"){ alert("Pustaka Excel belum siap. Periksa koneksi internet lalu coba lagi."); return; }
+  var f = readFilters(), m = buildModel(f), P = m.periods;
+  var aoa = buildAoa(f, m);
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!merges"] = [
+    { s:{r:3,c:0}, e:{r:4,c:0} }, { s:{r:3,c:1}, e:{r:4,c:1} },
+    { s:{r:3,c:2}, e:{r:4,c:2} }, { s:{r:3,c:3}, e:{r:4,c:3} },
+    { s:{r:3,c:4}, e:{r:3,c:3 + P.length} }
+  ];
+  ws["!cols"] = [{wch:5},{wch:42},{wch:16},{wch:26}].concat(P.map(function(){ return { wch: f.mode === "bulan" ? 12 : 18 }; }));
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Rekap " + MODE_LABEL[f.mode].replace(/[()\/]/g,"").slice(0,24));
+  XLSX.writeFile(wb, "Rekap_Program_" + f.mode + "_" + sanitizeFileName(state.sekolah.namaSekolah || "Sekolah") + ".xlsx");
+}
+
+/* ----------------------------------------------------------- pemasangan -- */
+function install(){
+  var tabs = document.getElementById("kalenderRekapTabs"), rekapPane = document.getElementById("rekapPane");
+  if(!tabs || !rekapPane) return;
+  var st = document.createElement("style"); st.textContent = STYLE; document.head.appendChild(st);
+
+  var btn = document.createElement("button");
+  btn.type = "button"; btn.dataset.t = "matriks"; btn.id = "mxTabBtn"; btn.textContent = "Matriks (Bulan/Triwulan/Tahap)";
+  tabs.appendChild(btn);
+
+  rekapPane.insertAdjacentHTML("afterend",
+    '<div id="matriksPane" style="display:none;">' +
+      '<div class="form-grid" id="mxFilters" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px;"></div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">' +
+        '<button class="btn primary small" id="mxBtnPrint" type="button">&#128424; Cetak Rekap</button>' +
+        '<button class="btn small" id="mxBtnExcel" type="button" style="background:#107c41;color:#fff;border-color:#107c41;">&#128202; Ekspor Excel</button>' +
+      '</div>' +
+      '<div id="mxTable"></div>' +
+    '</div>');
+  /* select mxMode dibuat oleh fillControls; tandai agar firstTime terdeteksi */
+  document.getElementById("mxFilters").innerHTML = '<select id="mxMode" style="display:none"></select>';
+
+  function show(){
+    tabs.querySelectorAll("button").forEach(function(b){ b.classList.toggle("active", b === btn); });
+    document.getElementById("kalenderPane").style.display = "none";
+    rekapPane.style.display = "none";
+    document.getElementById("matriksPane").style.display = "";
+    refresh();
+  }
+  function hide(){ document.getElementById("matriksPane").style.display = "none"; }
+  function refresh(){ fillControls(); renderMatrix(); }
+
+  btn.addEventListener("click", show);
+  tabs.querySelectorAll("button[data-t]").forEach(function(b){ if(b !== btn) b.addEventListener("click", hide); });
+  document.getElementById("mxBtnPrint").addEventListener("click", doPrint);
+  document.getElementById("mxBtnExcel").addEventListener("click", doExcel);
+
+  /* segarkan otomatis saat data/tampilan dirender ulang (renderAll, sinkron, ganti menu) */
+  var orig = window.renderKalenderProgramView;
+  window.renderKalenderProgramView = function(){
+    var active = tabs.querySelector("button.active");
+    if(active && active === btn){
+      /* tetap di tab Matriks: jangan biarkan tab bawaan menimpa tampilan */
+      document.getElementById("kalenderPane").style.display = "none";
+      rekapPane.style.display = "none";
+      if(document.getElementById("matriksPane").style.display !== "none" && !document.querySelector("#mxFilters select:focus")) refresh();
+      return;
+    }
+    return orig.apply(this, arguments);
+  };
+}
+
+window.__rekapMatriks = { buildModel:buildModel, buildAoa:buildAoa, buildPrintHtml:buildPrintHtml, cellText:cellText, dateInfo:dateInfo, install:install };
+install();
+})();
+
+</script>
 </body>
 </html>
