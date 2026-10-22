@@ -8707,5 +8707,272 @@ install();
 })();
 
 </script>
+<script>
+/* =========================================================================
+   ADD-ON: Catat Draft Pengeluaran -> Realisasi Program
+   - Tombol "Catat ke Realisasi" di setiap kartu kegiatan (Draft Pengeluaran)
+   - Modal: pilih program (Disetujui + sudah Serah Terima Dana), tanggal
+     pelaksanaan, tanggal real, item yang dicatat, keterangan, info Sisa di PJ
+   - Simpan = menambah SATU tahap realisasi (total item terpilih) ke program
+   - Tautan disimpan di kegiatan draft: g.linkRealisasi = [{progId, sumber,
+     realId, tanggal, total, itemIds}] -> lencana "Sudah dicatat"
+   Tidak mengubah kode lama; memakai helper aplikasi yang sudah ada.
+   ========================================================================= */
+(function(){
+"use strict";
+if(window.__draftKeRealisasi) return;
+
+var cur = null; // { g, progs:[...] }
+
+function esc(s){ return escapeHtml(String(s == null ? "" : s)); }
+function isoOk(v){ return /^\d{4}-\d{2}-\d{2}$/.test(String(v||"")); }
+function showDate(v){ return isoOk(v) ? v.slice(8,10) + "/" + v.slice(5,7) + "/" + v.slice(0,4) : String(v||""); }
+function todayIso(){ var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
+function canUpdate(p){ return currentUser.role === "Admin" || p.pj === currentUser.name || p.namaPengaju === currentUser.name; }
+
+function findProg(progId){
+  for(var i=0;i<SUMBER_KEYS.length;i++){
+    var arr = state.program[SUMBER_KEYS[i]] || [];
+    for(var j=0;j<arr.length;j++) if(String(arr[j].id) === String(progId)) return arr[j];
+  }
+  return null;
+}
+/* Tautan yang masih valid (tahap realisasinya belum dihapus). */
+function validLinks(g){
+  return (g.linkRealisasi || []).filter(function(l){
+    var p = findProg(l.progId);
+    return p && (p.realisasi || []).some(function(r){ return String(r.id) === String(l.realId); });
+  });
+}
+function reasonsFor(p){
+  var r = [];
+  if(p.status !== PROGRAM_STATUS.DISETUJUI) r.push("status \"" + p.status + "\" (harus Disetujui)");
+  if(!(p.tanggal || []).filter(Boolean).length) r.push("belum ada tanggal pelaksanaan");
+  if(!programPakaiSkemaUangMuka(p)) r.push("belum ada Serah Terima Dana");
+  if(!canUpdate(p)) r.push("bukan PJ/pengaju Anda (PJ: " + (p.pj || "-") + ")");
+  return r;
+}
+function eligiblePrograms(){
+  var out = [];
+  SUMBER_KEYS.forEach(function(k){
+    (state.program[k] || []).forEach(function(p){
+      var why = reasonsFor(p);
+      out.push({ p:p, key:k, ok: !why.length, why:why });
+    });
+  });
+  return out;
+}
+
+/* ------------------------------------------------------------- modal ---- */
+function ensureModal(){
+  if(document.getElementById("modal-draft-realisasi")) return;
+  var st = document.createElement("style");
+  st.textContent =
+    ".dd-link-badge{font-size:10.5px;font-weight:700;background:#e3f6e3;color:#0b7a0b;border:1px solid #b6e3b6;border-radius:999px;padding:2px 8px;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis;}" +
+    "#modal-draft-realisasi .dr-items{border:1px solid var(--border);border-radius:8px;max-height:220px;overflow:auto;margin:6px 0 10px;}" +
+    "#modal-draft-realisasi .dr-items label{display:flex;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--border);font-size:12.5px;cursor:pointer;}" +
+    "#modal-draft-realisasi .dr-items label:last-child{border-bottom:0;}" +
+    "#modal-draft-realisasi .dr-items .dr-n{margin-left:auto;font-weight:700;white-space:nowrap;}" +
+    "#modal-draft-realisasi .dr-items .dr-done{color:#0b7a0b;font-size:10.5px;font-weight:700;}" +
+    "#modal-draft-realisasi .dr-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}" +
+    "@media(max-width:640px){#modal-draft-realisasi .dr-grid{grid-template-columns:1fr;}}";
+  document.head.appendChild(st);
+  var d = document.createElement("div");
+  d.className = "modal-overlay"; d.id = "modal-draft-realisasi";
+  d.innerHTML =
+    '<div class="modal-box wide">' +
+    '<button class="modal-close" type="button" data-drclose>&times;</button>' +
+    '<h2>Catat ke Realisasi Program</h2>' +
+    '<p class="desc" id="drSub"></p>' +
+    '<div class="dr-grid">' +
+      '<div class="field"><label>Program</label><select id="drProg"></select><div id="drWhy" style="font-size:11.5px;color:#8a5b00;margin-top:6px;"></div></div>' +
+      '<div class="field"><label>Tanggal Pelaksanaan Program</label><select id="drTgl"></select></div>' +
+      '<div class="field"><label>Tanggal Real (pengeluaran)</label><input type="date" id="drTglReal"></div>' +
+      '<div class="field"><label>Total yang Dicatat</label><input type="text" id="drTotal" readonly></div>' +
+    '</div>' +
+    '<label style="font-size:12px;font-weight:700;">Item yang dicatat</label>' +
+    '<div class="dr-items" id="drItems"></div>' +
+    '<div class="field"><label>Keterangan</label><textarea id="drKet" rows="2" style="width:100%;"></textarea></div>' +
+    '<div class="admin-panel" id="drInfo" style="margin-bottom:6px;"></div>' +
+    '<div class="modal-actions">' +
+      '<button class="btn" type="button" data-drclose>Batal</button>' +
+      '<button class="btn primary" type="button" id="drSimpan">Catat ke Realisasi</button>' +
+    '</div></div>';
+  document.body.appendChild(d);
+  d.querySelectorAll("[data-drclose]").forEach(function(b){ b.addEventListener("click", function(){ closeModal("modal-draft-realisasi"); }); });
+  d.addEventListener("click", function(e){ if(e.target === d) closeModal("modal-draft-realisasi"); });
+  document.getElementById("drProg").addEventListener("change", onProgChange);
+  document.getElementById("drItems").addEventListener("change", refreshTotals);
+  document.getElementById("drSimpan").addEventListener("click", save);
+}
+
+function selectedItems(){
+  var ids = [];
+  document.querySelectorAll("#drItems input[type=checkbox]:checked").forEach(function(c){ ids.push(c.value); });
+  return (cur.g.items || []).filter(function(it){ return ids.indexOf(String(it.id)) >= 0; });
+}
+function selectedTotal(){ return selectedItems().reduce(function(s,it){ return s + ddItemTotal(it); }, 0); }
+function curProg(){ return findProg(document.getElementById("drProg").value); }
+
+function refreshTotals(){
+  var tot = selectedTotal();
+  document.getElementById("drTotal").value = rp(tot);
+  var p = curProg(), box = document.getElementById("drInfo");
+  if(!p){ box.innerHTML = ""; return; }
+  var dis = programUangMukaTotal(p), real = programRealisasiTotal(p), kem = programPengembalianTotal(p);
+  var sisaNow = dis - real - kem, sisaNew = sisaNow - tot;
+  var c = function(v){ return v < 0 ? "color:#b23030;" : ""; };
+  box.innerHTML =
+    '<div class="kv-row"><span>Total Diserahkan ke PJ (Uang Muka)</span><span>' + rp(dis) + '</span></div>' +
+    '<div class="kv-row"><span>Sudah Direalisasikan</span><span>' + rp(real) + '</span></div>' +
+    '<div class="kv-row"><span>Sisa di PJ sekarang</span><span style="' + c(sisaNow) + '">' + rp(sisaNow) + '</span></div>' +
+    '<div class="kv-row total"><span>Sisa di PJ setelah dicatat</span><span style="' + c(sisaNew) + '">' + (sisaNew < 0 ? rp(Math.abs(sisaNew)) + " (Perlu Serah Terima Tambahan)" : rp(sisaNew)) + '</span></div>';
+}
+
+function nearestDate(dates, target){
+  if(!isoOk(target)) return dates[0];
+  var t = Date.parse(target), best = dates[0], bd = Infinity;
+  dates.forEach(function(d){ var x = Math.abs(Date.parse(d) - t); if(x < bd){ bd = x; best = d; } });
+  return best;
+}
+function onProgChange(){
+  var p = curProg(), sel = document.getElementById("drTgl");
+  if(!p){ sel.innerHTML = ""; refreshTotals(); return; }
+  var dates = (p.tanggal || []).filter(Boolean).slice().sort();
+  var pick = nearestDate(dates, cur.g.tanggal);
+  sel.innerHTML = dates.map(function(t){
+    var n = (p.realisasi || []).filter(function(r){ return r.tanggal === t; }).length;
+    return '<option value="' + esc(t) + '"' + (t === pick ? " selected" : "") + '>' + esc(showDate(t)) + (n ? " (" + n + " tahap tercatat)" : "") + '</option>';
+  }).join("");
+  refreshTotals();
+}
+
+function openDr(gid){
+  var g = ddGroup(gid);
+  if(!g) return;
+  var items = (g.items || []).filter(function(it){ return !ddItemEmpty(it) && ddItemTotal(it) > 0; });
+  if(!items.length){ alert("Kegiatan ini belum punya item dengan nominal. Isi jumlah dan harga dulu."); return; }
+  var elig = eligiblePrograms();
+  if(!elig.some(function(e){ return e.ok; })){
+    alert(elig.length
+      ? "Belum ada program yang bisa dicatat.\n\n" + elig.slice(0,8).map(function(e){ return "\u2022 " + (e.p.namaProgram || "(tanpa nama)") + ": " + e.why.join("; "); }).join("\n") + (elig.length > 8 ? "\n\u2026dan " + (elig.length-8) + " program lain." : "")
+      : "Belum ada program sama sekali. Buat dan setujui program kerja terlebih dahulu.");
+    return;
+  }
+  ensureModal();
+  cur = { g:g };
+  var done = {};
+  validLinks(g).forEach(function(l){ (l.itemIds || []).forEach(function(id){ done[String(id)] = true; }); });
+  cur.done = done;
+  document.getElementById("drSub").textContent = "Kegiatan: " + (g.kegiatan || "(tanpa nama)") + " · " + showDate(g.tanggal) + " · Total draft " + rp(ddGroupTotal(g));
+  var progSel = document.getElementById("drProg");
+  var lastLink = validLinks(g).slice(-1)[0];
+  progSel.innerHTML = SUMBER_KEYS.map(function(k){
+    var opts = elig.filter(function(e){ return e.key === k; }).map(function(e){
+      var why = e.ok ? "" : " \u2014 " + e.why.join("; ");
+      var sel = lastLink && String(lastLink.progId) === String(e.p.id) ? " selected" : "";
+      return '<option value="' + esc(e.p.id) + '"' + (e.ok ? "" : " disabled") + sel + '>' + esc(e.p.namaProgram || "(tanpa nama)") + why + '</option>';
+    }).join("");
+    return opts ? '<optgroup label="' + esc(SUMBER_META[k].label) + '">' + opts + '</optgroup>' : "";
+  }).join("");
+  if(!progSel.value || progSel.selectedOptions[0] && progSel.selectedOptions[0].disabled){
+    var first = progSel.querySelector("option:not([disabled])"); if(first) progSel.value = first.value;
+  }
+  var bad = elig.filter(function(e){ return !e.ok; });
+  document.getElementById("drWhy").innerHTML = bad.length
+    ? '<details><summary style="cursor:pointer;font-weight:700;">' + bad.length + ' program tidak bisa dipilih \u2014 lihat alasan</summary><ul style="margin:6px 0 0 16px;padding:0;">' +
+      bad.map(function(e){ return '<li><b>' + esc(e.p.namaProgram || "(tanpa nama)") + '</b> (' + esc(SUMBER_META[e.key].label) + '): ' + esc(e.why.join("; ")) + '</li>'; }).join("") + '</ul></details>'
+    : "";
+  document.getElementById("drItems").innerHTML = items.map(function(it){
+    var d = done[String(it.id)];
+    return '<label><input type="checkbox" value="' + esc(it.id) + '"' + (d ? "" : " checked") + '>' +
+      '<span>' + esc(it.uraian || "(tanpa uraian)") + ' <span style="color:var(--text-muted)">· ' + esc(String(it.jumlah).replace(".", ",")) + ' × ' + rp(it.harga) + '</span>' +
+      (d ? ' <span class="dr-done">sudah dicatat</span>' : "") + '</span><span class="dr-n">' + rp(ddItemTotal(it)) + '</span></label>';
+  }).join("");
+  document.getElementById("drTglReal").value = isoOk(g.tanggal) ? g.tanggal : todayIso();
+  document.getElementById("drKet").value = (g.kegiatan || "Pengeluaran") + (items.length ? ": " + items.map(function(it){ return it.uraian; }).filter(Boolean).join("; ") : "");
+  onProgChange();
+  openModal("modal-draft-realisasi");
+}
+
+function save(){
+  var g = cur && cur.g, p = curProg();
+  if(!g || !p){ alert("Pilih program terlebih dahulu."); return; }
+  if(!canUpdate(p)){ alert("Akses Ditolak: hanya Admin atau PJ program yang dapat mencatat realisasi."); return; }
+  var tgl = document.getElementById("drTgl").value, tglReal = document.getElementById("drTglReal").value;
+  if(!tgl){ alert("Pilih tanggal pelaksanaan program."); return; }
+  if(!isoOk(tglReal)){ alert("Isi tanggal real dengan benar."); return; }
+  var items = selectedItems(), total = items.reduce(function(s,it){ return s + ddItemTotal(it); }, 0);
+  if(!items.length || total <= 0){ alert("Pilih minimal satu item bernominal."); return; }
+  var dup = items.filter(function(it){ return cur.done[String(it.id)]; });
+  if(dup.length && !confirm(dup.length + " item sudah pernah dicatat ke realisasi. Tetap catat lagi? (Bisa menyebabkan realisasi ganda)")) return;
+  var sisaBaru = programUangMukaTotal(p) - (programRealisasiTotal(p) + total) - programPengembalianTotal(p);
+  if(sisaBaru < 0 && !confirm("Realisasi ini membuat dana yang diserahkan ke PJ kurang " + rp(Math.abs(sisaBaru)) + ".\n\nKekurangan dicatat sebagai Piutang PJ di BKU (PJ menalangi dulu) sampai ada Serah Terima Tambahan.\n\nLanjutkan?")) return;
+  var realId = uid();
+  p.realisasi = p.realisasi || [];
+  p.realisasi.push({ id:realId, tanggal:tgl, tanggalReal:tglReal, anggaranTerpakai:total, keterangan:document.getElementById("drKet").value.trim() });
+  p.realisasiBatal = (p.realisasiBatal || []).filter(function(t){ return t !== tgl; });
+  g.linkRealisasi = g.linkRealisasi || [];
+  g.linkRealisasi.push({ progId:p.id, sumber:p.sumberDana, realId:realId, tanggal:tgl, total:total, itemIds:items.map(function(it){ return it.id; }) });
+  syncBkuUangMuka(p.sumberDana);
+  closeModal("modal-draft-realisasi");
+  renderAll();
+  try{ renderDraftPengeluaran(null, true); }catch(e){}
+  saveStateToLocalStorage();
+  alert(sisaBaru < 0
+    ? "Tercatat ke realisasi. Piutang PJ " + rp(Math.abs(sisaBaru)) + " tercatat di BKU sampai ada Serah Terima Tambahan."
+    : "Tercatat ke realisasi program \"" + (p.namaProgram || "") + "\" sebesar " + rp(total) + ".");
+}
+
+/* --------------------------------------- dekorasi kartu draft (observer) -- */
+function decorate(){
+  var box = document.getElementById("ddList");
+  if(!box) return;
+  box.querySelectorAll(".dd-card").forEach(function(card){
+    var g = ddGroup(card.dataset.gid);
+    if(!g) return;
+    var acts = card.querySelector(".dd-acts");
+    if(acts && !acts.querySelector("[data-ddrealisasi]")){
+      var b = document.createElement("button");
+      b.className = "btn small good"; b.type = "button"; b.tabIndex = -1;
+      b.setAttribute("data-ddrealisasi", "1"); b.title = "Catat kegiatan ini ke Realisasi Program";
+      b.textContent = "Catat ke Realisasi";
+      acts.insertBefore(b, acts.firstChild);
+    }
+    var old = card.querySelector(".dd-link-badge"); if(old) old.remove();
+    var links = validLinks(g);
+    if(links.length){
+      var l = links[links.length - 1], p = findProg(l.progId);
+      var sp = document.createElement("span");
+      sp.className = "dd-link-badge";
+      sp.textContent = "✔ Sudah dicatat → " + (p ? p.namaProgram : "") + " · " + showDate(l.tanggal) + (links.length > 1 ? " (+" + (links.length - 1) + ")" : "");
+      sp.title = "Total dicatat: " + rp(links.reduce(function(s,x){ return s + (Number(x.total) || 0); }, 0));
+      var sub = card.querySelector(".dd-sub");
+      if(sub) sub.parentNode.insertBefore(sp, sub);
+    }
+  });
+}
+function install(){
+  var box = document.getElementById("ddList");
+  if(!box) return;
+  var busy = false;
+  var obs = new MutationObserver(function(){
+    if(busy) return; busy = true;
+    try{ obs.disconnect(); decorate(); } finally { obs.observe(box, { childList:true, subtree:false }); busy = false; }
+  });
+  obs.observe(box, { childList:true, subtree:false });
+  box.addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest("[data-ddrealisasi]") : null;
+    if(!b) return;
+    var card = b.closest(".dd-card");
+    openDr(card && card.dataset.gid);
+  });
+  decorate();
+}
+install();
+window.__draftKeRealisasi = { open:openDr, decorate:decorate, validLinks:validLinks };
+})();
+
+</script>
 </body>
 </html>
