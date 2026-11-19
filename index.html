@@ -8974,5 +8974,399 @@ window.__draftKeRealisasi = { open:openDr, decorate:decorate, validLinks:validLi
 })();
 
 </script>
+<script>
+/* =========================================================================
+   ADD-ON: TAHUN ANGGARAN (TA) — buat RAB tahun berikutnya tanpa mengganggu
+   RAB tahun sebelumnya.
+   TEMPEL tepat sebelum </body>, SETELAH semua <script> yang sudah ada.
+
+   Cara kerja:
+   - Tiap Program Kerja punya field `ta` (tahun mulai TA, Juli–Juni; mis. 2026
+     = TA 2026/2027). Program lama yang belum punya `ta` dihitung otomatis dari
+     tanggal pelaksanaannya — data lama TIDAK diubah/dihapus.
+   - Pemilih "Tahun Anggaran" di bilah atas. Program Kerja, RAB, Realisasi,
+     Serah Terima, Kalender/Rekap, Dashboard & cetak RAB hanya menampilkan/
+     menghitung program pada TA aktif.
+   - Pagu per sumber dana disimpan terpisah per TA (state.sekolah.paguPerTa);
+     TA awal tetap memakai pagu lama.
+   - Tombol "+ TA Baru" (Admin) dan "Salin dari TA Lain" (di Program Kerja).
+   - BKU, saldo kas, Kontrol Keuangan, LPJ, Peminjaman SENGAJA tetap
+     menyeluruh (kas berjalan terus lintas tahun).
+   ========================================================================= */
+(function(){
+"use strict";
+if(window.__taAnggaran) return;
+
+var LS = "rkasTaAktif";
+var frozenBase = null, wrapDepth = 0;
+
+function esc(s){ return escapeHtml(String(s == null ? "" : s)); }
+function lsGet(){ try{ return localStorage.getItem(LS) || ""; }catch(e){ return ""; } }
+function lsSet(v){ try{ localStorage.setItem(LS, String(v)); }catch(e){} }
+function pad(n){ return String(n).padStart(2,"0"); }
+function taLabel(t){ return t + "/" + (t+1); }
+function isAdmin(){ return !!(currentUser && currentUser.role === "Admin"); }
+function dateTa(iso){
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso||""));
+  if(!m) return null;
+  var y = +m[1], mo = +m[2];
+  if(mo < 1 || mo > 12) return null;
+  return mo >= 7 ? y : y - 1;
+}
+function currentTa(){ var d = new Date(); return d.getMonth() + 1 >= 7 ? d.getFullYear() : d.getFullYear() - 1; }
+
+/* TA "awal": TA yang memakai pagu lama (SUMBER_META[k].pagu). Disimpan permanen
+   di state.sekolah.taDasar supaya tidak ikut berubah bila kolom Tahun Ajaran
+   di Data Sekolah diedit. */
+function baseTa(){
+  if(frozenBase !== null) return frozenBase;
+  var s = state.sekolah || {};
+  var n = Number(s.taDasar);
+  if(n > 0) return n;
+  var m = /(\d{4})/.exec(String(s.tahunAjaran || ""));
+  return m ? +m[1] : currentTa();
+}
+function programTa(p){
+  if(p && Number(p.ta) > 0) return Number(p.ta);
+  var ts = ((p && p.tanggal) || []).map(dateTa).filter(function(x){ return x !== null; });
+  if(ts.length) return Math.min.apply(null, ts);
+  return baseTa();
+}
+function activeTa(){ var v = Number(lsGet()); return v > 0 ? v : baseTa(); }
+
+function taList(){
+  var set = {};
+  function add(n){ n = Number(n); if(n > 0) set[n] = 1; }
+  add(baseTa()); add(activeTa());
+  (Array.isArray(state.sekolah.taDaftar) ? state.sekolah.taDaftar : []).forEach(add);
+  Object.keys(state.sekolah.paguPerTa || {}).forEach(add);
+  Object.keys(state.program || {}).forEach(function(k){
+    (state.program[k] || []).forEach(function(p){ add(programTa(p)); });
+  });
+  return Object.keys(set).map(Number).sort(function(a,b){ return a - b; });
+}
+
+/* ---------------------------------------------------------- pagu per TA -- */
+function paguFor(key, ta){
+  var pp = (state.sekolah.paguPerTa || {})[String(ta)];
+  if(pp && pp[key] !== undefined) return Math.max(0, Math.round(Number(pp[key]) || 0));
+  if(ta === baseTa()) return Number(SUMBER_META[key] && SUMBER_META[key].pagu) || 0;
+  return 0;
+}
+function setPagu(key, ta, v){
+  var s = state.sekolah;
+  if(!s.paguPerTa || typeof s.paguPerTa !== "object" || Array.isArray(s.paguPerTa)) s.paguPerTa = {};
+  if(!s.paguPerTa[String(ta)]) s.paguPerTa[String(ta)] = {};
+  s.paguPerTa[String(ta)][key] = Math.max(0, Math.round(Number(v) || 0));
+}
+window.paguInfo = function(key, ta){
+  ta = ta || activeTa();
+  var pagu = paguFor(key, ta), disetujui = 0, diajukan = 0;
+  ((state.program && state.program[key]) || []).forEach(function(p){
+    if(programTa(p) !== ta) return;
+    var t = programBudgetTotal(p);
+    if(p.status === PROGRAM_STATUS.DISETUJUI) disetujui += t;
+    else if(p.status === PROGRAM_STATUS.MENUNGGU || p.status === PROGRAM_STATUS.PERBAIKAN) diajukan += t;
+  });
+  var komitmen = disetujui + diajukan;
+  return { pagu:pagu, disetujui:disetujui, diajukan:diajukan, komitmen:komitmen, sisa:pagu - komitmen,
+    pct: pagu ? komitmen / pagu : 0, over: pagu > 0 && komitmen > pagu, overDisetujui: pagu > 0 && disetujui > pagu };
+};
+var origSetField = window.sumberSetField;
+if(typeof origSetField === "function"){
+  window.sumberSetField = function(k, field, v){
+    if(field === "pagu" && activeTa() !== baseTa()){ setPagu(k, activeTa(), v); return true; }
+    return origSetField.apply(this, arguments);
+  };
+}
+
+/* ------------------------------------- pembungkus: tampilan per TA aktif -- */
+function withTa(fn){
+  return function(){
+    var ta = activeTa();
+    var realP = state.program, realLabel = state.sekolah.tahunAjaran;
+    if(wrapDepth === 0) frozenBase = baseTa();
+    wrapDepth++;
+    var view = {};
+    Object.keys(realP).forEach(function(k){
+      view[k] = (realP[k] || []).filter(function(p){ return programTa(p) === ta; });
+    });
+    state.program = view;
+    state.sekolah.tahunAjaran = taLabel(ta);
+    try{ return fn.apply(this, arguments); }
+    finally{
+      state.program = realP;
+      state.sekolah.tahunAjaran = realLabel;
+      wrapDepth--;
+      if(wrapDepth === 0) frozenBase = null;
+    }
+  };
+}
+["renderProgramTable","renderSerahTerimaTable","renderRealisasi","renderKalenderProgramView",
+ "renderCalendarGrid","renderRekapProgramTable","renderDashboard",
+ "buildPrintRab","buildPrintRealisasi","buildPrintRekap","buildPrintRekapProgram","buildPrintKalender",
+ "getRekapProgramRows","getRekapProgramRowsRingkas","renderKontrolKeuangan","exportAllToExcel"].forEach(function(n){
+  if(typeof window[n] === "function") window[n] = withTa(window[n]);
+});
+
+var origNewProg = window.newProgramRow;
+if(typeof origNewProg === "function"){
+  window.newProgramRow = function(){
+    var row = origNewProg.apply(this, arguments);
+    row.ta = activeTa();
+    return row;
+  };
+}
+
+/* ------------------------------------------------------------ pemilih TA -- */
+function setActive(n){ lsSet(n); renderAll(); }
+
+function renderTaUi(){
+  var host = document.getElementById("taAktifWrap");
+  if(!host){
+    var bar = document.querySelector(".topbar-actions");
+    if(!bar) return;
+    host = document.createElement("span");
+    host.id = "taAktifWrap";
+    host.style.cssText = "display:inline-flex;gap:6px;align-items:center;";
+    bar.insertBefore(host, bar.firstChild);
+  }
+  var list = taList(), act = activeTa(), base = baseTa();
+  host.innerHTML = '<label for="taAktifSelect" style="font-size:12px;font-weight:700;color:var(--text-secondary);">Tahun Anggaran</label>' +
+    '<select id="taAktifSelect" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-weight:700;font-size:12.5px;background:#fff;">' +
+    list.map(function(t){ return '<option value="' + t + '"' + (t === act ? " selected" : "") + '>TA ' + taLabel(t) + (t === base ? " (awal)" : "") + '</option>'; }).join("") +
+    '</select>' + (isAdmin() ? '<button class="btn small" id="taBtnBaru" type="button">+ TA Baru</button>' : "");
+  document.getElementById("taAktifSelect").onchange = function(){ setActive(Number(this.value)); };
+  var nb = document.getElementById("taBtnBaru");
+  if(nb) nb.onclick = createTa;
+
+  var tabs = document.getElementById("programTabs");
+  if(tabs){
+    var bn = document.getElementById("taProgramBanner");
+    if(!bn){
+      bn = document.createElement("div");
+      bn.id = "taProgramBanner";
+      bn.style.cssText = "margin-bottom:10px;background:#eef4fe;border:1px solid #c9dcf7;color:#1d4f9c;padding:8px 12px;border-radius:8px;font-size:12.5px;";
+      tabs.parentNode.insertBefore(bn, tabs);
+    }
+    bn.innerHTML = 'Menampilkan Program Kerja <b>Tahun Anggaran ' + taLabel(act) + '</b>. Program &amp; RAB tahun anggaran lain tersimpan utuh dan tidak ikut terhitung di pagu/RAB tahun ini. Ganti lewat pemilih <b>Tahun Anggaran</b> di bagian atas.';
+  }
+  var add = document.getElementById("btnAddProgram");
+  if(add && !document.getElementById("taBtnSalinProgram")){
+    var b = document.createElement("button");
+    b.id = "taBtnSalinProgram"; b.type = "button"; b.className = "btn small";
+    b.textContent = "Salin Program dari TA Lain";
+    b.onclick = function(){ openCopy(); };
+    add.parentNode.insertBefore(b, add.nextSibling);
+  }
+}
+var origRenderAll = window.renderAll;
+window.renderAll = function(){
+  var r = origRenderAll.apply(this, arguments);
+  try{ renderTaUi(); }catch(e){ console.warn("[TA]", e); }
+  return r;
+};
+
+/* ------------------------------------------------------------ buat TA baru -- */
+function createTa(){
+  if(!isAdmin()){ alert("Hanya Admin yang dapat membuat Tahun Anggaran baru."); return; }
+  var list = taList();
+  var def = Math.max.apply(null, list) + 1;
+  var v = prompt("Tahun mulai Tahun Anggaran baru (tahun bulan Juli).\nContoh: " + def + " untuk TA " + taLabel(def) + " (Juli " + def + " – Juni " + (def+1) + ").", def);
+  if(v === null) return;
+  var n = parseInt(v, 10);
+  if(!(n >= 2000 && n <= 2100)){ alert("Tahun tidak valid."); return; }
+  if(list.indexOf(n) >= 0){
+    if(confirm("TA " + taLabel(n) + " sudah ada. Pindah ke TA tersebut?")) setActive(n);
+    return;
+  }
+  var s = state.sekolah;
+  s.taDaftar = (Array.isArray(s.taDaftar) ? s.taDaftar.slice() : []).concat([n]);
+  if(s.anggaranAwalTerkunci){
+    if(confirm("Anggaran Awal sedang DIKUNCI sehingga program baru tidak bisa diajukan.\n\nBuka kunci sekarang agar TA " + taLabel(n) + " bisa diisi? (Program tahun lama tidak terpengaruh.)")){
+      s.anggaranAwalTerkunci = false;
+    }
+  }
+  var prev = null;
+  list.forEach(function(t){ if(t < n) prev = t; });
+  if(prev !== null && confirm("Salin pagu tiap sumber dana dari TA " + taLabel(prev) + " ke TA " + taLabel(n) + "?\n(Bisa diubah lagi di menu Sumber Dana & Pagu.)")){
+    SUMBER_KEYS.forEach(function(k){ setPagu(k, n, paguFor(k, prev)); });
+  }
+  saveStateToLocalStorage();
+  setActive(n);
+  if(prev !== null && confirm("Salin program kerja dari TA " + taLabel(prev) + " sebagai dasar RAB TA " + taLabel(n) + "?\n(Tanggal otomatis digeser +" + (n - prev) + " tahun; status kembali 'Menunggu Persetujuan'.)")){
+    openCopy(prev);
+  }
+}
+
+/* ------------------------------------------------------- salin program -- */
+function shiftDate(iso, delta){
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso||""));
+  if(!m) return iso;
+  var y = +m[1] + delta, mo = +m[2], d = +m[3];
+  var dim = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+  return y + "-" + pad(mo) + "-" + pad(Math.min(d, dim));
+}
+function ensureCopyModal(){
+  if(document.getElementById("modal-ta-copy")) return;
+  var d = document.createElement("div");
+  d.className = "modal-overlay"; d.id = "modal-ta-copy";
+  d.innerHTML = '<div class="modal-box wide"><button class="modal-close" type="button" data-taclose>&times;</button>' +
+    '<h2>Salin Program Kerja ke Tahun Anggaran Aktif</h2>' +
+    '<p class="desc" id="taCopyInfo"></p>' +
+    '<div class="field" style="max-width:320px;"><label>Salin dari Tahun Anggaran</label><select id="taCopySrc"></select></div>' +
+    '<div style="margin:8px 0;"><label style="font-weight:600;"><input type="checkbox" id="taCopyAll" checked> Pilih semua</label>&nbsp;&nbsp;' +
+    '<label style="font-weight:600;"><input type="checkbox" id="taCopyItems" checked> Ikut salin item anggaran (RAB)</label></div>' +
+    '<div id="taCopyList" style="border:1px solid var(--border);border-radius:8px;max-height:300px;overflow:auto;"></div>' +
+    '<div class="modal-actions"><button class="btn" type="button" data-taclose>Batal</button><button class="btn primary" type="button" id="taCopyGo">Salin</button></div></div>';
+  document.body.appendChild(d);
+  d.querySelectorAll("[data-taclose]").forEach(function(b){ b.addEventListener("click", function(){ closeModal("modal-ta-copy"); }); });
+  d.addEventListener("click", function(e){ if(e.target === d) closeModal("modal-ta-copy"); });
+  document.getElementById("taCopySrc").addEventListener("change", renderCopyList);
+  document.getElementById("taCopyAll").addEventListener("change", function(){
+    var on = this.checked;
+    document.querySelectorAll("#taCopyList input[type=checkbox]").forEach(function(c){ c.checked = on; });
+  });
+  document.getElementById("taCopyGo").addEventListener("click", doCopy);
+}
+function renderCopyList(){
+  var src = Number(document.getElementById("taCopySrc").value), tgt = activeTa();
+  var html = "";
+  SUMBER_KEYS.forEach(function(k){
+    (state.program[k] || []).forEach(function(p){
+      if(programTa(p) !== src || p.status === PROGRAM_STATUS.DITOLAK) return;
+      html += '<label style="display:flex;gap:8px;align-items:center;padding:7px 10px;border-bottom:1px solid var(--border);cursor:pointer;font-size:12.5px;">' +
+        '<input type="checkbox" checked data-k="' + esc(k) + '" data-id="' + esc(p.id) + '"> ' +
+        '<span style="flex:1;"><b>' + esc(p.namaProgram || "(tanpa nama)") + '</b> <span class="badge-sumber ' + esc(k) + '">' + esc(SUMBER_META[k].label) + '</span></span>' +
+        '<span style="font-weight:700;">' + rp(programBudgetTotal(p)) + '</span></label>';
+    });
+  });
+  document.getElementById("taCopyList").innerHTML = html || '<div style="padding:14px;color:var(--text-muted);">Tidak ada program pada TA ini.</div>';
+  document.getElementById("taCopyInfo").textContent = "Tujuan: TA " + taLabel(tgt) + ". Tanggal pelaksanaan otomatis digeser " + (tgt - src >= 0 ? "+" : "") + (tgt - src) + " tahun. Salinan berstatus 'Menunggu Persetujuan', tanpa PJ, realisasi, serah terima, atau pengembalian. Program asli tidak diubah.";
+}
+function openCopy(preSrc){
+  if(state.sekolah.anggaranAwalTerkunci){ alert("Anggaran Awal sedang dikunci. Minta Admin membuka kunci di menu Program Kerja terlebih dahulu."); return; }
+  var tgt = activeTa();
+  var srcs = taList().filter(function(t){ return t !== tgt; });
+  if(!srcs.length){ alert("Belum ada Tahun Anggaran lain untuk disalin."); return; }
+  ensureCopyModal();
+  var pick = (preSrc && srcs.indexOf(preSrc) >= 0) ? preSrc : srcs.filter(function(t){ return t < tgt; }).pop() || srcs[0];
+  document.getElementById("taCopySrc").innerHTML = srcs.map(function(t){ return '<option value="' + t + '"' + (t === pick ? " selected" : "") + '>TA ' + taLabel(t) + '</option>'; }).join("");
+  document.getElementById("taCopyAll").checked = true;
+  renderCopyList();
+  openModal("modal-ta-copy");
+}
+function doCopy(){
+  var src = Number(document.getElementById("taCopySrc").value), tgt = activeTa(), delta = tgt - src;
+  var withItems = document.getElementById("taCopyItems").checked;
+  var sel = [];
+  document.querySelectorAll("#taCopyList input[type=checkbox]:checked").forEach(function(c){ sel.push({ k:c.dataset.k, id:c.dataset.id }); });
+  if(!sel.length){ alert("Pilih minimal satu program."); return; }
+  var made = 0, skipped = 0;
+  sel.forEach(function(x){
+    var orig = (state.program[x.k] || []).filter(function(p){ return String(p.id) === String(x.id); })[0];
+    if(!orig) return;
+    var dup = (state.program[x.k] || []).some(function(p){
+      return programTa(p) === tgt && String(p.namaProgram||"").trim().toLowerCase() === String(orig.namaProgram||"").trim().toLowerCase();
+    });
+    if(dup){ skipped++; return; }
+    var np = newProgramRow(x.k);                       // sudah ber-ta = TA aktif
+    np.namaPengaju = orig.namaPengaju || currentUser.name;
+    np.namaProgram = orig.namaProgram;
+    np.deskripsi = orig.deskripsi || "";
+    np.tanggal = (orig.tanggal || []).map(function(t){ return shiftDate(t, delta); });
+    np.ta = tgt;
+    np.status = PROGRAM_STATUS.MENUNGGU;
+    np.pj = "";
+    if(withItems){
+      np.budgets = (orig.budgets || []).map(function(b){
+        var r = newProgramBudgetRow(np, shiftDate(b.tanggal, delta));
+        r.uraian = b.uraian; r.volume = b.volume; r.satuan = b.satuan; r.harga = b.harga;
+        return r;
+      });
+    }
+    state.program[x.k].push(np);
+    made++;
+  });
+  closeModal("modal-ta-copy");
+  renderAll();
+  saveStateToLocalStorage();
+  alert(made + " program disalin ke TA " + taLabel(tgt) + (skipped ? " (" + skipped + " dilewati karena nama yang sama sudah ada di TA ini)" : "") + ".");
+}
+
+/* -------------------------------------- pagu di modal Sumber Dana (per TA) -- */
+var origOpenSumber = window.openSumberModal;
+if(typeof origOpenSumber === "function"){
+  window.openSumberModal = function(id){
+    origOpenSumber.apply(this, arguments);
+    try{
+      var el = document.getElementById("sdPagu");
+      if(el){
+        if(id && activeTa() !== baseTa()) el.value = formatRibuan(paguFor(id, activeTa()));
+        var lb = el.parentNode && el.parentNode.querySelector("label");
+        if(lb) lb.textContent = "Pagu TA " + taLabel(activeTa()) + " (Rp)";
+      }
+    }catch(e){}
+  };
+}
+(function(){
+  var sb = document.getElementById("sdSimpan");
+  if(!sb) return;
+  var stash = null;
+  sb.addEventListener("click", function(){
+    stash = null;
+    if(!isAdmin() || activeTa() === baseTa()) return;
+    var inp = document.getElementById("sdPagu");
+    var editing = sdEditingId;
+    stash = { ta:activeTa(), v:parseRibuan(inp.value), editing:editing };
+    var m = editing && SUMBER_META[editing];
+    inp.value = formatRibuan(m ? m.pagu : 0);       // pagu TA awal tidak ikut berubah
+  }, true);
+  sb.addEventListener("click", function(){
+    if(!stash) return;
+    var st = stash; stash = null;
+    if(document.getElementById("modal-sumber").classList.contains("open")){
+      document.getElementById("sdPagu").value = formatRibuan(st.v);   // validasi gagal
+      return;
+    }
+    var id = st.editing || currentProgramKey;
+    if(!SUMBER_META[id]) return;
+    setPagu(id, st.ta, st.v);
+    renderAll();
+    saveStateToLocalStorage();
+  });
+})();
+
+/* ------------- peringatan bila tanggal program di luar TA aktif (Ajukan) -- */
+(function(){
+  var b = document.getElementById("mpSimpan");
+  if(!b) return;
+  b.addEventListener("click", function(e){
+    var ta = activeTa();
+    var out = (mpDatesDraft || []).filter(Boolean).filter(function(t){ var x = dateTa(t); return x !== null && x !== ta; });
+    if(out.length && !confirm("Ada tanggal pelaksanaan di luar TA " + taLabel(ta) + " (Juli " + ta + " – Juni " + (ta+1) + "):\n" + out.map(formatTgl).join(", ") + "\n\nProgram tetap tercatat di TA " + taLabel(ta) + ". Lanjutkan?")){
+      e.stopImmediatePropagation(); e.preventDefault();
+    }
+  }, true);
+})();
+
+/* ---------- simpan TA awal sekali setelah data termuat dari Google Sheets -- */
+var tries = 0;
+var iv = setInterval(function(){
+  tries++;
+  var started = window.__rkasSync && window.__rkasSync.isStarted && window.__rkasSync.isStarted();
+  if(started){
+    clearInterval(iv);
+    if(!Number(state.sekolah.taDasar)){ state.sekolah.taDasar = baseTa(); saveStateToLocalStorage(); }
+    try{ renderAll(); }catch(e){}
+  } else if(tries > 120) clearInterval(iv);
+}, 1500);
+
+window.__taAnggaran = { activeTa:activeTa, baseTa:baseTa, programTa:programTa, taList:taList, paguFor:paguFor,
+  shiftDate:shiftDate, withTa:withTa, taLabel:taLabel, dateTa:dateTa };
+try{ renderTaUi(); }catch(e){}
+})();
+</script>
+
 </body>
 </html>
